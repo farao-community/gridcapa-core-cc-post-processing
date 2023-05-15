@@ -1,0 +1,29 @@
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: gridcapa
+    password: gridcapa
+    template:
+      reply-timeout: 6000000
+
+core-cc-post-processing:
+  filenames:
+    ttc-validation: "'TTC_RTEValidation_'yyyyMMdd'_%s'e'_(?<version>[0-9]{1,2}).xml'"
+  url:
+    task-manager-business-date-url: http://localhost:8080/tasks/businessdate/
+  whitelist:
+    - http://localhost:9000
+    - http://minio:9000
+
+cse-valid-runner:
+  amqp:
+    queue-name: core-cc-requests
+    expiration: 60000
+
+minio-adapter:
+  bucket: gridcapa
+  base-path: CORE/CC
+  access-key: gridcapa
+  secret-key: gridcapa
+  url: http://localhost:9000/
