@@ -6,7 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app;
 
-import com.farao_community.farao.core_cc_post_processing.app.services.FileUtils;
+import com.farao_community.farao.core_cc_post_processing.app.util.FileUtils;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.junit.jupiter.api.Test;

@@ -4,7 +4,7 @@
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.farao_community.farao.core_cc_post_processing.app.services;
+package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCFileResource;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;

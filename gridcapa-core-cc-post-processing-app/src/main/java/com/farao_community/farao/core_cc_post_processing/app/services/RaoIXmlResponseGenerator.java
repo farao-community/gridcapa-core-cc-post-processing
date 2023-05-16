@@ -3,8 +3,40 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
+import com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.*;
+import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
+import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
+import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
+import com.farao_community.farao.gridcapa_core_cc.api.resource.HourlyRaoResult;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
+import org.apache.tomcat.jni.Local;
 import org.springframework.stereotype.Service;
+import org.threeten.extra.Interval;
+
+import javax.xml.XMLConstants;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.Marshaller;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.namespace.QName;
+import java.io.*;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -27,59 +59,58 @@ public class RaoIXmlResponseGenerator {
         this.minioAdapter = minioAdapter;
     }
 
-    /*public void generateRaoResponse(RaoIntegrationTask raoIntegrationTask, String targetMinioFolder, boolean isManualRun) {
+    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
-            generateRaoResponseHeader(raoIntegrationTask, responseMessage);
-            generateRaoResponsePayLoad(raoIntegrationTask, responseMessage);
-            exportRaoIntegrationResponse(raoIntegrationTask, responseMessage, targetMinioFolder, isManualRun);
+            generateRaoResponseHeader(responseMessage, localDate, correlationId);
+            generateRaoResponsePayLoad(taskDtos, responseMessage, localDate);
+            exportRaoIntegrationResponse(responseMessage, targetMinioFolder, localDate);
         } catch (Exception e) {
-            throw new RaoIntegrationException("Error occurred during Rao Integration Response file creation", e);
+            throw new CoreCCPostProcessingInternalException("Error occurred during Rao Integration Response file creation", e);
         }
     }
 
-    public void generateCgmXmlHeaderFile(RaoIntegrationTask raoIntegrationTask, String cgmsTempDirPath) {
+    public void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
-            generateCgmXmlHeaderFileHeader(raoIntegrationTask, responseMessage);
-            generateCgmXmlHeaderFilePayLoad(raoIntegrationTask, responseMessage);
+            generateCgmXmlHeaderFileHeader(responseMessage, localDate);
+            generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage, localDate);
             exportCgmXmlHeaderFile(responseMessage, cgmsTempDirPath);
         } catch (Exception e) {
-            throw new RaoIntegrationException("Error occurred during CGM_XML_HEADER creation", e);
+            throw new CoreCCPostProcessingInternalException("Error occurred during CGM_XML_HEADER creation", e);
         }
     }
 
-    void generateRaoResponseHeader(RaoIntegrationTask raoIntegrationTask, ResponseMessageType responseMessage) throws DatatypeConfigurationException {
+    void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
         header.setNoun("OptimizedRemedialActions");
-        header.setRevision(String.valueOf(raoIntegrationTask.getVersion()));
+        header.setRevision(String.valueOf(1));
         header.setContext("PRODUCTION");
         header.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(Instant.now().toString()));
         header.setSource(SENDER_ID);
         header.setAsyncReplyFlag(false);
         header.setAckRequired(false);
         header.setReplyAddress(RECEIVER_ID);
-        header.setMessageID(String.format("%s-%s-F305", SENDER_ID, IntervalUtil.getFormattedBusinessDay(raoIntegrationTask.getTimeInterval())));
-        header.setCorrelationID(raoIntegrationTask.getCorrelationId());
+        header.setMessageID(String.format("%s-%s-F305", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate)));
+        header.setCorrelationID(correlationId);
         responseMessage.setHeader(header);
     }
 
-    void generateCgmXmlHeaderFileHeader(RaoIntegrationTask raoIntegrationTask, ResponseMessageType responseMessage) throws DatatypeConfigurationException {
+    void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
         header.setNoun("OptimizedCommonGridModel");
         header.setContext("PRODUCTION");
-        header.setRevision(String.valueOf(raoIntegrationTask.getVersion()));
+        header.setRevision(String.valueOf(1));
         header.setSource(SENDER_ID);
         header.setReplyAddress(RECEIVER_ID);
         header.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(Instant.now().toString()));
-        header.setCorrelationID(raoIntegrationTask.getCorrelationId());
+        //TODO:header.setCorrelationID(taskDto.getCorrelationId());
 
         //need to save this MessageID and reuse in rao response
-        String outputCgmXmlHeaderMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(raoIntegrationTask.getTimeInterval()), raoIntegrationTask.getVersion());
+        String outputCgmXmlHeaderMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
         header.setMessageID(outputCgmXmlHeaderMessageId);
-        raoIntegrationTask.getDailyOutputs().setOutputCgmXmlHeaderMessageId(outputCgmXmlHeaderMessageId);
 
         responseMessage.setHeader(header);
     }
@@ -89,38 +120,43 @@ public class RaoIXmlResponseGenerator {
         return String.format("%s/%s", formatter.format(interval.getStart()), formatter.format(interval.getEnd()));
     }
 
-    void generateRaoResponsePayLoad(RaoIntegrationTask raoIntegrationTask, ResponseMessageType responseMessage) {
+    void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate) {
         ResponseItems responseItems = new ResponseItems();
-        responseItems.setTimeInterval(raoIntegrationTask.getTimeInterval());
-        raoIntegrationTask.getHourlyRaoResults().stream().sorted(Comparator.comparing(HourlyRaoResult::getInstant))
-                .forEach(hourlyRaoResult -> {
+        responseItems.setTimeInterval(IntervalUtil.getFormattedBusinessDay(localDate));
+        taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
+                .forEach(taskDto -> {
                     ResponseItem responseItem = new ResponseItem();
                     //set time interval
-                    Instant instant = Instant.parse(hourlyRaoResult.getInstant());
+                    Instant instant = taskDto.getTimestamp().toInstant();
                     Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
                     responseItem.setTimeInterval(formatInterval(interval));
 
-                    if (hourlyRaoResult.getStatus().equals(TaskStatus.ERROR)) {
-                        fillFailedHours(hourlyRaoResult, responseItem);
-                    } else if (hourlyRaoResult.getStatus().equals(TaskStatus.RUNNING)) {
+                    if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
+                        fillFailedHours(taskDto, responseItem);
+                    } else if (taskDto.getStatus().equals(TaskStatus.RUNNING)) {
                         fillRunningHours(responseItem);
                     } else {
                         //set file
-                        com.rte_france.farao.rao_integration.server.outputs.rao_response.Files files = new com.rte_france.farao.rao_integration.server.outputs.rao_response.Files();
-                        com.rte_france.farao.rao_integration.server.outputs.rao_response.File file = new com.rte_france.farao.rao_integration.server.outputs.rao_response.File();
+                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files();
+                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
 
                         file.setCode(OPTIMIZED_CGM);
-                        file.setUrl(DOCUMENT_IDENTIFICATION + raoIntegrationTask.getDailyOutputs().getOutputCgmXmlHeaderMessageId()); //MessageID of the CGM F304 zip (from header file)
+                        String outputCgmXmlHeaderMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        file.setUrl(DOCUMENT_IDENTIFICATION + outputCgmXmlHeaderMessageId); //MessageID of the CGM F304 zip (from header file)
                         files.getFile().add(file);
 
-                        com.rte_france.farao.rao_integration.server.outputs.rao_response.File file1 = new com.rte_france.farao.rao_integration.server.outputs.rao_response.File();
+                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
                         file1.setCode(OPTIMIZED_CB);
-                        file1.setUrl(DOCUMENT_IDENTIFICATION + raoIntegrationTask.getDailyOutputs().getOutputFlowBasedConstraintDocumentMessageId()); //MessageID of the f303
+                        String outputFlowBasedConstraintDocumentMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        file1.setUrl(DOCUMENT_IDENTIFICATION + outputFlowBasedConstraintDocumentMessageId); //MessageID of the f303
                         files.getFile().add(file1);
 
-                        com.rte_france.farao.rao_integration.server.outputs.rao_response.File file2 = new com.rte_france.farao.rao_integration.server.outputs.rao_response.File();
+                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
                         file2.setCode(RAO_REPORT);
-                        file2.setUrl(DOCUMENT_IDENTIFICATION + hourlyRaoResult.getCneResultDocumentId());
+                        String networkFileName = taskDto.getOutputs().stream().filter(processFileDto -> processFileDto.getFileType().equals("CGM_OUT"))
+                            .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("Cannot find network file for task %s", taskDto.getTimestamp())))
+                            .getFilename();
+                        file2.setUrl(DOCUMENT_IDENTIFICATION + networkFileName);
                         files.getFile().add(file2);
 
                         responseItem.setFiles(files);
@@ -132,31 +168,31 @@ public class RaoIXmlResponseGenerator {
         responseMessage.setPayload(payload);
     }
 
-    void generateCgmXmlHeaderFilePayLoad(RaoIntegrationTask raoIntegrationTask, ResponseMessageType responseMessage) {
+    void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate) {
         ResponseItems responseItems = new ResponseItems();
-        responseItems.setTimeInterval(raoIntegrationTask.getTimeInterval());
+        Interval interval = IntervalUtil.getInterval(localDate);
+        responseItems.setTimeInterval(interval.toString());
 
-        String[] timeInterval = raoIntegrationTask.getTimeInterval().split("/");
-        Instant start = parseInstantWithoutSeconds(timeInterval[0]);
-        Instant end = parseInstantWithoutSeconds(timeInterval[1]);
+        Instant start = interval.getStart();
+        Instant end = interval.getEnd();
         for (Instant instant = start; instant.isBefore(end); instant = instant.plus(1, ChronoUnit.HOURS)) {
-            final Instant instantFinal = instant;
-            HourlyRaoResult hourlyRaoResult = raoIntegrationTask.getHourlyRaoResults().stream().filter(result -> result.getInstant().equals(instantFinal.toString())).findAny().orElse(null);
+            Interval hourInterval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
+
+            TaskDto taskDto = taskDtos.stream().filter(task -> hourInterval.contains(task.getTimestamp().toInstant())).findAny().orElse(null);
             ResponseItem responseItem = new ResponseItem();
             //set time interval
-            Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
             responseItem.setTimeInterval(formatInterval(interval));
 
-            if (hourlyRaoResult == null) {
+            if (taskDto == null) {
                 // If there's no result object then there was no request object
                 fillMissingCgmInput(responseItem);
-            } else if (hourlyRaoResult.getStatus().equals(TaskStatus.SUCCESS)) {
+            } else if (taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
                 //set file
-                com.rte_france.farao.rao_integration.server.outputs.rao_response.Files files = new com.rte_france.farao.rao_integration.server.outputs.rao_response.Files();
+                com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files();
 
-                com.rte_france.farao.rao_integration.server.outputs.rao_response.File file = new com.rte_france.farao.rao_integration.server.outputs.rao_response.File();
+                com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
                 file.setCode(CGM);
-                file.setUrl(FILENAME + OutputFileNameUtil.generateUctFileName(instant.toString(), raoIntegrationTask.getVersion()));
+                file.setUrl(FILENAME + OutputFileNameUtil.generateUctFileName(instant.toString(), 1));
                 files.getFile().add(file);
                 responseItem.setFiles(files);
             }
@@ -178,11 +214,11 @@ public class RaoIXmlResponseGenerator {
         responseItem.setError(error);
     }
 
-    private void fillFailedHours(HourlyRaoResult hourlyRaoResult, ResponseItem responseItem) {
+    private void fillFailedHours(TaskDto taskDto, ResponseItem responseItem) {
         ErrorType error = new ErrorType();
-        error.setCode(hourlyRaoResult.getErrorCodeString());
+        error.setCode(taskDto.getErrorCodeString());
         error.setLevel("FATAL");
-        error.setReason(hourlyRaoResult.getErrorMessage());
+        error.setReason(taskDto.getErrorMessage());
         responseItem.setError(error);
     }
 
@@ -194,20 +230,16 @@ public class RaoIXmlResponseGenerator {
         responseItem.setError(error);
     }
 
-    private void exportRaoIntegrationResponse(RaoIntegrationTask raoIntegrationTask, ResponseMessageType responseMessage, String targetMinioFolder, boolean isManualRun) {
+    private void exportRaoIntegrationResponse(ResponseMessageType responseMessage, String targetMinioFolder, LocalDate localDate) {
         byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
-        String raoIResponseFileName = OutputFileNameUtil.generateRaoIResponseFileName(raoIntegrationTask);
+        String raoIResponseFileName = OutputFileNameUtil.generateRaoIResponseFileName(localDate);
         String raoIntegrationResponseDestinationPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, raoIResponseFileName);
 
         try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
-            minioAdapter.uploadFile(raoIntegrationResponseDestinationPath, raoResponseIs);
-            if (!isManualRun) {
-                minioAdapter.copyObject(raoIntegrationResponseDestinationPath, raoIResponseFileName, minioAdapter.getDefaultBucket(), minioAdapter.getOutputsBucket());
-            }
+            minioAdapter.uploadOutput(raoIntegrationResponseDestinationPath, raoResponseIs);
         } catch (IOException e) {
-            throw new RaoIntegrationException(String.format("Exception occurred while uploading RAO response of task %s", raoIntegrationTask.getTaskId()));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading RAO response for business date %s", localDate));
         }
-        raoIntegrationTask.getDailyOutputs().setRaoIntegrationResponsePath(raoIntegrationResponseDestinationPath);
     }
 
     private void exportCgmXmlHeaderFile(ResponseMessageType responseMessage, String cgmsArchiveTempPath) {
@@ -220,7 +252,7 @@ public class RaoIXmlResponseGenerator {
             }
 
         } catch (IOException e) {
-            throw new RaoIntegrationException("Exception occurred during CGM_XML_HEADER Response export.", e);
+            throw new CoreCCPostProcessingInternalException("Exception occurred during CGM_XML_HEADER Response export.", e);
         }
     }
 
@@ -240,7 +272,7 @@ public class RaoIXmlResponseGenerator {
                     .replace("<ResponseItems", "<ResponseItems xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"http://unicorn.com/Response/response-payload\"")
                     .getBytes();
         } catch (Exception e) {
-            throw new RaoIntegrationException("Exception occurred during RAO Response export.", e);
+            throw new CoreCCPostProcessingInternalException("Exception occurred during RAO Response export.", e);
         }
-    }*/
+    }
 }
