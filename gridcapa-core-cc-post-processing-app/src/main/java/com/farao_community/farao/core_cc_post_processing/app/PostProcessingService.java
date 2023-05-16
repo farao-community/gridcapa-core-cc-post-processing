@@ -74,7 +74,7 @@ public class PostProcessingService {
                     case "CNE":
                         cnes.put(taskDto, processFileDto);
                         break;
-                    case "CGM":
+                    case "CGM_OUT":
                         cgms.put(taskDto, processFileDto);
                         break;
                 }
