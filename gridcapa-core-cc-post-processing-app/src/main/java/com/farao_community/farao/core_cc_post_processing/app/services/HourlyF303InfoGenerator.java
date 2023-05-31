@@ -4,7 +4,6 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import com.farao_community.farao.core_cc_post_processing.app.services.HourlyF303Info;
 import com.farao_community.farao.core_cc_post_processing.app.util.CracHelper;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.data.crac_api.Crac;
@@ -99,7 +98,7 @@ class HourlyF303InfoGenerator {
         Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());
 
         List<CriticalBranchType> criticalBranches = getCriticalBranchesOfSuccessfulInterval(cracCreationContext, statesWithCra);
-        List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval( cracCreationContext, raoResult, statesWithCra);
+        List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval(cracCreationContext, raoResult, statesWithCra);
 
         return new HourlyF303Info(criticalBranches, complexVariants);
 

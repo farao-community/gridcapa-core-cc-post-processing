@@ -4,16 +4,13 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.*;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
-import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.HourlyRaoResult;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
-import org.apache.tomcat.jni.Local;
 import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
 
@@ -35,8 +32,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Set;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -137,21 +134,21 @@ public class RaoIXmlResponseGenerator {
                         fillRunningHours(responseItem);
                     } else {
                         //set file
-                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files();
-                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
 
                         file.setCode(OPTIMIZED_CGM);
                         String outputCgmXmlHeaderMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
                         file.setUrl(DOCUMENT_IDENTIFICATION + outputCgmXmlHeaderMessageId); //MessageID of the CGM F304 zip (from header file)
                         files.getFile().add(file);
 
-                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
                         file1.setCode(OPTIMIZED_CB);
                         String outputFlowBasedConstraintDocumentMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
                         file1.setUrl(DOCUMENT_IDENTIFICATION + outputFlowBasedConstraintDocumentMessageId); //MessageID of the f303
                         files.getFile().add(file1);
 
-                        com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
                         file2.setCode(RAO_REPORT);
                         String networkFileName = taskDto.getOutputs().stream().filter(processFileDto -> processFileDto.getFileType().equals("CGM_OUT"))
                             .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("Cannot find network file for task %s", taskDto.getTimestamp())))
@@ -188,9 +185,9 @@ public class RaoIXmlResponseGenerator {
                 fillMissingCgmInput(responseItem);
             } else if (taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
                 //set file
-                com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.Files();
+                com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
 
-                com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response.File();
+                com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
                 file.setCode(CGM);
                 file.setUrl(FILENAME + OutputFileNameUtil.generateUctFileName(instant.toString(), 1));
                 files.getFile().add(file);

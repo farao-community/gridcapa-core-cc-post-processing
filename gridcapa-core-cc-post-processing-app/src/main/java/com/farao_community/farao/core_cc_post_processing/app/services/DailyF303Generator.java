@@ -8,7 +8,6 @@ import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.FbConstraint;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.FlowBasedConstraintDocument;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.importer.FbConstraintImporter;
-import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.springframework.stereotype.Service;
