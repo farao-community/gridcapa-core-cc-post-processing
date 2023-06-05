@@ -4,6 +4,7 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
@@ -33,7 +34,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Set;
-import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -78,6 +78,7 @@ public class RaoIXmlResponseGenerator {
         }
     }
 
+    // Attention, erreur de checkstyle
     void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
@@ -213,9 +214,9 @@ public class RaoIXmlResponseGenerator {
 
     private void fillFailedHours(TaskDto taskDto, ResponseItem responseItem) {
         ErrorType error = new ErrorType();
-        error.setCode(taskDto.getErrorCodeString());
+//        error.setCode(taskDto.getErrorCodeString());
         error.setLevel("FATAL");
-        error.setReason(taskDto.getErrorMessage());
+//        error.setReason(taskDto.getErrorMessage());
         responseItem.setError(error);
     }
 
