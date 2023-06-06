@@ -7,6 +7,7 @@ import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPos
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.HourlyRaoResult;
@@ -32,6 +33,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Set;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 
@@ -56,7 +58,7 @@ public class RaoIXmlResponseGenerator {
         this.minioAdapter = minioAdapter;
     }
 
-    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId) {
+    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId, Map<TaskDto, ProcessFileDto> metadatas) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateRaoResponseHeader(responseMessage, localDate, correlationId);
@@ -213,9 +215,9 @@ public class RaoIXmlResponseGenerator {
 
     private void fillFailedHours(TaskDto taskDto, ResponseItem responseItem) {
         ErrorType error = new ErrorType();
-        error.setCode(taskDto.getErrorCodeString());
+        //TODO:error.setCode(taskDto.getErrorCodeString());
         error.setLevel("FATAL");
-        error.setReason(taskDto.getErrorMessage());
+        //TODO:error.setReason(taskDto.getErrorMessage());
         responseItem.setError(error);
     }
 
@@ -243,7 +245,13 @@ public class RaoIXmlResponseGenerator {
         try {
             byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
             File targetFile = new File(cgmsArchiveTempPath, OutputsNamingRules.CGM_XML_HEADER_FILENAME); //NOSONAR
-
+            if (!Files.exists(targetFile.getAbsoluteFile().getParentFile().toPath())) {
+                try {
+                    Files.createDirectories(targetFile.getAbsoluteFile().getParentFile().toPath());
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
             try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
                 Files.copy(raoResponseIs, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }

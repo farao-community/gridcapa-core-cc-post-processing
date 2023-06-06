@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
+import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -100,10 +100,14 @@ public final class ZipUtil {
     }
 
     private static void recursiveZip(String dir2zip, ZipOutputStream zos, String referencePath) {
+        LOGGER.info("Zipping directory {}", dir2zip);
         //create a new File object based on the directory we have to zip
         File zipDir = new File(dir2zip); //NOSONAR
+        LOGGER.info(String.valueOf(Files.exists(Path.of(dir2zip))));
+        Paths.get(dir2zip);
         //get a listing of the directory content
         String[] dirList = zipDir.list();
+        Arrays.stream(dirList).forEach(LOGGER::info);
         byte[] readBuffer = new byte[2156];
         int bytesIn;
         //loop through dirList, and zip the files
