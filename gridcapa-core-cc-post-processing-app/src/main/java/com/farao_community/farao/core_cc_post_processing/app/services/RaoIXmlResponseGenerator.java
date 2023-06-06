@@ -4,6 +4,7 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
@@ -35,7 +36,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
-import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -80,6 +80,7 @@ public class RaoIXmlResponseGenerator {
         }
     }
 
+    // Attention, erreur de checkstyle
     void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
@@ -245,13 +246,7 @@ public class RaoIXmlResponseGenerator {
         try {
             byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
             File targetFile = new File(cgmsArchiveTempPath, OutputsNamingRules.CGM_XML_HEADER_FILENAME); //NOSONAR
-            if (!Files.exists(targetFile.getAbsoluteFile().getParentFile().toPath())) {
-                try {
-                    Files.createDirectories(targetFile.getAbsoluteFile().getParentFile().toPath());
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-            }
+
             try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
                 Files.copy(raoResponseIs, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             }
