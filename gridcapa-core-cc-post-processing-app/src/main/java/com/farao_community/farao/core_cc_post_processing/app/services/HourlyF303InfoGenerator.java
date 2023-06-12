@@ -180,12 +180,15 @@ class HourlyF303InfoGenerator {
 
     private Network getNetworkOfTaskDto() {
         ProcessFileDto networkFileDto = taskDto
-            .getInputs()
+            .getOutputs()
             .stream()
-            .filter(processFileDto -> processFileDto.getFileType().equals("CGM"))
+            .filter(processFileDto -> processFileDto.getFileType().equals("CGM_OUT"))
             .findFirst()
             .orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("CGM missing for task %s", taskDto.getTimestamp())));
-        try (InputStream networkInputStream = minioAdapter.getFile(networkFileDto.getFilePath())) {
+
+        System.out.println(taskDto.getTimestamp());
+        System.out.println(networkFileDto.getFilename() + "  " + networkFileDto.getFilePath());
+        try (InputStream networkInputStream = minioAdapter.getFile(networkFileDto.getFilePath().split("CORE/CC/")[1])) {
             return Network.read(networkFileDto.getFilename(), networkInputStream);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Cannot import network of task %s", taskDto.getTimestamp()));
@@ -197,7 +200,7 @@ class HourlyF303InfoGenerator {
         ProcessFileDto raoResultFileDto = taskDto.getOutputs()
             .stream().filter(processFileDto -> processFileDto.getFileType().equals("RAO_RESULT"))
             .findFirst().orElseThrow();
-        try (InputStream raoResultInputStream = minioAdapter.getFile(raoResultFileDto.getFilePath())) {
+        try (InputStream raoResultInputStream = minioAdapter.getFile(raoResultFileDto.getFilePath().split("CORE/CC/")[1])) {
             return raoResultImporter.importRaoResult(raoResultInputStream, crac);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Cannot import RAO result of hourly RAO response of instant %s", taskDto.getTimestamp()));

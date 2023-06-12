@@ -41,7 +41,7 @@ public class DailyF303Generator {
             .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException("task dto missing cbcora file"))
             .getFilePath();
 
-        try (InputStream cracXmlInputStream = minioAdapter.getFile(cracFilePath)) {
+        try (InputStream cracXmlInputStream = minioAdapter.getFile(cracFilePath.split("CORE/CC/")[1])) {
 
             // get native CRAC
             FbConstraint nativeCrac = new FbConstraintImporter().importNativeCrac(cracXmlInputStream);

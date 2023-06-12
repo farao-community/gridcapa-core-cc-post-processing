@@ -76,7 +76,7 @@ public class PostProcessingService {
 
         zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate);
         zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate);
-        zipLogsAndSendToOutputs(outputsTargetMinioFolder, logPerTask, localDate);
+        //zipLogsAndSendToOutputs(outputsTargetMinioFolder, logPerTask, localDate);
 
         //TODO: zip logs
         FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(tasksToPostProcess);
@@ -156,7 +156,7 @@ public class PostProcessingService {
 
         // Add all cgms from minio to tmp folder
         cgms.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(cgm -> {
-            InputStream inputStream = minioAdapter.getFile(cgm.getFilePath());
+            InputStream inputStream = minioAdapter.getFile(cgm.getFilePath().split("CORE/CC/")[1]);
             File cgmFile = new File(cgmZipTmpDir + cgm.getFilename());
             try {
                 FileUtils.copyInputStreamToFile(inputStream, cgmFile);
@@ -187,7 +187,7 @@ public class PostProcessingService {
         cnes.values().stream()
             .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
             .forEach(cne -> {
-                InputStream inputStream = minioAdapter.getFile(cne.getFilePath());
+                InputStream inputStream = minioAdapter.getFile(cne.getFilePath().split("CORE/CC/")[1]);
                 File cneFile = new File(cneZipTmpDir + cne.getFilename());
                 try {
                     FileUtils.copyInputStreamToFile(inputStream, cneFile);
@@ -210,7 +210,7 @@ public class PostProcessingService {
     }
 
     private void zipLogsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> logs, LocalDate localDate) {
-        String logZipTmpDir = "/tmp/cnes_out/" + localDate.toString();
+        String logZipTmpDir = "/tmp/cnes_out/" + localDate.toString() + "/";
 
         // Add all cnes from minio to tmp folder
         logs.values().forEach(log -> {

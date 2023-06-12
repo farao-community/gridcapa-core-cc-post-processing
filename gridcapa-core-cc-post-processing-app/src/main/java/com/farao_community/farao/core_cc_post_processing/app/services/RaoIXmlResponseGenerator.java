@@ -73,7 +73,7 @@ public class RaoIXmlResponseGenerator {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateCgmXmlHeaderFileHeader(responseMessage, localDate);
-            generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage, localDate);
+            generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage);
             exportCgmXmlHeaderFile(responseMessage, cgmsTempDirPath);
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Error occurred during CGM_XML_HEADER creation", e);
@@ -168,20 +168,23 @@ public class RaoIXmlResponseGenerator {
         responseMessage.setPayload(payload);
     }
 
-    void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate) {
+    void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage) {
         ResponseItems responseItems = new ResponseItems();
-        Interval interval = IntervalUtil.getInterval(localDate);
+        Instant start = taskDtos.stream().map(taskDto -> taskDto.getTimestamp().toInstant()).min(Instant::compareTo).orElseThrow();
+        Instant end = taskDtos.stream().map(taskDto -> taskDto.getTimestamp().toInstant()).max(Instant::compareTo).orElseThrow();
+
+        Interval interval = Interval.of(start, end);
         responseItems.setTimeInterval(interval.toString());
 
-        Instant start = interval.getStart();
-        Instant end = interval.getEnd();
+        taskDtos.forEach(taskDto -> System.out.println(taskDto.getTimestamp().toInstant()));
         for (Instant instant = start; instant.isBefore(end); instant = instant.plus(1, ChronoUnit.HOURS)) {
             Interval hourInterval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
 
+            System.out.println(hourInterval);
             TaskDto taskDto = taskDtos.stream().filter(task -> hourInterval.contains(task.getTimestamp().toInstant())).findAny().orElse(null);
             ResponseItem responseItem = new ResponseItem();
             //set time interval
-            responseItem.setTimeInterval(formatInterval(interval));
+            responseItem.setTimeInterval(formatInterval(hourInterval));
 
             if (taskDto == null) {
                 // If there's no result object then there was no request object
@@ -189,8 +192,8 @@ public class RaoIXmlResponseGenerator {
             } else if (taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
                 //set file
                 com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
-
                 com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
+
                 file.setCode(CGM);
                 file.setUrl(FILENAME + OutputFileNameUtil.generateUctFileName(instant.toString(), 1));
                 files.getFile().add(file);
@@ -246,6 +249,10 @@ public class RaoIXmlResponseGenerator {
         try {
             byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
             File targetFile = new File(cgmsArchiveTempPath, OutputsNamingRules.CGM_XML_HEADER_FILENAME); //NOSONAR
+
+            if (!Files.exists(targetFile.getParentFile().toPath())) {
+                targetFile.getParentFile().mkdirs();
+            }
 
             try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
                 Files.copy(raoResponseIs, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
