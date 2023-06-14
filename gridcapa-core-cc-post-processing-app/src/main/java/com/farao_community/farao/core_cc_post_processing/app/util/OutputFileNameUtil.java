@@ -3,10 +3,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 
 /**
@@ -34,12 +31,6 @@ public final class OutputFileNameUtil {
         return handle25TimestampCase(output, instant);
     }
 
-    public static String generateCneFileName(String instant) {
-        String output = OutputsNamingRules.CNE_FILENAME_FORMATTER.format(Instant.parse(instant))
-                .replace("-v0-", "-v" + 1 + "-");
-        return handle25TimestampCase(output, instant);
-    }
-
     public static String generateOptimizedCbFileName(LocalDate localDate) {
         return OutputsNamingRules.OPTIMIZED_CB_FILENAME_FORMATTER.format(localDate)
                 .replace("0V", String.format("%02d", 1));
@@ -59,22 +50,6 @@ public final class OutputFileNameUtil {
                 .replace("0V", String.format("%02d", 1));
     }
 
-    public static String generateMetadataFileName(LocalDate localDate) {
-        return OutputsNamingRules.METADATA_FILENAME_FORMATTER.format(localDate)
-                .replace("0V", String.format("%02d", 1));
-    }
-
-    public static String generateCracCreationReportFileName(String instant, LocalDate localDate) {
-        String output = OutputsNamingRules.RAO_LOGS_FILENAME_FORMATTER.format(Instant.parse(instant))
-            .replace("0V", String.format("%02d", 1));
-        return handle25TimestampCase(output, instant);
-    }
-
-    public static String generateLogsZipName(LocalDate localDate) {
-        return OutputsNamingRules.LOGS_OUTPUT_FORMATTER.format(localDate)
-            .replace("0V", String.format("%02d", 1));
-    }
-
     /**
      * For 25-timestamp business day, replace the duplicate hour "_HH30_" with "_BH30_"
      */
@@ -86,5 +61,10 @@ public final class OutputFileNameUtil {
         } else {
             return filename;
         }
+    }
+
+    public static String generateZippedLogsName(String instant, String outputsTargetMinioFolder, int version) {
+        return String.format(OutputsNamingRules.OUTPUTS, outputsTargetMinioFolder, OutputsNamingRules.LOGS_OUTPUT_FORMATTER.format(Instant.parse(instant))
+            .replace("0V", String.format("%02d", version)));
     }
 }

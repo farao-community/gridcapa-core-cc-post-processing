@@ -61,12 +61,7 @@ public class CoreCCPostProcessingHandler {
             LocalDate localDate = taskDtoUpdated.getTimestamp().toLocalDate();
             if (checkIfAllHourlyTasksAreFinished(localDate)) {
                 Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
-                taskDtoForBusinessDate.forEach(taskDto -> {
-                    LOGGER.info(taskDto.getTimestamp().toString());
-                    LOGGER.info(taskDto.getStatus().toString());
-                    LOGGER.info(taskDto.getId().toString());
-                });
-                postProcessingService.processTasks(localDate, taskDtoForBusinessDate);
+                postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
                 LOGGER.info("YAY! {} tasks found", taskDtoForBusinessDate.size());
             }
         }
@@ -106,8 +101,29 @@ public class CoreCCPostProcessingHandler {
         return false;
     }
 
+    public List<byte[]> getLogsForTask(Set<TaskDto> taskList) {
+        List<byte[]> logList = new ArrayList<>();
+        taskList.forEach(taskDto -> {
+            String offsetDateTime = taskDto.getTimestamp().toString();
+            String requestUrl = getUrlToExportTaskLog(offsetDateTime);
+            try {
+                ResponseEntity<byte[]> responseEntity = restTemplateBuilder.build().getForEntity(requestUrl, byte[].class);
+                if (responseEntity.getBody() != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                    logList.add(Objects.requireNonNull(responseEntity.getBody()));
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error while getting log for timestamp {}.", offsetDateTime, e);
+            }
+        });
+        return logList;
+    }
+
     private String getUrlToCheckAllTasksOfTheDayAreOver(LocalDate localDate) {
         return coreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl() + localDate + "/allOver";
+    }
+
+    private String getUrlToExportTaskLog(String offsetDateTime) {
+        return coreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl() + offsetDateTime + "/log";
     }
 
     private static Optional<ProcessFileDto> getProcessFile(TaskDto taskDto, String fileType) {

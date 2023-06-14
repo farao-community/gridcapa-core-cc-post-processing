@@ -143,5 +143,32 @@ public final class ZipUtil {
         }
     }
 
+    public static void collectAndZip(ZipOutputStream zos, byte[] bytes) {
+        byte[] byteBuff = new byte[1024];
+        try (ZipInputStream zipIn = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+            ZipEntry entry = zipIn.getNextEntry(); //NOSONAR
+            int totalEntries = 0;
+            // iterates over entries in the zip file
+            while (entry != null) {
+                totalEntries++;
+                if (!entry.isDirectory()) {
+                    // if the entry is a file
+                    zos.putNextEntry(entry);
+                    for (int bytesRead; (bytesRead = zipIn.read(byteBuff)) != -1; ) {
+                        zos.write(byteBuff, 0, bytesRead);
+                    }
+                }
+                zipIn.closeEntry();
+                entry = zipIn.getNextEntry(); //NOSONAR
+                if (totalEntries > 10000) {
+                    throw new IOException("Entry threshold reached while unzipping.");
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error while unzipping logs");
+            throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
+        }
+    }
+
 }
 
