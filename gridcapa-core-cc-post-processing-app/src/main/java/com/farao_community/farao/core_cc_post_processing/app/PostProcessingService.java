@@ -74,12 +74,9 @@ public class PostProcessingService {
         // -- zipped logs
         zipAndUploadLogs(logList, OutputFileNameUtil.generateZippedLogsName(raoMetadata.getInstant(), outputsTargetMinioFolder, raoMetadata.getVersion()));
 
-        // -- ACK
-        // TODO : read and save 1 ACK in outputs
-
         // -- cgms
         zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate);
-        // -- cgms
+        // -- cnes
         zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate);
         // -- flowBasedConstraintDocument
         FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(tasksToPostProcess);
@@ -90,7 +87,7 @@ public class PostProcessingService {
     }
 
     private String generateTargetMinioFolder(LocalDate localDate) {
-        return "RAO_OUTPUT_DIR/" + localDate;
+        return "RAO_OUTPUTS_DIR/" + localDate;
     }
 
     private void fillMapsOfOutputs(Set<TaskDto> tasksToProcess,
