@@ -3,7 +3,6 @@ package com.farao_community.farao.core_cc_post_processing.app;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMetadataGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyF303Generator;
-import com.farao_community.farao.core_cc_post_processing.app.services.FileExporterHelper;
 import com.farao_community.farao.core_cc_post_processing.app.services.RaoIXmlResponseGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
@@ -13,6 +12,7 @@ import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.Fl
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
+import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInvalidDataException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,21 +36,20 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
 @Service
 public class PostProcessingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostProcessingService.class);
+    public static final String CORE_CC = "CORE/CC/";
 
     private final MinioAdapter minioAdapter;
     private final RaoIXmlResponseGenerator raoIXmlResponseGenerator;
     private final DailyF303Generator dailyF303Generator;
-    private final FileExporterHelper fileExporterHelper;
     private RaoMetadata raoMetadata = new RaoMetadata();
     private List<CoreCCMetadata> metadataList = new ArrayList<>();
 
     // TODO : harmonize raoMetadata version + instant fetching => in OutputFileNameUtil ?
 
-    public PostProcessingService(MinioAdapter minioAdapter, RaoIXmlResponseGenerator raoIXmlResponseGenerator, DailyF303Generator dailyF303Generator, FileExporterHelper fileExporterHelper) {
+    public PostProcessingService(MinioAdapter minioAdapter, RaoIXmlResponseGenerator raoIXmlResponseGenerator, DailyF303Generator dailyF303Generator) {
         this.minioAdapter = minioAdapter;
         this.raoIXmlResponseGenerator = raoIXmlResponseGenerator;
         this.dailyF303Generator = dailyF303Generator;
-        this.fileExporterHelper = fileExporterHelper;
     }
 
     public void processTasks(LocalDate localDate, Set<TaskDto> tasksToPostProcess, List<byte[]> logList) {
@@ -105,6 +104,9 @@ public class PostProcessingService {
                         break;
                     case "METADATA":
                         metadatas.put(taskDto, processFileDto);
+                        break;
+                    default:
+                        throw new CoreCCInvalidDataException("Wrong output type");
                 }
             })
         );
@@ -114,7 +116,7 @@ public class PostProcessingService {
         metadatas.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).
             forEach(metadata -> {
                 // TODO : more robust way of fetching un-presigned url
-                InputStream inputStream = minioAdapter.getFile(metadata.getFilePath().split("CORE/CC/")[1]);
+                InputStream inputStream = minioAdapter.getFile(metadata.getFilePath().split(CORE_CC)[1]);
                 try {
                     CoreCCMetadata coreCCMetadata = new ObjectMapper().readValue(IOUtils.toString(inputStream, StandardCharsets.UTF_8), CoreCCMetadata.class);
                     metadataList.add(coreCCMetadata);
@@ -141,7 +143,7 @@ public class PostProcessingService {
         raoMetadata.setOutputsSendingInstant(Instant.now().toString());
         raoMetadata.setRaoRequestFileName(metadataList.stream().map(CoreCCMetadata::getRaoRequestFileName).collect(Collectors.toSet()).iterator().next());
         raoMetadata.setVersion(metadataList.stream().map(CoreCCMetadata::getVersion).collect(Collectors.toSet()).iterator().next());
-        raoMetadata.setInstant(getLastInstant(metadataList.stream().map(CoreCCMetadata::getInstant).collect(Collectors.toSet())));
+        raoMetadata.setInstant(getLastInstant(metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).collect(Collectors.toSet())));
     }
 
     private void zipAndUploadLogs(List<byte[]> logList, String logFileName) {
@@ -151,7 +153,6 @@ public class PostProcessingService {
                 ZipUtil.collectAndZip(zos, bytes);
             }
             // upload zipped result
-            zos.close();
             minioAdapter.uploadOutput(logFileName, new ByteArrayInputStream(baos.toByteArray()));
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
@@ -166,7 +167,7 @@ public class PostProcessingService {
 
         // Add all cgms from minio to tmp folder
         cgms.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(cgm -> {
-            InputStream inputStream = minioAdapter.getFile(cgm.getFilePath().split("CORE/CC/")[1]);
+            InputStream inputStream = minioAdapter.getFile(cgm.getFilePath().split(CORE_CC)[1]);
             File cgmFile = new File(cgmZipTmpDir + cgm.getFilename());
             try {
                 FileUtils.copyInputStreamToFile(inputStream, cgmFile);
@@ -197,7 +198,7 @@ public class PostProcessingService {
         cnes.values().stream()
             .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
             .forEach(cne -> {
-                InputStream inputStream = minioAdapter.getFile(cne.getFilePath().split("CORE/CC/")[1]);
+                InputStream inputStream = minioAdapter.getFile(cne.getFilePath().split(CORE_CC)[1]);
                 File cneFile = new File(cneZipTmpDir + cne.getFilename());
                 try {
                     FileUtils.copyInputStreamToFile(inputStream, cneFile);

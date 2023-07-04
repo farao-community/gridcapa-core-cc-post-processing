@@ -47,7 +47,7 @@ public class CoreCCMetadataGenerator {
         try (InputStream csvIs = new ByteArrayInputStream(csv)) {
             minioAdapter.uploadOutput(metadataDestinationPath, csvIs);
         } catch (IOException e) {
-            throw new CoreCCInternalException(String.format("Exception occurred while uploading metadata file"));
+            throw new CoreCCInternalException("Exception occurred while uploading metadata file");
         }
     }
 
@@ -80,11 +80,11 @@ public class CoreCCMetadataGenerator {
         data.put(RAO_END_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationEndInstant());
         data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(macroMetada.getComputationStartInstant()), Instant.parse(macroMetada.getComputationEndInstant()))));
         metadataList.forEach(individualMetadata -> {
-            data.put(RAO_START_TIME, individualMetadata.getInstant(), individualMetadata.getComputationStart());
-            data.put(RAO_END_TIME, individualMetadata.getInstant(), individualMetadata.getComputationEnd());
-            data.put(RAO_COMPUTATION_TIME, individualMetadata.getInstant(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(individualMetadata.getComputationStart()), Instant.parse(individualMetadata.getComputationEnd()))));
-            data.put(RAO_RESULTS_PROVIDED, individualMetadata.getInstant(), individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
-            data.put(RAO_COMPUTATION_STATUS, individualMetadata.getInstant(), individualMetadata.getStatus());
+            data.put(RAO_START_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationStart());
+            data.put(RAO_END_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationEnd());
+            data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(individualMetadata.getComputationStart()), Instant.parse(individualMetadata.getComputationEnd()))));
+            data.put(RAO_RESULTS_PROVIDED, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
+            data.put(RAO_COMPUTATION_STATUS, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus());
         });
         return data;
     }
@@ -94,7 +94,7 @@ public class CoreCCMetadataGenerator {
         List<RaoMetadata.Indicator> indicators = Arrays.stream(values())
                 .sorted(Comparator.comparing(RaoMetadata.Indicator::getOrder))
                 .collect(Collectors.toList());
-        List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getInstant).sorted(String::compareTo).collect(Collectors.toList());
+        List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).sorted(String::compareTo).collect(Collectors.toList());
         timestamps.add(0, timeInterval);
 
         // Generate CSV string

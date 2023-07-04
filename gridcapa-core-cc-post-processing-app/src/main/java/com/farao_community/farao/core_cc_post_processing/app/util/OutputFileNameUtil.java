@@ -14,11 +14,6 @@ public final class OutputFileNameUtil {
     private OutputFileNameUtil() {
     }
 
-    public static String generateRaoRequestAckFileName(LocalDate localDate) {
-        return OutputsNamingRules.RAO_REQUEST_ACK_FILENAME_FORMATTER.format(localDate)
-                .replace("0V", String.format("%02d", 1));
-    }
-
     public static String generateRaoIResponseFileName(LocalDate localDate) {
         return OutputsNamingRules.RAO_INTEGRATION_RESPONSE_FILENAME_FORMATTER.format(localDate)
                 .replace("0V", String.format("%02d", 1));
