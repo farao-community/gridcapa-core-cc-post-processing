@@ -1,0 +1,36 @@
+name: DOCKER
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: DockerBuild
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Get the release version
+        id: get_version
+        run: |
+          VERSION=$( mvn help:evaluate -Dexpression=project.version -q -DforceStdout )
+          echo "::set-output name=version::$VERSION"
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      - name: Build with Maven
+        run: mvn --batch-mode -Pdefault,coverage install
+
+      - name: Build and publish docker image
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: farao/gridcapa-core-cc-post-processing
+          tags: ${{ steps.get_version.outputs.VERSION }}
+          username: farao
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
