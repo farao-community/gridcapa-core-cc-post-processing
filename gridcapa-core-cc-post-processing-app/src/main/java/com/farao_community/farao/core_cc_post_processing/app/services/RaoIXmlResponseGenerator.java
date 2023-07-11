@@ -176,11 +176,9 @@ public class RaoIXmlResponseGenerator {
         Interval interval = Interval.of(start, end);
         responseItems.setTimeInterval(interval.toString());
 
-        taskDtos.forEach(taskDto -> System.out.println(taskDto.getTimestamp().toInstant()));
         for (Instant instant = start; instant.isBefore(end); instant = instant.plus(1, ChronoUnit.HOURS)) {
             Interval hourInterval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
 
-            System.out.println(hourInterval);
             TaskDto taskDto = taskDtos.stream().filter(task -> hourInterval.contains(task.getTimestamp().toInstant())).findAny().orElse(null);
             ResponseItem responseItem = new ResponseItem();
             //set time interval

@@ -186,8 +186,6 @@ class HourlyF303InfoGenerator {
             .findFirst()
             .orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("CGM missing for task %s", taskDto.getTimestamp())));
 
-        System.out.println(taskDto.getTimestamp());
-        System.out.println(networkFileDto.getFilename() + "  " + networkFileDto.getFilePath());
         try (InputStream networkInputStream = minioAdapter.getFile(networkFileDto.getFilePath().split("CORE/CC/")[1])) {
             return Network.read(networkFileDto.getFilename(), networkInputStream);
         } catch (IOException e) {

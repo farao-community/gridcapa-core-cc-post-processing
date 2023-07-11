@@ -12,7 +12,6 @@ import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.Fl
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
-import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInvalidDataException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -106,7 +105,7 @@ public class PostProcessingService {
                         metadatas.put(taskDto, processFileDto);
                         break;
                     default:
-                        throw new CoreCCInvalidDataException("Wrong output type");
+                        // do nothing, other outputs are available but we won't be collecting them
                 }
             })
         );

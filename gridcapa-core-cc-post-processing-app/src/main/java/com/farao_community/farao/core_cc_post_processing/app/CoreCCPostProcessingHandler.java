@@ -62,7 +62,6 @@ public class CoreCCPostProcessingHandler {
             if (checkIfAllHourlyTasksAreFinished(localDate)) {
                 Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
                 postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
-                LOGGER.info("YAY! {} tasks found", taskDtoForBusinessDate.size());
             }
         }
     }
@@ -74,7 +73,6 @@ public class CoreCCPostProcessingHandler {
         try {
             ResponseEntity<TaskDto[]> responseEntity = restTemplateBuilder.build().getForEntity(requestUrl, TaskDto[].class);
             if (responseEntity.getBody() != null && responseEntity.getStatusCode() == HttpStatus.OK) {
-                LOGGER.info(responseEntity.toString());
                 return new HashSet<>(Arrays.asList(responseEntity.getBody()));
             }
         } catch (Exception e) {

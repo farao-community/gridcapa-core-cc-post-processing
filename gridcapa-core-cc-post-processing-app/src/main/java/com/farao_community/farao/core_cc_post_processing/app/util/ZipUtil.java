@@ -100,10 +100,8 @@ public final class ZipUtil {
     }
 
     private static void recursiveZip(String dir2zip, ZipOutputStream zos, String referencePath) {
-        LOGGER.info("Zipping directory {}", dir2zip);
         //create a new File object based on the directory we have to zip
         File zipDir = new File(dir2zip); //NOSONAR
-        LOGGER.info(String.valueOf(Files.exists(Path.of(dir2zip))));
         Paths.get(dir2zip);
         //get a listing of the directory content
         String[] dirList = zipDir.list();
