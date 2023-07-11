@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jxb:bindings version="1.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb">
+    <jxb:bindings schemaLocation="../../xsd/F305-RaoResponse/common-message-specification-01_with_response-payload_02.xsd">
+        <jxb:schemaBindings>
+            <jxb:package name="com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response"/>
+        </jxb:schemaBindings>
+    </jxb:bindings>
+</jxb:bindings>

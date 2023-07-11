@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="flowbased" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns1="flowbased">
+  <xs:import namespace="http://www.w3.org/2001/XMLSchema-instance"/>
+  <xs:element name="FlowBasedConstraintDocument">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns1:DocumentIdentification"/>
+        <xs:element ref="ns1:DocumentVersion"/>
+        <xs:element ref="ns1:DocumentType"/>
+        <xs:element ref="ns1:ProcessType"/>
+        <xs:element ref="ns1:SenderIdentification"/>
+        <xs:element ref="ns1:SenderRole"/>
+        <xs:element ref="ns1:ReceiverIdentification"/>
+        <xs:element ref="ns1:ReceiverRole"/>
+        <xs:element ref="ns1:CreationDateTime"/>
+        <xs:element ref="ns1:ConstraintTimeInterval"/>
+        <xs:element ref="ns1:Domain"/>
+        <xs:element ref="ns1:criticalBranches"/>
+        <xs:element ref="ns1:complexVariants"/>
+      </xs:sequence>
+      <xs:attribute name="DtdRelease" use="required" type="xs:integer"/>
+      <xs:attribute name="DtdVersion" use="required" type="xs:integer"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DocumentIdentification">
+    <xs:complexType>
+      <xs:attribute name="v" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DocumentVersion">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:integer"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DocumentType">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ProcessType">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SenderIdentification">
+    <xs:complexType>
+      <xs:attribute name="codingScheme" use="required" type="xs:NCName"/>
+      <xs:attribute name="v" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SenderRole">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ReceiverIdentification">
+    <xs:complexType>
+      <xs:attribute name="codingScheme" use="required" type="xs:NCName"/>
+      <xs:attribute name="v" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ReceiverRole">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="CreationDateTime">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ConstraintTimeInterval">
+    <xs:complexType>
+      <xs:attribute name="v" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Domain">
+    <xs:complexType>
+      <xs:attribute name="codingScheme" use="required" type="xs:NCName"/>
+      <xs:attribute name="v" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="criticalBranches">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="ns1:criticalBranch"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="criticalBranch">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns1:timeInterval"/>
+        <xs:element ref="ns1:branch"/>
+        <xs:element ref="ns1:imaxFactor"/>
+        <xs:element ref="ns1:imaxType"/>
+        <xs:element ref="ns1:permanentImaxFactor"/>
+        <xs:element ref="ns1:temporaryImaxFactor"/>
+        <xs:element ref="ns1:frmMw"/>
+        <xs:element ref="ns1:minRAMfactor"/>
+        <xs:element ref="ns1:CNEC"/>
+        <xs:element ref="ns1:MNEC"/>
+        <xs:element ref="ns1:direction"/>
+        <xs:element ref="ns1:tsoOrigin"/>
+        <xs:element minOccurs="0" ref="ns1:outage"/>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="imaxFactor" type="xs:integer"/>
+  <xs:element name="imaxType" type="xs:NCName"/>
+  <xs:element name="permanentImaxFactor" type="xs:integer"/>
+  <xs:element name="temporaryImaxFactor" type="xs:integer"/>
+  <xs:element name="frmMw" type="xs:integer"/>
+  <xs:element name="minRAMfactor" type="xs:integer"/>
+  <xs:element name="CNEC" type="xs:boolean"/>
+  <xs:element name="MNEC" type="xs:boolean"/>
+  <xs:element name="direction" type="xs:NCName"/>
+  <xs:element name="outage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="ns1:branch"/>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="xs:NCName"/>
+      <xs:attribute name="location" use="required" type="xs:NCName"/>
+      <xs:attribute name="name" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="complexVariants">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="ns1:complexVariant"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="complexVariant">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns1:timeInterval"/>
+        <xs:element ref="ns1:tsoOrigin"/>
+        <xs:element ref="ns1:actionsSet"/>
+      </xs:sequence>
+      <xs:attribute name="id" use="required" type="xs:NCName"/>
+      <xs:attribute name="name" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="actionsSet">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns1:preventive"/>
+        <xs:element ref="ns1:curative"/>
+        <xs:element ref="ns1:enforced"/>
+        <xs:element ref="ns1:afterCOList"/>
+        <xs:element maxOccurs="unbounded" ref="ns1:action"/>
+      </xs:sequence>
+      <xs:attribute name="name" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="preventive" type="xs:boolean"/>
+  <xs:element name="curative" type="xs:boolean"/>
+  <xs:element name="enforced" type="xs:boolean"/>
+  <xs:element name="afterCOList">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="ns1:afterCOId"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="afterCOId" type="xs:NCName"/>
+  <xs:element name="action">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns1:branch"/>
+        <xs:element minOccurs="0" ref="ns1:value"/>
+        <xs:sequence minOccurs="0">
+          <xs:element ref="ns1:range"/>
+          <xs:element ref="ns1:relativeRange"/>
+        </xs:sequence>
+        <xs:element minOccurs="0" ref="ns1:PSTGroupId"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="value" type="xs:NCName"/>
+  <xs:element name="range">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns1:min"/>
+        <xs:element ref="ns1:max"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="relativeRange">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="ns1:min"/>
+        <xs:element ref="ns1:max"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="PSTGroupId" type="xs:integer"/>
+  <xs:element name="timeInterval">
+    <xs:complexType>
+      <xs:attribute name="v" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="branch">
+    <xs:complexType>
+      <xs:attribute name="eic" type="xs:integer"/>
+      <xs:attribute name="elementName"/>
+      <xs:attribute name="from" use="required"/>
+      <xs:attribute name="name"/>
+      <xs:attribute name="order" type="xs:integer"/>
+      <xs:attribute name="to" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tsoOrigin" type="xs:NCName"/>
+  <xs:element name="min" type="xs:integer"/>
+  <xs:element name="max" type="xs:integer"/>
+</xs:schema>

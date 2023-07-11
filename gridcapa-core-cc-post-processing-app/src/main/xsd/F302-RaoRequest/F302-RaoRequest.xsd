@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://iec.ch/TC57/2011/schema/message" xmlns:req="http://unicorn.com/Request/request-payload" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:message="http://iec.ch/TC57/2011/schema/message">
+  <xs:import namespace="http://unicorn.com/Request/request-payload"/>
+  <xs:element name="RequestMessage">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="message:Header"/>
+        <xs:element ref="message:Payload"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Header">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="message:Verb"/>
+        <xs:element ref="message:Noun"/>
+        <xs:element ref="message:Revision"/>
+        <xs:element ref="message:Context"/>
+        <xs:element ref="message:Timestamp"/>
+        <xs:element ref="message:Source"/>
+        <xs:element ref="message:AsyncReplyFlag"/>
+        <xs:element ref="message:ReplyAddress"/>
+        <xs:element ref="message:AckRequired"/>
+        <xs:element ref="message:MessageID"/>
+        <xs:element ref="message:CorrelationID"/>
+        <xs:element maxOccurs="unbounded" ref="message:Property"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Verb" type="xs:NCName"/>
+  <xs:element name="Noun" type="xs:NCName"/>
+  <xs:element name="Revision" type="xs:integer"/>
+  <xs:element name="Context" type="xs:NCName"/>
+  <xs:element name="Timestamp" type="xs:dateTime"/>
+  <xs:element name="Source" type="xs:NMTOKEN"/>
+  <xs:element name="AsyncReplyFlag" type="xs:boolean"/>
+  <xs:element name="ReplyAddress" type="xs:NMTOKEN"/>
+  <xs:element name="AckRequired" type="xs:boolean"/>
+  <xs:element name="MessageID" type="xs:string"/>
+  <xs:element name="CorrelationID" type="xs:string"/>
+  <xs:element name="Property">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="message:Name"/>
+        <xs:element ref="message:Value"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Name" type="xs:NCName"/>
+  <xs:element name="Value" type="xs:NMTOKEN"/>
+  <xs:element name="Payload">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="req:RequestItems"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

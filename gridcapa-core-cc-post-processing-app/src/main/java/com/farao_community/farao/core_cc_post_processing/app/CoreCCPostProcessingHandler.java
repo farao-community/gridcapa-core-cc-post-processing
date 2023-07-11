@@ -9,7 +9,7 @@ package com.farao_community.farao.core_cc_post_processing.app;
 import com.farao_community.farao.core_cc_post_processing.app.configuration.CoreCCPostProcessingConfiguration;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCFileResource;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInvalidDataException;
-import com.farao_community.farao.core_cc_post_processing.app.services.FileUtils;
+import com.farao_community.farao.core_cc_post_processing.app.util.FileUtils;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
@@ -61,13 +61,7 @@ public class CoreCCPostProcessingHandler {
             LocalDate localDate = taskDtoUpdated.getTimestamp().toLocalDate();
             if (checkIfAllHourlyTasksAreFinished(localDate)) {
                 Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
-                taskDtoForBusinessDate.forEach(taskDto -> {
-                    LOGGER.info(taskDto.getTimestamp().toString());
-                    LOGGER.info(taskDto.getStatus().toString());
-                    LOGGER.info(taskDto.getId().toString());
-                });
-                postProcessingService.processTasks(localDate, taskDtoForBusinessDate);
-                LOGGER.info("YAY! {} tasks found", taskDtoForBusinessDate.size());
+                postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
             }
         }
     }
@@ -79,7 +73,6 @@ public class CoreCCPostProcessingHandler {
         try {
             ResponseEntity<TaskDto[]> responseEntity = restTemplateBuilder.build().getForEntity(requestUrl, TaskDto[].class);
             if (responseEntity.getBody() != null && responseEntity.getStatusCode() == HttpStatus.OK) {
-                LOGGER.info(responseEntity.toString());
                 return new HashSet<>(Arrays.asList(responseEntity.getBody()));
             }
         } catch (Exception e) {
@@ -106,8 +99,29 @@ public class CoreCCPostProcessingHandler {
         return false;
     }
 
+    public List<byte[]> getLogsForTask(Set<TaskDto> taskList) {
+        List<byte[]> logList = new ArrayList<>();
+        taskList.forEach(taskDto -> {
+            String offsetDateTime = taskDto.getTimestamp().toString();
+            String requestUrl = getUrlToExportTaskLog(offsetDateTime);
+            try {
+                ResponseEntity<byte[]> responseEntity = restTemplateBuilder.build().getForEntity(requestUrl, byte[].class);
+                if (responseEntity.getBody() != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                    logList.add(Objects.requireNonNull(responseEntity.getBody()));
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error while getting log for timestamp {}.", offsetDateTime, e);
+            }
+        });
+        return logList;
+    }
+
     private String getUrlToCheckAllTasksOfTheDayAreOver(LocalDate localDate) {
         return coreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl() + localDate + "/allOver";
+    }
+
+    private String getUrlToExportTaskLog(String offsetDateTime) {
+        return coreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl() + offsetDateTime + "/log";
     }
 
     private static Optional<ProcessFileDto> getProcessFile(TaskDto taskDto, String fileType) {

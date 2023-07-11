@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <xs:import namespace="http://www.w3.org/2001/XMLSchema-instance"/>
+  <xs:element name="GSKDocument">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="DocumentIdentification"/>
+        <xs:element ref="DocumentVersion"/>
+        <xs:element ref="DocumentType"/>
+        <xs:element ref="ProcessType"/>
+        <xs:element ref="SenderIdentification"/>
+        <xs:element ref="SenderRole"/>
+        <xs:element ref="ReceiverIdentification"/>
+        <xs:element ref="ReceiverRole"/>
+        <xs:element ref="CreationDateTime"/>
+        <xs:element ref="GSKTimeInterval"/>
+        <xs:element ref="Domain"/>
+        <xs:element maxOccurs="unbounded" ref="GSKSeries"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DocumentIdentification">
+    <xs:complexType>
+      <xs:attribute name="v" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DocumentVersion">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:integer"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="DocumentType">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ProcessType">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SenderIdentification">
+    <xs:complexType>
+      <xs:attribute name="codingScheme" use="required" type="xs:NCName"/>
+      <xs:attribute name="v" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="SenderRole">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ReceiverIdentification">
+    <xs:complexType>
+      <xs:attribute name="codingScheme" use="required" type="xs:NCName"/>
+      <xs:attribute name="v" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ReceiverRole">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="CreationDateTime">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:dateTime"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GSKTimeInterval">
+    <xs:complexType>
+      <xs:attribute name="v" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Domain">
+    <xs:complexType>
+      <xs:attribute name="codingScheme" use="required" type="xs:NCName"/>
+      <xs:attribute name="v" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GSKSeries">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="TimeSeriesIdentification"/>
+        <xs:element ref="BusinessType"/>
+        <xs:element ref="Area"/>
+        <xs:element maxOccurs="unbounded" ref="ManualGSK_Block"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="TimeSeriesIdentification">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="BusinessType">
+    <xs:complexType>
+      <xs:attribute name="share" use="required" type="xs:integer"/>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Area">
+    <xs:complexType>
+      <xs:attribute name="codingScheme" use="required" type="xs:NCName"/>
+      <xs:attribute name="v" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ManualGSK_Block">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="GSK_Name"/>
+        <xs:element ref="TimeInterval"/>
+        <xs:element maxOccurs="unbounded" ref="ManualNodes"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="GSK_Name">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="TimeInterval">
+    <xs:complexType>
+      <xs:attribute name="v" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ManualNodes">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="NodeName"/>
+        <xs:element minOccurs="0" ref="Factor"/>
+        <xs:element ref="Status"/>
+        <xs:choice minOccurs="0">
+          <xs:element ref="ActiveGen"/>
+          <xs:element ref="InitActiveLoad"/>
+        </xs:choice>
+        <xs:element minOccurs="0" ref="ActualGSK"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="NodeName">
+    <xs:complexType>
+      <xs:attribute name="v" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Factor">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Status">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ActiveGen">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="InitActiveLoad">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ActualGSK">
+    <xs:complexType>
+      <xs:attribute name="v" use="required" type="xs:decimal"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,233 @@
+/*
+ * Copyright (c) 2021, RTE (http://www.rte-france.com)
+ */
+package com.farao_community.farao.core_cc_post_processing.app.services;
+
+import com.farao_community.farao.core_cc_post_processing.app.util.XmlOutputsUtil;
+import com.farao_community.farao.data.crac_creation.creator.fb_constraint.FbConstraint;
+import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.*;
+import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.etso.*;
+
+import javax.xml.datatype.XMLGregorianCalendar;
+import java.time.OffsetDateTime;
+import java.util.*;
+
+/**
+ * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
+ * @author Mohamed BenRejeb {@literal <mohamed.ben-rejeb at rte-france.com>}
+ */
+class DailyF303Clusterizer {
+
+    private final List<HourlyF303Info> hourlyF303Infos;
+    private final FbConstraint nativeCrac;
+    private static final int DOCUMENT_VERSION = 1;
+    private static final MessageTypeList DOCUMENT_TYPE = MessageTypeList.B_07;
+
+    private static final Comparator<CriticalBranchType> CRITICAL_BRANCH_COMPARATOR =
+            Comparator.comparing(DailyF303Clusterizer::getOriginalIdOrId)
+                    .thenComparing((CriticalBranchType cb) -> getStartTime(cb.getTimeInterval()))
+                    .thenComparing((CriticalBranchType cb) -> getEndTime(cb.getTimeInterval()));
+
+    private static final Comparator<IndependantComplexVariant> COMPLEX_VARIANT_COMPARATOR =
+            Comparator.comparing(IndependantComplexVariant::getId)
+                    .thenComparing((IndependantComplexVariant icv) -> getStartTime(icv.getTimeInterval()))
+                    .thenComparing((IndependantComplexVariant icv) -> getEndTime(icv.getTimeInterval()));
+
+    DailyF303Clusterizer(List<HourlyF303Info> hourlyF303Infos, FbConstraint nativeCrac) {
+        this.hourlyF303Infos = hourlyF303Infos;
+        this.nativeCrac = nativeCrac;
+    }
+
+    FlowBasedConstraintDocument generateClusterizedDocument() {
+
+        /*
+        possible improvement to optimize F303 size: cluster complexVariants with exactly the same RA
+         */
+
+        List<IndependantComplexVariant> complexVariantsList = getComplexVariants();
+        List<CriticalBranchType> criticalBranchesList = clusterCriticalBranches();
+        return generateDailyFbDocument(criticalBranchesList, complexVariantsList);
+    }
+
+    private List<IndependantComplexVariant> getComplexVariants() {
+        List<IndependantComplexVariant> independentComplexVariants = new ArrayList<>();
+        for (HourlyF303Info hourlyInfos : hourlyF303Infos) {
+            independentComplexVariants.addAll(hourlyInfos.getComplexVariants());
+        }
+
+        independentComplexVariants.sort(COMPLEX_VARIANT_COMPARATOR);
+
+        return independentComplexVariants;
+    }
+
+    private List<CriticalBranchType> clusterCriticalBranches() {
+
+        List<CriticalBranchType> criticalBranchTypeList = new ArrayList<>();
+
+        Map<String, List<CriticalBranchType>> criticalBranchesById = arrangeCriticalBranchesById();
+        for (Map.Entry<String, List<CriticalBranchType>> entry : criticalBranchesById.entrySet()) {
+            entry.getValue().sort(CRITICAL_BRANCH_COMPARATOR);
+        }
+
+        criticalBranchesById.forEach((key, cbs) -> {
+            List<CriticalBranchType> mergedCbs = mergeCriticalBranches(cbs);
+            criticalBranchesById.put(key, mergedCbs);
+        });
+        for (List<CriticalBranchType> cbt : criticalBranchesById.values()) {
+            criticalBranchTypeList.addAll(cbt);
+        }
+
+        criticalBranchTypeList.sort(CRITICAL_BRANCH_COMPARATOR);
+        return criticalBranchTypeList;
+    }
+
+    private FlowBasedConstraintDocument generateDailyFbDocument(List<CriticalBranchType> criticalBranches, List<IndependantComplexVariant> independentComplexVariants) {
+        FlowBasedConstraintDocument fbDoc = nativeCrac.getDocument();
+        updateHeader(fbDoc);
+        fbDoc.getCriticalBranches().getCriticalBranch().clear();
+        fbDoc.getComplexVariants().getComplexVariant().clear();
+        CriticalBranchesType criticalBranchesType = new CriticalBranchesType();
+        criticalBranchesType.getCriticalBranch().addAll(criticalBranches);
+        fbDoc.setCriticalBranches(criticalBranchesType);
+        ComplexVariantsType complexVariantsType = new ComplexVariantsType();
+        complexVariantsType.getComplexVariant().addAll(independentComplexVariants);
+        fbDoc.setComplexVariants(complexVariantsType);
+        return fbDoc;
+    }
+
+    private static List<CriticalBranchType> mergeCriticalBranches(List<CriticalBranchType> cbs) {
+        List<CriticalBranchType> mergedList = new ArrayList<>();
+        int i = 0;
+        int j;
+        while (i < cbs.size()) {
+            for (j = i + 1; j < cbs.size(); ++j) {
+                if (canBeMerged(cbs.get(i), cbs.get(j))) {
+                    updateTimeInterval(cbs.get(i), cbs.get(j));
+                } else {
+                    break;
+                }
+            }
+            mergedList.add(cbs.get(i));
+            i = j;
+        }
+        return mergedList;
+    }
+
+    private static boolean canBeMerged(CriticalBranchType headBranch, CriticalBranchType tailBranch) {
+        // If they have the same ID
+        if (!headBranch.getId().equals(tailBranch.getId())) {
+            return false;
+        }
+
+        // Check that timestamps are consecutive
+        if (!getEndTime(headBranch.getTimeInterval()).isEqual(getStartTime(tailBranch.getTimeInterval()))) {
+            return false;
+        }
+
+        // Check that the applied CRAs are the same between the two timestamps
+        if ((headBranch.getComplexVariantId() == null && tailBranch.getComplexVariantId() != null)
+                || (headBranch.getComplexVariantId() != null && tailBranch.getComplexVariantId() == null)
+                || (headBranch.getComplexVariantId() != null && tailBranch.getComplexVariantId() != null && !headBranch.getComplexVariantId().equals(tailBranch.getComplexVariantId()))) {
+            return false;
+        }
+
+        // Check that the branch has not changed between the two timestamps (can occur if it was initially duplicated in the F301)
+        return areCriticalBranchesEquivalent(headBranch, tailBranch);
+    }
+
+    private Map<String, List<CriticalBranchType>> arrangeCriticalBranchesById() {
+        Map<String, List<CriticalBranchType>> criticalBranchesById = new HashMap<>();
+        for (HourlyF303Info hourlyInfos : hourlyF303Infos) {
+            for (CriticalBranchType cb : hourlyInfos.getCriticalBranches()) {
+                String cbId = cb.getId();
+                if (criticalBranchesById.containsKey(cbId)) {
+                    criticalBranchesById.get(cbId).add(cb);
+                } else {
+                    List<CriticalBranchType> cbs = new ArrayList<>();
+                    cbs.add(cb);
+                    criticalBranchesById.put(cbId, cbs);
+                }
+            }
+        }
+        return criticalBranchesById;
+    }
+
+    private static void updateHeader(FlowBasedConstraintDocument fbDoc) {
+        // Identification
+        IdentificationType identificationType = fbDoc.getDocumentIdentification();
+        String senderString = fbDoc.getReceiverIdentification().getV();
+        String dateString = fbDoc.getConstraintTimeInterval().getV().split("/")[1].substring(0, 10).replace("-", "");
+        String documentId = String.format("%s-%s-F303v%s", senderString, dateString, DOCUMENT_VERSION);
+        identificationType.setV(documentId);
+        fbDoc.setDocumentIdentification(identificationType);
+
+        // Version & co
+        VersionType versionType = fbDoc.getDocumentVersion();
+        versionType.setV(DOCUMENT_VERSION);
+        fbDoc.setDocumentVersion(versionType);
+        MessageType messageType = fbDoc.getDocumentType();
+        messageType.setV(DOCUMENT_TYPE);
+        fbDoc.setDocumentType(messageType);
+        ProcessType processType = fbDoc.getProcessType();
+        processType.setV(processType.getV());
+        fbDoc.setProcessType(processType);
+
+        // Invert sender & receiver
+        PartyType rev = (PartyType) fbDoc.getSenderIdentification().clone();
+        PartyType sender = (PartyType) fbDoc.getReceiverIdentification().clone();
+        fbDoc.setReceiverIdentification(rev);
+        fbDoc.setSenderIdentification(sender);
+        RoleType revRoleType = (RoleType) fbDoc.getSenderRole().clone();
+        RoleType senderRoleType = (RoleType) fbDoc.getReceiverRole().clone();
+        fbDoc.setReceiverRole(revRoleType);
+        fbDoc.setSenderRole(senderRoleType);
+
+        // DateTime
+        MessageDateTimeType messageDateTimeType = new MessageDateTimeType();
+        XMLGregorianCalendar xmlGregorianCalendar = XmlOutputsUtil.getXMLGregorianCurrentTime();
+        messageDateTimeType.setV(xmlGregorianCalendar);
+        fbDoc.setCreationDateTime(messageDateTimeType);
+        fbDoc.setConstraintTimeInterval(fbDoc.getConstraintTimeInterval());
+        fbDoc.setDomain(fbDoc.getDomain());
+    }
+
+    private static void updateTimeInterval(CriticalBranchType headBranch, CriticalBranchType tailBranch) {
+        OffsetDateTime start = getStartTime(headBranch.getTimeInterval());
+        OffsetDateTime end = getEndTime(tailBranch.getTimeInterval());
+        TimeIntervalType timeIntervalType = new TimeIntervalType();
+        String timeIntervalString = start.toString() + "/" + end.toString();
+        timeIntervalType.setV(timeIntervalString);
+        headBranch.setTimeInterval(timeIntervalType);
+    }
+
+    private static OffsetDateTime getStartTime(TimeIntervalType timeIntervalType) {
+        String[] timeInterval = timeIntervalType.getV().split("/");
+        return OffsetDateTime.parse(timeInterval[0]);
+    }
+
+    private static OffsetDateTime getEndTime(TimeIntervalType timeIntervalType) {
+        String[] timeInterval = timeIntervalType.getV().split("/");
+        return OffsetDateTime.parse(timeInterval[1]);
+    }
+
+    private static String getOriginalIdOrId(CriticalBranchType cb) {
+        if (!Objects.isNull(cb.getOriginalId())) {
+            return cb.getOriginalId();
+        } else {
+            return cb.getId();
+        }
+    }
+
+    private static boolean areCriticalBranchesEquivalent(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.getBranch().equals(cb2.getBranch())
+                && ((cb1.getImaxFactor() == null && cb2.getImaxFactor() == null) || (cb1.getImaxFactor() != null && cb2.getImaxFactor() != null && Math.abs(cb1.getImaxFactor().doubleValue() - cb2.getImaxFactor().doubleValue()) < 1e-6))
+                && ((cb1.getImaxA() == null && cb2.getImaxA() == null) || (cb1.getImaxA() != null && cb2.getImaxA() != null && Math.abs(cb1.getImaxA().doubleValue() - cb2.getImaxA().doubleValue()) < 1e-6))
+                && ((cb1.getMinRAMfactor() == null && cb2.getMinRAMfactor() == null) || (cb1.getMinRAMfactor() != null && cb2.getMinRAMfactor() != null && Math.abs(cb1.getMinRAMfactor().doubleValue() - cb2.getMinRAMfactor().doubleValue()) < 1e-6))
+                && ((cb1.getOutage() == null && cb2.getOutage() == null) || (cb1.getOutage() != null && cb2.getOutage() != null && cb1.getOutage().equals(cb2.getOutage())))
+                && ((cb1.getDirection() == null && cb2.getDirection() == null) || (cb1.getDirection() != null && cb2.getDirection() != null && cb1.getDirection().equals(cb2.getDirection())))
+                && ((cb1.getTsoOrigin() == null && cb2.getTsoOrigin() == null) || (cb1.getTsoOrigin() != null && cb2.getTsoOrigin() != null && cb1.getTsoOrigin().equals(cb2.getTsoOrigin())))
+                && Math.abs(cb1.getFrmMw() - cb2.getFrmMw()) < 1e-6
+                && ((cb1.isMNEC() && cb2.isMNEC()) || (!cb1.isMNEC() && !cb2.isMNEC()))
+                && ((cb1.isCNEC() && cb2.isCNEC()) || (!cb1.isCNEC() && !cb2.isCNEC()));
+    }
+}
