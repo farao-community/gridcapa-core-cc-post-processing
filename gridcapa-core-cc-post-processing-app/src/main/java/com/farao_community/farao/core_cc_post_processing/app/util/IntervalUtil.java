@@ -1,23 +1,25 @@
 /*
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
-import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import org.threeten.extra.Interval;
 
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
  * @author Mohamed BenRejeb {@literal <mohamed.ben-rejeb at rte-france.com>}
+ * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
+ * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 public final class IntervalUtil {
 
@@ -41,19 +43,6 @@ public final class IntervalUtil {
         return positionsMap;
     }
 
-    public static int getInstantPosition(String instant, String interval) {
-        Map<Integer, Interval> positionsMap = getPositionsMap(interval);
-        return positionsMap.entrySet().stream()
-            .filter(entry -> entry.getValue().contains(Instant.parse(instant)))
-            .findFirst()
-            .orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("Instant %s not found in interval %s", instant, interval)))
-            .getKey();
-    }
-
-    public static String getTsMiddleOfHourlyInterval(Interval interval) {
-        return interval.getStart().plus(30, ChronoUnit.MINUTES).toString();
-    }
-
     public static String getCurrentTimeInterval(OffsetDateTime timestamp) {
         OffsetDateTime startTime = timestamp.minusMinutes(timestamp.getMinute());
         OffsetDateTime endTime = startTime.plusHours(1L);
@@ -68,29 +57,11 @@ public final class IntervalUtil {
         return !offsetDateTime.isBefore(startTimeBranch) && offsetDateTime.isBefore(endTimeBranch);
     }
 
-    public static OffsetDateTime getBusinessDay(String timeInterval) {
-        return OffsetDateTime.parse(timeInterval.split("/")[1]).withHour(0);
-    }
-
-    public static String getFormattedBusinessDay(String timeInterval, String format) {
-        return DateTimeFormatter.ofPattern(format).format(getBusinessDay(timeInterval));
-    }
-
     public static String getFormattedBusinessDay(LocalDate localDate, String format) {
         return DateTimeFormatter.ofPattern(format).format(localDate);
     }
 
-    public static String getFormattedBusinessDay(String timeInterval) {
-        return getFormattedBusinessDay(timeInterval, "yyyyMMdd");
-    }
-
     public static String getFormattedBusinessDay(LocalDate localDate) {
         return getFormattedBusinessDay(localDate, "yyyyMMdd");
-    }
-
-    public static Interval getInterval(LocalDate localDate) {
-        Instant startOfDay = localDate.atStartOfDay().toInstant(ZoneOffset.UTC);
-        Instant endOfDay = startOfDay.plus(1, ChronoUnit.DAYS);
-        return Interval.of(startOfDay, endOfDay);
     }
 }

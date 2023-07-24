@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
@@ -17,6 +20,8 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * @author Mohamed BenRejeb {@literal <mohamed.ben-rejeb at rte-france.com>}
+ * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
+ * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 public final class ZipUtil {
 
@@ -27,57 +32,6 @@ public final class ZipUtil {
 
     private ZipUtil() {
         throw new AssertionError("Utility class should not be instantiated");
-    }
-
-    public static void unzipFile(Path zipFilePath, Path destDirectory) {
-        if (!destDirectory.toFile().exists() && !destDirectory.toFile().mkdir()) {
-            LOGGER.error("Cannot create destination directory '{}'", destDirectory);
-            throw new CoreCCPostProcessingInternalException(String.format("Cannot create destination directory '%s'", destDirectory));
-        }
-        try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath.toFile()))) {
-            ZipEntry entry = zipIn.getNextEntry(); //NOSONAR
-            int totalEntries = 0;
-            // iterates over entries in the zip file
-            while (entry != null) {
-                totalEntries++;
-                Path filePath = Path.of(destDirectory + File.separator + entry.getName()).normalize();
-                if (!filePath.startsWith(destDirectory)) {
-                    throw new IOException("Entry is outside of the target directory");
-                }
-                if (!entry.isDirectory()) {
-                    // if the entry is a file, extracts it
-                    extractFile(zipIn, filePath.toString(), entry.getCompressedSize());
-                } else {
-                    // if the entry is a directory, make the directory
-                    File dir = new File(filePath.toString()); //NOSONAR
-                    dir.mkdir();
-                }
-                zipIn.closeEntry();
-                entry = zipIn.getNextEntry(); //NOSONAR
-                if (totalEntries > THRESHOLD_ENTRIES) {
-                    throw new IOException("Entry threshold reached while unzipping.");
-                }
-            }
-        } catch (IOException e) {
-            LOGGER.error("Error while extracting file '{}'", zipFilePath.getFileName());
-            throw new CoreCCPostProcessingInternalException(String.format("Error while extracting file '%s'", zipFilePath.getFileName()), e);
-        }
-    }
-
-    private static void extractFile(ZipInputStream zipIn, String filePath, long compressedSize) throws IOException {
-        float totalSizeEntry = 0;
-        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath))) { //NOSONAR
-            byte[] bytesIn = new byte[BUFFER_SIZE];
-            int read;
-            while ((read = zipIn.read(bytesIn)) != -1) {
-                bos.write(bytesIn, 0, read);
-                totalSizeEntry += read;
-                double compressionRatio = totalSizeEntry / compressedSize;
-                if (compressionRatio > THRESHOLD_RATIO) {
-                    throw new IOException("Ratio between compressed and uncompressed data suspiciously large.");
-                }
-            }
-        }
     }
 
     public static void deletePath(Path path) {

@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
@@ -26,6 +29,7 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
 /**
  * @author Peter Mitri {@literal <peter.mitri at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
+ * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  */
 public class CoreCCMetadataGenerator {
 
@@ -41,7 +45,7 @@ public class CoreCCMetadataGenerator {
 
     public void exportMetadataFile(String targetMinioFolder, List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
         byte[] csv = generateMetadataCsv(metadataList, macroMetadata).getBytes();
-        String metadataFileName = generateMetadataFileName(macroMetadata.getInstant(), macroMetadata.getVersion());
+        String metadataFileName = generateMetadataFileName(macroMetadata.getRaoRequestInstant(), macroMetadata.getVersion());
         String metadataDestinationPath = generateOutputsDestinationPath(targetMinioFolder, metadataFileName);
 
         try (InputStream csvIs = new ByteArrayInputStream(csv)) {

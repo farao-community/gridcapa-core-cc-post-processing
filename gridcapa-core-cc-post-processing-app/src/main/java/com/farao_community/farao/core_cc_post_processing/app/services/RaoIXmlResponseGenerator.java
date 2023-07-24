@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
@@ -8,9 +11,9 @@ import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_respons
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
-import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
+import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.HourlyRaoResult;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.springframework.stereotype.Service;
@@ -36,10 +39,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
  * @author Mohamed Ben Rejeb {@literal <mohamed.ben-rejeb at rte-france.com>}
+ * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
+ * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 @Service
 public class RaoIXmlResponseGenerator {
@@ -58,21 +64,21 @@ public class RaoIXmlResponseGenerator {
         this.minioAdapter = minioAdapter;
     }
 
-    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId, Map<TaskDto, ProcessFileDto> metadatas) {
+    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateRaoResponseHeader(responseMessage, localDate, correlationId);
-            generateRaoResponsePayLoad(taskDtos, responseMessage, localDate);
+            generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap);
             exportRaoIntegrationResponse(responseMessage, targetMinioFolder, localDate);
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Error occurred during Rao Integration Response file creation", e);
         }
     }
 
-    public void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate) {
+    public void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate, String correlationId) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
-            generateCgmXmlHeaderFileHeader(responseMessage, localDate);
+            generateCgmXmlHeaderFileHeader(responseMessage, localDate, correlationId);
             generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage);
             exportCgmXmlHeaderFile(responseMessage, cgmsTempDirPath);
         } catch (Exception e) {
@@ -80,7 +86,6 @@ public class RaoIXmlResponseGenerator {
         }
     }
 
-    // Attention, erreur de checkstyle
     void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
@@ -97,7 +102,7 @@ public class RaoIXmlResponseGenerator {
         responseMessage.setHeader(header);
     }
 
-    void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate) throws DatatypeConfigurationException {
+    void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
         header.setNoun("OptimizedCommonGridModel");
@@ -106,7 +111,7 @@ public class RaoIXmlResponseGenerator {
         header.setSource(SENDER_ID);
         header.setReplyAddress(RECEIVER_ID);
         header.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(Instant.now().toString()));
-        //TODO:header.setCorrelationID(taskDto.getCorrelationId());
+        header.setCorrelationID(correlationId);
 
         //need to save this MessageID and reuse in rao response
         String outputCgmXmlHeaderMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
@@ -120,7 +125,7 @@ public class RaoIXmlResponseGenerator {
         return String.format("%s/%s", formatter.format(interval.getStart()), formatter.format(interval.getEnd()));
     }
 
-    void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate) {
+    void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(IntervalUtil.getFormattedBusinessDay(localDate));
         taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
@@ -132,7 +137,7 @@ public class RaoIXmlResponseGenerator {
                     responseItem.setTimeInterval(formatInterval(interval));
 
                     if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
-                        fillFailedHours(taskDto, responseItem);
+                        fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
                     } else if (taskDto.getStatus().equals(TaskStatus.RUNNING)) {
                         fillRunningHours(responseItem);
                     } else {
@@ -204,10 +209,6 @@ public class RaoIXmlResponseGenerator {
         responseMessage.setPayload(payload);
     }
 
-    private Instant parseInstantWithoutSeconds(String instant) {
-        return Instant.parse(instant.replace(":00Z", ":00:00Z"));
-    }
-
     private void fillMissingCgmInput(ResponseItem responseItem) {
         ErrorType error = new ErrorType();
         error.setCode("NOT_AVAILABLE");
@@ -215,11 +216,11 @@ public class RaoIXmlResponseGenerator {
         responseItem.setError(error);
     }
 
-    private void fillFailedHours(TaskDto taskDto, ResponseItem responseItem) {
+    private void fillFailedHours(ResponseItem responseItem, String errorCode, String errorMessage) {
         ErrorType error = new ErrorType();
-        //TODO:error.setCode(taskDto.getErrorCodeString());
+        error.setCode(errorCode);
         error.setLevel("FATAL");
-        //TODO:error.setReason(taskDto.getErrorMessage());
+        error.setReason(errorMessage);
         responseItem.setError(error);
     }
 

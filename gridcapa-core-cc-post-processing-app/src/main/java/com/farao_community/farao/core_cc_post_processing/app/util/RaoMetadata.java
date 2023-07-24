@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
@@ -5,6 +11,10 @@ import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPos
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
+ * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
+ */
 public class RaoMetadata {
     String raoRequestFileName;
     String timeInterval;
@@ -14,7 +24,8 @@ public class RaoMetadata {
     int version;
     String computationStartInstant;
     String computationEndInstant;
-    String instant;
+    String raoRequestInstant;
+    String correlationId;
 
     public enum Indicator {
         RAO_REQUESTS_RECEIVED("RAO requests received", 1), // per BD
@@ -77,6 +88,14 @@ public class RaoMetadata {
         this.timeInterval = timeInterval;
     }
 
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+    }
+
     public String getRaoRequestFileName() {
         return raoRequestFileName;
     }
@@ -133,11 +152,11 @@ public class RaoMetadata {
         this.version = version;
     }
 
-    public String getInstant() {
-        return instant;
+    public String getRaoRequestInstant() {
+        return raoRequestInstant;
     }
 
-    public void setInstant(String instant) {
-        this.instant = instant;
+    public void setRaoRequestInstant(String raoRequestInstant) {
+        this.raoRequestInstant = raoRequestInstant;
     }
 }

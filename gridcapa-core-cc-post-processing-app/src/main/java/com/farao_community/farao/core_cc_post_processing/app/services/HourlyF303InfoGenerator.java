@@ -1,10 +1,12 @@
 /*
- * Copyright (c) 2021, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import com.farao_community.farao.core_cc_post_processing.app.util.CracHelper;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.data.crac_api.Crac;
 import com.farao_community.farao.data.crac_api.Instant;
@@ -15,6 +17,7 @@ import com.farao_community.farao.data.crac_api.range_action.PstRangeAction;
 import com.farao_community.farao.data.crac_api.range_action.RangeAction;
 import com.farao_community.farao.data.crac_creation.creator.api.CracCreationContext;
 import com.farao_community.farao.data.crac_creation.creator.api.ImportStatus;
+import com.farao_community.farao.data.crac_creation.creator.api.parameters.CracCreationParameters;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.FbConstraint;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.crac_creator.FbConstraintCracCreator;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.crac_creator.FbConstraintCreationContext;
@@ -44,6 +47,8 @@ import java.util.stream.Collectors;
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
  * @author Mohamed BenRejeb {@literal <mohamed.ben-rejeb at rte-france.com>}
  * @author Baptiste Seguinot {@literal <baptiste.seguinot at rte-france.com}
+ * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
+ * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 class HourlyF303InfoGenerator {
 
@@ -92,7 +97,7 @@ class HourlyF303InfoGenerator {
     private HourlyF303Info getInfoForSuccessfulInterval() {
 
         Network network = getNetworkOfTaskDto();
-        FbConstraintCreationContext cracCreationContext = new FbConstraintCracCreator().createCrac(nativeCrac, network, taskDto.getTimestamp(), CracHelper.getCracCreationParameters());
+        FbConstraintCreationContext cracCreationContext = new FbConstraintCracCreator().createCrac(nativeCrac, network, taskDto.getTimestamp(), getCracCreationParameters());
         RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac());
 
         Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());
@@ -350,5 +355,11 @@ class HourlyF303InfoGenerator {
             }
         }
         return nativeVariants;
+    }
+
+    private static CracCreationParameters getCracCreationParameters() {
+        CracCreationParameters parameters = CracCreationParameters.load();
+        parameters.setDefaultMonitoredLineSide(CracCreationParameters.MonitoredLineSide.MONITOR_LINES_ON_LEFT_SIDE);
+        return parameters;
     }
 }
