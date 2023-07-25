@@ -13,6 +13,7 @@ import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileName
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
+import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInvalidDataException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.HourlyRaoResult;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
@@ -50,6 +51,7 @@ import java.util.UUID;
 @Service
 public class RaoIXmlResponseGenerator {
 
+    public static final String F304_PATH = "%s-%s-F304v%s";
     private final MinioAdapter minioAdapter;
     public static final String OPTIMIZED_CGM = "OPTIMIZED_CGM";
     public static final String OPTIMIZED_CB = "OPTIMIZED_CB";
@@ -114,7 +116,7 @@ public class RaoIXmlResponseGenerator {
         header.setCorrelationID(correlationId);
 
         //need to save this MessageID and reuse in rao response
-        String outputCgmXmlHeaderMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+        String outputCgmXmlHeaderMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
         header.setMessageID(outputCgmXmlHeaderMessageId);
 
         responseMessage.setHeader(header);
@@ -137,6 +139,9 @@ public class RaoIXmlResponseGenerator {
                     responseItem.setTimeInterval(formatInterval(interval));
 
                     if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
+                        if (!metadataMap.containsKey(taskDto.getId())) {
+                            throw new CoreCCInvalidDataException("Wrong task id in metadataMap");
+                        }
                         fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
                     } else if (taskDto.getStatus().equals(TaskStatus.RUNNING)) {
                         fillRunningHours(responseItem);
@@ -146,13 +151,13 @@ public class RaoIXmlResponseGenerator {
                         com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
 
                         file.setCode(OPTIMIZED_CGM);
-                        String outputCgmXmlHeaderMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        String outputCgmXmlHeaderMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
                         file.setUrl(DOCUMENT_IDENTIFICATION + outputCgmXmlHeaderMessageId); //MessageID of the CGM F304 zip (from header file)
                         files.getFile().add(file);
 
                         com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
                         file1.setCode(OPTIMIZED_CB);
-                        String outputFlowBasedConstraintDocumentMessageId = String.format("%s-%s-F304v%s", SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        String outputFlowBasedConstraintDocumentMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
                         file1.setUrl(DOCUMENT_IDENTIFICATION + outputFlowBasedConstraintDocumentMessageId); //MessageID of the f303
                         files.getFile().add(file1);
 

@@ -24,10 +24,6 @@ import java.util.zip.ZipOutputStream;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 public final class ZipUtil {
-
-    private static final int BUFFER_SIZE = 4096;
-    private static final double THRESHOLD_RATIO = 100;
-    private static final int THRESHOLD_ENTRIES = 10000;
     private static final Logger LOGGER = LoggerFactory.getLogger(ZipUtil.class);
 
     private ZipUtil() {
@@ -46,7 +42,6 @@ public final class ZipUtil {
         try (ByteArrayOutputStream os = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(os)) {
             recursiveZip(inputDirectory, zos, inputDirectory);
-            zos.close();
             return os.toByteArray();
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while compressing directory '%s'", inputDirectory), e);

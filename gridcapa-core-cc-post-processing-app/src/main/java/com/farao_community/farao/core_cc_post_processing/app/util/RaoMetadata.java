@@ -69,15 +69,15 @@ public class RaoMetadata {
     }
 
     public static String getFirstInstant(Set<String> instantSet) {
-        TreeSet ts = new TreeSet();
+        TreeSet<String> ts = new TreeSet<>();
         ts.addAll(instantSet);
-        return ts.first().toString();
+        return ts.first();
     }
 
     public static String getLastInstant(Set<String> instantSet) {
-        TreeSet ts = new TreeSet();
+        TreeSet<String> ts = new TreeSet<>();
         ts.addAll(instantSet);
-        return ts.last().toString();
+        return ts.last();
     }
 
     public String getTimeInterval() {

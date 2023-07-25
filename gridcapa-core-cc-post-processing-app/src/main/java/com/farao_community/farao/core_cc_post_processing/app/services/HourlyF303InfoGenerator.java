@@ -334,9 +334,7 @@ class HourlyF303InfoGenerator {
         Map<String, CriticalBranchType> nativeCbs = new HashMap<>();
 
         for (CriticalBranchType cb : nativeCrac.getDocument().getCriticalBranches().getCriticalBranch()) {
-            if (!nativeCbs.containsKey(cb.getId())) {
-                nativeCbs.put(cb.getId(), cb);
-            } else if (IntervalUtil.isInTimeInterval(offsetDateTime, cb.getTimeInterval().getV())) {
+            if (!nativeCbs.containsKey(cb.getId()) || IntervalUtil.isInTimeInterval(offsetDateTime, cb.getTimeInterval().getV())) {
                 nativeCbs.put(cb.getId(), cb);
             }
         }
@@ -348,9 +346,7 @@ class HourlyF303InfoGenerator {
         Map<String, IndependantComplexVariant> nativeVariants = new HashMap<>();
 
         for (IndependantComplexVariant cv : nativeCrac.getDocument().getComplexVariants().getComplexVariant()) {
-            if (!nativeVariants.containsKey(cv.getId())) {
-                nativeVariants.put(cv.getId(), cv);
-            } else if (IntervalUtil.isInTimeInterval(offsetDateTime, cv.getTimeInterval().getV())) {
+            if (!nativeVariants.containsKey(cv.getId()) || IntervalUtil.isInTimeInterval(offsetDateTime, cv.getTimeInterval().getV())) {
                 nativeVariants.put(cv.getId(), cv);
             }
         }
