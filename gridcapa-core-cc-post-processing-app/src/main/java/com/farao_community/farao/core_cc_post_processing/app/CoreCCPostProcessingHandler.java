@@ -96,7 +96,7 @@ public class CoreCCPostProcessingHandler {
             LOGGER.error("Error during automatic launch", e);
         }
         LOGGER.warn("Response entity body was null or status was not OK.");
-        return null;
+        return Collections.emptySet();
     }
 
     private String getUrlToCheckAllTasksOfTheDayAreOver(LocalDate localDate) {
