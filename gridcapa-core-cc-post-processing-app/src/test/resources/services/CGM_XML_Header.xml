@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<EventMessage xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://iec.ch/TC57/2011/schema/message" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Header>
+        <Verb>created</Verb>
+        <Noun>OptimizedCommonGridModel</Noun>
+        <Revision>1</Revision>
+        <Context>PRODUCTION</Context>
+        <Timestamp>2023-08-04T13:03:23.900189Z</Timestamp>
+        <Source>22XCORESO------S</Source>
+        <ReplyAddress>17XTSO-CS------W</ReplyAddress>
+        <MessageID>22XCORESO------S-20230804-F304v1</MessageID>
+        <CorrelationID>correlationId</CorrelationID>
+    </Header>
+    <Payload>
+        <ResponseItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://unicorn.com/Response/response-payload" timeInterval="2023-08-04T14:46:00Z/2023-08-04T14:47:00Z">
+            <ResponseItem timeInterval="2023-08-04T14:46Z/2023-08-04T15:46Z">
+                <Files>
+                    <File code="CGM" url="fileName://20230804_1630_2D5_UX1.uct"/>
+                </Files>
+            </ResponseItem>
+        </ResponseItems>
+    </Payload>
+</EventMessage>
