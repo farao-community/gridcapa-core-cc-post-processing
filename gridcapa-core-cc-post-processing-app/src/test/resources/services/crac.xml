@@ -9,11 +9,11 @@
   <ReceiverIdentification codingScheme="A01" v="22XCORESO------S"/>
   <ReceiverRole v="A44"/>
   <CreationDateTime v="2019-08-15T14:07:28Z"/>
-  <ConstraintTimeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+  <ConstraintTimeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
   <Domain codingScheme="A01" v="10YDOM-REGION-1V"/>
   <criticalBranches>
     <criticalBranch id="fr4_de1_N">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <branch eic="1234567890123450" from="FFR4AA1 " name="FFR4AA1  DDE1AA1  1" order="1" to="DDE1AA1 "/>
       <imaxFactor>1</imaxFactor>
       <imaxType>SEASONAL</imaxType>
@@ -27,7 +27,7 @@
       <tsoOrigin>FR</tsoOrigin>
     </criticalBranch>
     <criticalBranch id="nl2_be3_N">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <branch eic="1234567890123450" from="NNL2AA1 " name="NNL2AA1  BBE3AA1  1" order="1" to="BBE3AA1 "/>
       <imaxA>5000</imaxA>
       <imaxType>SEASONAL</imaxType>
@@ -41,7 +41,7 @@
       <tsoOrigin>FR</tsoOrigin>
     </criticalBranch>
     <criticalBranch id="de2_nl3_N">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <branch eic="1234567890123450" from="DDE2AA1 " name="DDE2AA1  NNL3AA1  1" order="1" to="NNL3AA1 "/>
       <imaxFactor>1</imaxFactor>
       <imaxType>SEASONAL</imaxType>
@@ -55,7 +55,7 @@
       <tsoOrigin>FR</tsoOrigin>
     </criticalBranch>
     <criticalBranch id="fr4_de1_CO1">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <branch eic="1234567890123450" from="FFR4AA1 " name="FFR4AA1  DDE1AA1  1" order="1" to="DDE1AA1 "/>
       <imaxFactor>1</imaxFactor>
       <imaxType>SEASONAL</imaxType>
@@ -72,7 +72,7 @@
       </outage>
     </criticalBranch>
     <criticalBranch id="fr3_fr5_CO1 - DIR">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <branch eic="1234567890123450" from="FFR3AA1 " name="FFR3AA1  FFR5AA1  1" order="1" to="FFR5AA1 "/>
       <imaxFactor>0.5</imaxFactor>
       <imaxType>SEASONAL</imaxType>
@@ -89,7 +89,7 @@
       </outage>
     </criticalBranch>
     <criticalBranch id="fr3_fr5_CO1 - OPP">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <branch eic="1234567890123450" from="FFR3AA1 " name="FFR3AA1  FFR5AA1  1" order="1" to="FFR5AA1 "/>
       <imaxFactor>0.5</imaxFactor>
       <imaxType>SEASONAL</imaxType>
@@ -106,7 +106,7 @@
       </outage>
     </criticalBranch>
     <criticalBranch id="fr1_fr4_CO1">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <branch eic="1234567890123450" from="FFR1AA1 " name="FFR1AA1  FFR4AA1  1" order="1" to="FFR4AA1 "/>
       <imaxFactor>1</imaxFactor>
       <imaxType>SEASONAL</imaxType>
@@ -125,7 +125,7 @@
   </criticalBranches>
   <complexVariants>
     <complexVariant id="pst_be" name="pst_be">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <tsoOrigin>BE</tsoOrigin>
       <actionsSet name="pst_be">
         <preventive>false</preventive>
@@ -144,7 +144,7 @@
       </actionsSet>
     </complexVariant>
     <complexVariant id="pst_fr" name="pst_fr">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <tsoOrigin>FR</tsoOrigin>
       <actionsSet name="pst_fr">
         <preventive>true</preventive>
@@ -160,7 +160,7 @@
       </actionsSet>
     </complexVariant>
     <complexVariant id="close_fr1_fr5" name="close_fr1_fr5">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <tsoOrigin>FR</tsoOrigin>
       <actionsSet name="close_fr1_fr5">
         <preventive>true</preventive>
@@ -173,7 +173,7 @@
       </actionsSet>
     </complexVariant>
     <complexVariant id="open_fr1_fr2" name="open_fr1_fr2">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <tsoOrigin>FR</tsoOrigin>
       <actionsSet name="open_fr1_fr2">
         <preventive>true</preventive>
@@ -186,7 +186,7 @@
       </actionsSet>
     </complexVariant>
     <complexVariant id="open_fr1_fr3" name="open_fr1_fr3">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <tsoOrigin>HU</tsoOrigin>
       <actionsSet name="open_fr1_fr3">
         <preventive>false</preventive>
@@ -202,7 +202,7 @@
       </actionsSet>
     </complexVariant>
     <complexVariant id="open_be1_be4" name="open_be1_be4">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <tsoOrigin>HU</tsoOrigin>
       <actionsSet name="open_be1_be4">
         <preventive>true</preventive>
@@ -215,7 +215,7 @@
       </actionsSet>
     </complexVariant>
     <complexVariant id="close_de3_de4" name="close_de3_de4">
-      <timeInterval v="2023-08-07T14:00Z/2023-08-07T15:00Z"/>
+      <timeInterval v="2023-08-21T15:00Z/2023-08-21T16:00Z"/>
       <tsoOrigin>HU</tsoOrigin>
       <actionsSet name="close_de3_de4">
         <preventive>true</preventive>

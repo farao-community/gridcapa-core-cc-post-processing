@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.Utils;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.FbConstraint;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.importer.FbConstraintImporter;
 import com.farao_community.farao.gridcapa.task_manager.api.*;
@@ -22,23 +23,19 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-public class HourlyF303InfoGeneratorTest {
+class HourlyF303InfoGeneratorTest {
 
     private FbConstraint nativeCrac;
-    private Instant instantStart = Instant.parse("2023-08-07T14:50:05Z");
-    private Instant instantEnd = Instant.parse("2023-08-07T14:51:00Z");
-    private Interval interval = Interval.of(instantStart, instantEnd);
+    private final Instant instantStart = Instant.parse("2023-08-21T15:16:00Z");
+    private final Instant instantEnd = Instant.parse("2023-08-21T15:17:00Z");
+    private final Interval interval = Interval.of(instantStart, instantEnd);
     private TaskDto taskDto;
     private MinioAdapter minioAdapter;
     private InputStream networkIS;
@@ -51,46 +48,31 @@ public class HourlyF303InfoGeneratorTest {
     }
 
     private void importCrac() throws FileNotFoundException {
-        Path cracPath = Paths.get(getClass().getResource("/services/crac.xml").getPath());
+        Path cracPath = Paths.get(Objects.requireNonNull(getClass().getResource("/services/crac.xml")).getPath());
         File cracFile = new File(cracPath.toString());
         InputStream cracInputStream = new FileInputStream(cracFile);
         nativeCrac = new FbConstraintImporter().importNativeCrac(cracInputStream);
     }
 
     private void importNetwork() throws FileNotFoundException {
-        Path networkPath = Paths.get(getClass().getResource("/services/network.uct").getPath());
+        Path networkPath = Paths.get(Objects.requireNonNull(getClass().getResource("/services/network.uct")).getPath());
         File networkFile = new File(networkPath.toString());
         networkIS = new FileInputStream(networkFile);
     }
 
     private void importRaoResult() throws FileNotFoundException {
-        Path raoResultPath = Paths.get(getClass().getResource("/services/raoResult.json").getPath());
+        Path raoResultPath = Paths.get(Objects.requireNonNull(getClass().getResource("/services/raoResult.json")).getPath());
         File raoResultFile = new File(raoResultPath.toString());
         raoResultIS = new FileInputStream(raoResultFile);
-    }
-
-    private void initTask() {
-        UUID uuid = UUID.fromString("22711acb-ee59-47ed-b877-3c3688efe820");
-        OffsetDateTime dateTime = OffsetDateTime.of(2023, 8, 7, 16, 30, 00, 0, ZoneId.of("Europe/Brussels").getRules().getOffset(LocalDateTime.now()));
-        List<ProcessFileDto> inputs = List.of();
-        List<ProcessFileDto> outputs = initTaskOutputs(dateTime);
-        List<ProcessEventDto> processEvents = List.of();
-        taskDto = new TaskDto(uuid, dateTime, TaskStatus.SUCCESS, inputs, outputs, processEvents);
-    }
-
-    private List<ProcessFileDto> initTaskOutputs(OffsetDateTime dateTime) {
-        ProcessFileDto raoResultFileDto = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "cne.xml", dateTime);
-        ProcessFileDto cgmFileDto = new ProcessFileDto("/CORE/CC/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", dateTime);
-        return List.of(raoResultFileDto, cgmFileDto);
     }
 
     @Test
     void generate() throws FileNotFoundException {
         importNetwork();
         importRaoResult();
-        initTask();
-        Mockito.doReturn(networkIS).when(minioAdapter).getFile(Mockito.eq("network.uct"));
-        Mockito.doReturn(raoResultIS).when(minioAdapter).getFile(Mockito.eq("raoResult.json"));
+        taskDto = Utils.makeTask(TaskStatus.SUCCESS);
+        Mockito.doReturn(networkIS).when(minioAdapter).getFile("network.uct");
+        Mockito.doReturn(raoResultIS).when(minioAdapter).getFile("raoResult.json");
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter);
         HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate();
         checkCriticalBranchesWithTatlPatl(hourlyF303Info);
@@ -99,7 +81,7 @@ public class HourlyF303InfoGeneratorTest {
 
     private static void checkComplexVariants(HourlyF303Info hourlyF303Info) {
         assertEquals(1, hourlyF303Info.getComplexVariants().size());
-        assertEquals("CRA_160001", hourlyF303Info.getComplexVariants().get(0).getId());
+        assertEquals("CRA_150001", hourlyF303Info.getComplexVariants().get(0).getId());
         assertEquals(2, hourlyF303Info.getComplexVariants().get(0).getActionsSet().size());
         assertEquals("open_fr1_fr3", hourlyF303Info.getComplexVariants().get(0).getActionsSet().get(0).getName());
         assertEquals("pst_be", hourlyF303Info.getComplexVariants().get(0).getActionsSet().get(1).getName());

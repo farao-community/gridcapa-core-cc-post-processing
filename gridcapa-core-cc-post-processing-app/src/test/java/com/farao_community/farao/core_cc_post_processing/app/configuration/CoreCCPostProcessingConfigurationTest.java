@@ -7,22 +7,36 @@
 package com.farao_community.farao.core_cc_post_processing.app.configuration;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-public class CoreCCPostProcessingConfigurationTest {
+@SpringBootTest
+class CoreCCPostProcessingConfigurationTest {
+
+    @Autowired
+    CoreCCPostProcessingConfiguration coreCCPostProcessingConfiguration;
 
     @Test
-    void testCoreCCPostProcessingConfiguration() {
+    void autowiredCoreCCPostProcessingConfiguration() {
+        assertNull(coreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl());
+        assertEquals("http://localhost:8080/tasks/businessdate/", coreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl());
+        assertNull(coreCCPostProcessingConfiguration.getProcess());
+    }
+
+    @Test
+    void customCoreCCPostProcessingConfiguration() {
         CoreCCPostProcessingConfiguration.ProcessProperties processProperties = new CoreCCPostProcessingConfiguration.ProcessProperties("test", "Europe/Brussels");
         CoreCCPostProcessingConfiguration.UrlProperties urlProperties = new CoreCCPostProcessingConfiguration.UrlProperties("task_manager_2023-08-04T14:30:00Z", "task_manager_20230804");
-        CoreCCPostProcessingConfiguration coreCCPostProcessingConfiguration = new CoreCCPostProcessingConfiguration(urlProperties, processProperties);
-        assertEquals("task_manager_2023-08-04T14:30:00Z", coreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl());
-        assertEquals("task_manager_20230804", coreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl());
-        assertEquals("test", coreCCPostProcessingConfiguration.getProcess().getTag());
-        assertEquals("Europe/Brussels", coreCCPostProcessingConfiguration.getProcess().getTimezone());
+        CoreCCPostProcessingConfiguration customCoreCCPostProcessingConfiguration = new CoreCCPostProcessingConfiguration(urlProperties, processProperties);
+        assertEquals("task_manager_2023-08-04T14:30:00Z", customCoreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl());
+        assertEquals("task_manager_20230804", customCoreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl());
+        assertEquals("test", customCoreCCPostProcessingConfiguration.getProcess().getTag());
+        assertEquals("Europe/Brussels", customCoreCCPostProcessingConfiguration.getProcess().getTimezone());
     }
 }
