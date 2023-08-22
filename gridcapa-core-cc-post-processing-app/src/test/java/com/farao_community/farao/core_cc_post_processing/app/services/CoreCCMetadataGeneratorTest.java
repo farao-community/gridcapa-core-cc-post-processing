@@ -12,7 +12,6 @@ import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,12 +19,12 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-public class CoreCCMetadataGeneratorTest {
+class CoreCCMetadataGeneratorTest {
 
     private MinioAdapter minioAdapter;
-    private CoreCCMetadata coreCCMetadata = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
-    private List<CoreCCMetadata> metadataList = List.of(coreCCMetadata);
-    private RaoMetadata macroMetadata = new RaoMetadata();
+    private final CoreCCMetadata coreCCMetadata = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
+    private final List<CoreCCMetadata> metadataList = List.of(coreCCMetadata);
+    private final RaoMetadata macroMetadata = new RaoMetadata();
     private boolean fileUploadedToMinio;
 
     @BeforeEach

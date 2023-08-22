@@ -50,7 +50,6 @@ import java.util.UUID;
 @Service
 public class RaoIXmlResponseGenerator {
 
-    public static final String F299_PATH = "%s-%s-F299v%s";
     public static final String F303_PATH = "%s-%s-F303v%s";
     public static final String F304_PATH = "%s-%s-F304v%s";
     private final MinioAdapter minioAdapter;
@@ -143,7 +142,7 @@ public class RaoIXmlResponseGenerator {
                         if (metadataMap.containsKey(taskDto.getId())) {
                             fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
                         }
-                        // The code used to throw a CoreCCInvalidDataException("Wrong task id in metadataMap") but this led to no F305 file in the output directory
+                        fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
                     } else if (taskDto.getStatus().equals(TaskStatus.RUNNING)) {
                         fillRunningHours(responseItem);
                     } else {
@@ -164,7 +163,7 @@ public class RaoIXmlResponseGenerator {
 
                         com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
                         file2.setCode(RAO_REPORT);
-                        String outputLogsDocumentMessageId = String.format(F299_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        String outputLogsDocumentMessageId = OutputsNamingRules.LOGS_OUTPUT_FORMATTER.format(localDate);
                         file2.setUrl(DOCUMENT_IDENTIFICATION + outputLogsDocumentMessageId); //MessageID of the f299
                         files.getFile().add(file2);
 

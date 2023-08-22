@@ -6,6 +6,10 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.HeaderType;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.PayloadType;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseItem;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
@@ -17,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,42 +32,36 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+import static java.util.Objects.isNull;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-public class RaoIXmlResponseGeneratorTest {
+class RaoIXmlResponseGeneratorTest {
 
     private MinioAdapter minioAdapter;
-    private String targetMinioFolder = "/minioFolder";
-    private LocalDate localDate = LocalDate.of(2023, 8, 4);
-    private String startInstantString = "2023-08-04T14:46:00Z";
-    private OffsetDateTime startInstant = OffsetDateTime.parse(startInstantString);
-    private String endInstantString = "2023-08-04T14:47:00Z";
-    private OffsetDateTime endInstant = OffsetDateTime.parse(endInstantString);
-    private String correlationId = "correlationId";
-    private TaskDto taskDtoStart;
-    private TaskDto taskDtoEnd;
-    private TaskDto errorTask;
-    private TaskDto runningTask;
-    private TaskDto successTask;
+    private final LocalDate localDate = LocalDate.of(2023, 8, 4);
+    private final String startInstantString = "2023-08-04T14:46:00Z";
+    private final OffsetDateTime startInstant = OffsetDateTime.parse(startInstantString);
+    private final String endInstantString = "2023-08-04T14:47:00Z";
+    private final OffsetDateTime endInstant = OffsetDateTime.parse(endInstantString);
+    private final String correlationId = "correlationId";
     private Set<TaskDto> taskDtos;
-    private String cgmsArchiveTempPath = "/tmp/gridcapa/cgms";
-    private String xmlHeaderFileName = "/services/CGM_XML_Header.xml";
-    private Path xmlHeaderFilePath = Paths.get(getClass().getResource(xmlHeaderFileName).getPath());
-    private File xmlHeaderFile = new File(xmlHeaderFilePath.toString());
+    private final String cgmsArchiveTempPath = "/tmp/gridcapa/cgms";
+    private final String xmlHeaderFileName = "/services/CGM_XML_Header.xml";
+    private final Path xmlHeaderFilePath = Paths.get(Objects.requireNonNull(getClass().getResource(xmlHeaderFileName)).getPath());
+    private final File xmlHeaderFile = new File(xmlHeaderFilePath.toString());
     private boolean raoResponseIsUploadedToMinio;
-    private CoreCCMetadata coreCCMetadataErrorTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
-    private CoreCCMetadata coreCCMetadataRunningTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
-    private CoreCCMetadata coreCCMetadataSuccessTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
-    private UUID uuidErrorTask = UUID.fromString("22711acb-ee59-47ed-b877-3c3688efe820");
-    private UUID uuidRunningTask = UUID.fromString("259ebbe3-4639-4fa6-9687-cdb38a2f36cc");
-    private UUID uuidSuccessTask = UUID.fromString("6df6092d-145b-47be-b412-54fc45a90a04");
-    private Map<UUID, CoreCCMetadata> metadataMap = new HashMap<UUID, CoreCCMetadata>();
-    private ProcessFileDto processFileDto = new ProcessFileDto("/path/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", OffsetDateTime.of(2023, 8, 4, 16, 39, 00, 0, ZoneId.of("Europe/Brussels").getRules().getOffset(LocalDateTime.now())));
+    private final CoreCCMetadata coreCCMetadataErrorTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
+    private final CoreCCMetadata coreCCMetadataRunningTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
+    private final CoreCCMetadata coreCCMetadataSuccessTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
+    private final UUID uuidErrorTask = UUID.fromString("22711acb-ee59-47ed-b877-3c3688efe820");
+    private final UUID uuidRunningTask = UUID.fromString("259ebbe3-4639-4fa6-9687-cdb38a2f36cc");
+    private final UUID uuidSuccessTask = UUID.fromString("6df6092d-145b-47be-b412-54fc45a90a04");
+    private final Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
+    private final ProcessFileDto processFileDto = new ProcessFileDto("/path/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", OffsetDateTime.of(2023, 8, 4, 16, 39, 0, 0, ZoneId.of("Europe/Brussels").getRules().getOffset(LocalDateTime.now())));
 
     @BeforeEach
     void setUp() {
@@ -85,10 +84,10 @@ public class RaoIXmlResponseGeneratorTest {
     }
 
     private void initTasksForCgmXmlHeader() {
-        taskDtoStart = Mockito.mock(TaskDto.class);
+        TaskDto taskDtoStart = Mockito.mock(TaskDto.class);
         Mockito.doReturn(startInstant).when(taskDtoStart).getTimestamp();
         Mockito.doReturn(TaskStatus.SUCCESS).when(taskDtoStart).getStatus();
-        taskDtoEnd = Mockito.mock(TaskDto.class);
+        TaskDto taskDtoEnd = Mockito.mock(TaskDto.class);
         Mockito.doReturn(endInstant).when(taskDtoEnd).getTimestamp();
         Mockito.doReturn(TaskStatus.SUCCESS).when(taskDtoEnd).getStatus();
         taskDtos = Set.of(taskDtoStart, taskDtoEnd);
@@ -96,16 +95,16 @@ public class RaoIXmlResponseGeneratorTest {
 
     private void changeDateInGeneratedCggmXmlHeader(File file) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
-        String pattern = "<Timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z<\\/Timestamp>";
+        String pattern = "<Timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z</Timestamp>";
         String replaceBy = "<Timestamp>2023-08-04T13:03:23.900189Z</Timestamp>";
         String line;
-        String oldText = "";
+        StringBuilder oldText = new StringBuilder();
         while ((line = reader.readLine()) != null) {
-            oldText += line + "\r\n";
+            oldText.append(line).append("\r\n");
         }
         reader.close();
-        String newText = oldText.replaceAll(pattern, replaceBy);
-        FileWriter writer = new FileWriter(file.getAbsolutePath().toString());
+        String newText = oldText.toString().replaceAll(pattern, replaceBy);
+        FileWriter writer = new FileWriter(file.getAbsolutePath());
         writer.write(newText);
         writer.close();
     }
@@ -124,22 +123,23 @@ public class RaoIXmlResponseGeneratorTest {
         initMetadataMap();
         Mockito.doAnswer(answer -> raoResponseIsUploadedToMinio = true).when(minioAdapter).uploadOutput(Mockito.eq("/minioFolder/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml"), Mockito.any());
         RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        String targetMinioFolder = "/minioFolder";
         raoIXmlResponseGenerator.generateRaoResponse(taskDtos, targetMinioFolder, localDate, correlationId, metadataMap);
         assertTrue(raoResponseIsUploadedToMinio);
     }
 
     private void initTasksForRaoResponse() {
-        errorTask = Mockito.mock(TaskDto.class);
+        TaskDto errorTask = Mockito.mock(TaskDto.class);
         Mockito.doReturn(startInstant).when(errorTask).getTimestamp();
         Mockito.doReturn(TaskStatus.ERROR).when(errorTask).getStatus();
         Mockito.doReturn(uuidErrorTask).when(errorTask).getId();
         Mockito.doReturn(List.of(processFileDto)).when(errorTask).getOutputs();
-        runningTask = Mockito.mock(TaskDto.class);
+        TaskDto runningTask = Mockito.mock(TaskDto.class);
         Mockito.doReturn(startInstant).when(runningTask).getTimestamp();
         Mockito.doReturn(TaskStatus.RUNNING).when(runningTask).getStatus();
         Mockito.doReturn(uuidRunningTask).when(runningTask).getId();
         Mockito.doReturn(List.of(processFileDto)).when(runningTask).getOutputs();
-        successTask = Mockito.mock(TaskDto.class);
+        TaskDto successTask = Mockito.mock(TaskDto.class);
         Mockito.doReturn(startInstant).when(successTask).getTimestamp();
         Mockito.doReturn(TaskStatus.SUCCESS).when(successTask).getStatus();
         Mockito.doReturn(uuidSuccessTask).when(successTask).getId();
@@ -152,5 +152,78 @@ public class RaoIXmlResponseGeneratorTest {
         metadataMap.put(uuidErrorTask, coreCCMetadataErrorTask);
         metadataMap.put(uuidRunningTask, coreCCMetadataRunningTask);
         metadataMap.put(uuidSuccessTask, coreCCMetadataSuccessTask);
+    }
+
+    @Test
+    void generateRaoResponseHeader() throws DatatypeConfigurationException {
+        ResponseMessageType responseMessage = new ResponseMessageType();
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        raoIXmlResponseGenerator.generateRaoResponseHeader(responseMessage, localDate, correlationId);
+        HeaderType header = responseMessage.getHeader();
+        assertEquals("created", header.getVerb());
+        assertEquals("OptimizedRemedialActions", header.getNoun());
+        assertEquals("1", header.getRevision());
+        assertEquals("PRODUCTION", header.getContext());
+        assertEquals("22XCORESO------S", header.getSource());
+        assertEquals("17XTSO-CS------W", header.getReplyAddress());
+        assertEquals("22XCORESO------S-20230804-F305", header.getMessageID());
+        assertEquals("correlationId", header.getCorrelationID());
+    }
+
+    @Test
+    void generateRaoResponsePayLoad() {
+        ResponseMessageType responseMessage = new ResponseMessageType();
+        initTasksForRaoResponse();
+        initMetadataMap();
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        raoIXmlResponseGenerator.generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap);
+        PayloadType payload = responseMessage.getPayload();
+        assertEquals(3, payload.getResponseItems().getResponseItem().size());
+        // Only one response item has files and their order is random
+        for (int index = 0; index < 3; index++) {
+            ResponseItem responseItem = payload.getResponseItems().getResponseItem().get(index);
+            assertEquals("2023-08-04T14:46Z/2023-08-04T15:46Z", responseItem.getTimeInterval());
+            if (!isNull(responseItem.getFiles())) {
+                assertEquals(3, responseItem.getFiles().getFile().size());
+                assertEquals("OPTIMIZED_CGM", responseItem.getFiles().getFile().get(0).getCode());
+                assertEquals("documentIdentification://22XCORESO------S-20230804-F304v1", responseItem.getFiles().getFile().get(0).getUrl());
+                assertEquals("OPTIMIZED_CB", responseItem.getFiles().getFile().get(1).getCode());
+                assertEquals("documentIdentification://22XCORESO------S-20230804-F303v1", responseItem.getFiles().getFile().get(1).getUrl());
+                assertEquals("RAO_REPORT", responseItem.getFiles().getFile().get(2).getCode());
+                assertEquals("documentIdentification://CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_20230804-F342-0V.zip", responseItem.getFiles().getFile().get(2).getUrl());
+            }
+        }
+    }
+
+    @Test
+    void generateCgmXmlHeaderFileHeader() throws DatatypeConfigurationException {
+        ResponseMessageType responseMessage = new ResponseMessageType();
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        raoIXmlResponseGenerator.generateCgmXmlHeaderFileHeader(responseMessage, localDate, correlationId);
+        HeaderType header = responseMessage.getHeader();
+        assertEquals("created", header.getVerb());
+        assertEquals("OptimizedCommonGridModel", header.getNoun());
+        assertEquals("1", header.getRevision());
+        assertEquals("PRODUCTION", header.getContext());
+        assertEquals("22XCORESO------S", header.getSource());
+        assertEquals("17XTSO-CS------W", header.getReplyAddress());
+        assertEquals("22XCORESO------S-20230804-F304v1", header.getMessageID());
+        assertEquals("correlationId", header.getCorrelationID());
+    }
+
+    @Test
+    void generateCgmXmlHeaderFilePayLoad() {
+        ResponseMessageType responseMessage = new ResponseMessageType();
+        initTasksForCgmXmlHeader();
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        raoIXmlResponseGenerator.generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage);
+        PayloadType payload = responseMessage.getPayload();
+        assertEquals(1, payload.getResponseItems().getResponseItem().size());
+        ResponseItem responseItem = payload.getResponseItems().getResponseItem().get(0);
+        assertEquals("2023-08-04T14:46Z/2023-08-04T15:46Z", responseItem.getTimeInterval());
+        assertEquals(1, responseItem.getFiles().getFile().size());
+        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = responseItem.getFiles().getFile().get(0);
+        assertEquals("CGM", file.getCode());
+        assertEquals("fileName://20230804_1630_2D5_UX1.uct", file.getUrl());
     }
 }

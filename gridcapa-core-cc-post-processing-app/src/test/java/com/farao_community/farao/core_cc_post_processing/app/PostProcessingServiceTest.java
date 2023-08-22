@@ -34,18 +34,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-public class PostProcessingServiceTest {
+class PostProcessingServiceTest {
 
     private MinioAdapter minioAdapter;
-    private RaoIXmlResponseGenerator raoIXmlResponseGenerator;
-    private DailyF303Generator dailyF303Generator;
-    private FlowBasedConstraintDocument dailyFlowBasedConstraintDocument;
-    private LocalDate localDate = LocalDate.of(2023, 8, 4);
-    private TaskDto taskDto;
+    private final LocalDate localDate = LocalDate.of(2023, 8, 4);
     private Set<TaskDto> tasksToPostProcess;
-    private List<byte[]> logList = List.of();
-    private OffsetDateTime dateTime = OffsetDateTime.of(2023, 8, 4, 16, 39, 00, 0, ZoneId.of("Europe/Brussels").getRules().getOffset(LocalDateTime.now()));
-    private String serializedMetadata = "{\"raoRequestFileName\": \"raoRequest.json\", \"requestReceivedInstant\": \"2023-08-04T11:26:00Z\", \"raoRequestInstant\": \"2023-08-04T11:26:00Z\", \"computationStart\": \"2023-08-04T11:27:00Z\", \"computationEnd\": \"2023-08-04T11:29:00Z\", \"timeInterval\": \"2023-08-04T11:25:00Z/2023-08-04T12:25:00Z\", \"correlationId\": \"correlationId\", \"status\": \"SUCCESS\", \"errorCode\": \"0\", \"errorMessage\": \"This is an error.\", \"version\": 1}";
+    private final List<byte[]> logList = List.of();
+    private final OffsetDateTime dateTime = OffsetDateTime.of(2023, 8, 4, 16, 39, 00, 0, ZoneId.of("Europe/Brussels").getRules().getOffset(LocalDateTime.now()));
     private boolean logsUploadedToMinio;
     private boolean cgmsUploadedToMinio;
     private boolean cnesUploadedToMinio;
@@ -56,6 +51,7 @@ public class PostProcessingServiceTest {
     void setUp() {
         initUploadBooleans();
         minioAdapter = Mockito.mock(MinioAdapter.class);
+        String serializedMetadata = "{\"raoRequestFileName\": \"raoRequest.json\", \"requestReceivedInstant\": \"2023-08-04T11:26:00Z\", \"raoRequestInstant\": \"2023-08-04T11:26:00Z\", \"computationStart\": \"2023-08-04T11:27:00Z\", \"computationEnd\": \"2023-08-04T11:29:00Z\", \"timeInterval\": \"2023-08-04T11:25:00Z/2023-08-04T12:25:00Z\", \"correlationId\": \"correlationId\", \"status\": \"SUCCESS\", \"errorCode\": \"0\", \"errorMessage\": \"This is an error.\", \"version\": 1}";
         Mockito.doReturn(IOUtils.toInputStream(serializedMetadata)).when(minioAdapter).getFile(Mockito.any());
         Mockito.doAnswer(answer -> logsUploadedToMinio = true).when(minioAdapter).uploadOutput(Mockito.eq("RAO_OUTPUTS_DIR/2023-08-04/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_20230804-F342-01.zip"), Mockito.any());
         Mockito.doAnswer(answer -> cgmsUploadedToMinio = true).when(minioAdapter).uploadOutput(Mockito.eq("RAO_OUTPUTS_DIR/2023-08-04/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F304_20230804-F304-01.zip"), Mockito.any());
@@ -73,9 +69,9 @@ public class PostProcessingServiceTest {
     }
 
     private PostProcessingService initPostProcessingService() {
-        raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
-        dailyF303Generator = Mockito.mock(DailyF303Generator.class);
-        dailyFlowBasedConstraintDocument = Mockito.mock(FlowBasedConstraintDocument.class);
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        DailyF303Generator dailyF303Generator = Mockito.mock(DailyF303Generator.class);
+        FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = Mockito.mock(FlowBasedConstraintDocument.class);
         Mockito.doReturn(dailyFlowBasedConstraintDocument).when(dailyF303Generator).generate(Mockito.any());
         return new PostProcessingService(minioAdapter, raoIXmlResponseGenerator, dailyF303Generator);
     }
@@ -85,7 +81,7 @@ public class PostProcessingServiceTest {
         List<ProcessFileDto> inputs = initInputs();
         List<ProcessFileDto> outputs = initOutputs();
         List<ProcessEventDto> processEvents = initProcessEvents();
-        taskDto = new TaskDto(uuid, dateTime, TaskStatus.SUCCESS, inputs, outputs, processEvents);
+        TaskDto taskDto = new TaskDto(uuid, dateTime, TaskStatus.SUCCESS, inputs, outputs, processEvents);
         tasksToPostProcess = Set.of(taskDto);
     }
 

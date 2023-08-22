@@ -28,10 +28,9 @@ import java.util.UUID;
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-public class DailyF303GeneratorTest {
+class DailyF303GeneratorTest {
 
     private MinioAdapter minioAdapter = Mockito.mock(MinioAdapter.class);
-    private TaskDto taskDto;
     private Set<TaskDto> taskDtos;
     private InputStream cracIS;
     private InputStream networkIS;
@@ -41,9 +40,9 @@ public class DailyF303GeneratorTest {
     void generate() throws FileNotFoundException {
         initTask();
         importFiles();
-        Mockito.doReturn(cracIS).when(minioAdapter).getFile(Mockito.eq("crac.xml"));
-        Mockito.doReturn(networkIS).when(minioAdapter).getFile(Mockito.eq("network.uct"));
-        Mockito.doReturn(raoResultIS).when(minioAdapter).getFile(Mockito.eq("raoResult.json"));
+        Mockito.doReturn(cracIS).when(minioAdapter).getFile("crac.xml");
+        Mockito.doReturn(networkIS).when(minioAdapter).getFile("network.uct");
+        Mockito.doReturn(raoResultIS).when(minioAdapter).getFile("raoResult.json");
         DailyF303Generator dailyF303Generator = new DailyF303Generator(minioAdapter);
         FlowBasedConstraintDocument flowBasedConstraintDocument = dailyF303Generator.generate(taskDtos);
     }
@@ -57,7 +56,7 @@ public class DailyF303GeneratorTest {
         List<ProcessFileDto> inputs = List.of(cracProcessFile);
         List<ProcessFileDto> outputs = List.of(raoResultFileDto, cgmFileDto);
         List<ProcessEventDto> processEvents = List.of();
-        taskDto = new TaskDto(uuid, dateTime, TaskStatus.SUCCESS, inputs, outputs, processEvents);
+        TaskDto taskDto = new TaskDto(uuid, dateTime, TaskStatus.SUCCESS, inputs, outputs, processEvents);
         taskDtos = Set.of(taskDto);
     }
 
