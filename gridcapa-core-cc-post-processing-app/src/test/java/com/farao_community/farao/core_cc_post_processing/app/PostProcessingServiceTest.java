@@ -22,12 +22,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,9 +34,8 @@ class PostProcessingServiceTest {
 
     private MinioAdapter minioAdapter;
     private final LocalDate localDate = LocalDate.of(2023, 8, 4);
-    private Set<TaskDto> tasksToPostProcess;
+    private final Set<TaskDto> tasksToPostProcess = Set.of(Utils.makeTask(TaskStatus.SUCCESS));
     private final List<byte[]> logList = List.of();
-    private final OffsetDateTime dateTime = OffsetDateTime.of(2023, 8, 4, 16, 39, 00, 0, ZoneId.of("Europe/Brussels").getRules().getOffset(LocalDateTime.now()));
     private boolean logsUploadedToMinio;
     private boolean cgmsUploadedToMinio;
     private boolean cnesUploadedToMinio;
@@ -76,33 +71,8 @@ class PostProcessingServiceTest {
         return new PostProcessingService(minioAdapter, raoIXmlResponseGenerator, dailyF303Generator);
     }
 
-    private void initTask() {
-        UUID uuid = UUID.fromString("22711acb-ee59-47ed-b877-3c3688efe820");
-        List<ProcessFileDto> inputs = initInputs();
-        List<ProcessFileDto> outputs = initOutputs();
-        List<ProcessEventDto> processEvents = initProcessEvents();
-        TaskDto taskDto = new TaskDto(uuid, dateTime, TaskStatus.SUCCESS, inputs, outputs, processEvents);
-        tasksToPostProcess = Set.of(taskDto);
-    }
-
-    private List<ProcessFileDto> initInputs() {
-        return List.of();
-    }
-
-    private List<ProcessFileDto> initOutputs() {
-        ProcessFileDto cneFileDto = new ProcessFileDto("/CORE/CC/cne.xml", "CNE", ProcessFileStatus.VALIDATED, "cne.xml", dateTime);
-        ProcessFileDto cgmFileDto = new ProcessFileDto("/CORE/CC/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", dateTime);
-        ProcessFileDto metadataFileDto = new ProcessFileDto("/CORE/CC/metadata.csv", "METADATA", ProcessFileStatus.VALIDATED, "metadata.csv", dateTime);
-        return List.of(cneFileDto, cgmFileDto, metadataFileDto);
-    }
-
-    private List<ProcessEventDto> initProcessEvents() {
-        return List.of();
-    }
-
     @Test
     void processTasks() throws IOException {
-        initTask();
         PostProcessingService postProcessingService = initPostProcessingService();
         postProcessingService.processTasks(localDate, tasksToPostProcess, logList);
         assertZipDirectoriesExist();

@@ -111,8 +111,7 @@ class HourlyF303InfoGeneratorTest {
 
     @Test
     void generateForNotSuccessfulTask() {
-        taskDto = Mockito.mock(TaskDto.class);
-        Mockito.doReturn(TaskStatus.ERROR).when(taskDto).getStatus();
+        taskDto = Utils.makeTask(TaskStatus.ERROR);
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter);
         HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate();
         checkCriticalBranches(hourlyF303Info);

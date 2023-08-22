@@ -6,12 +6,11 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.Utils;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.HeaderType;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.PayloadType;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseItem;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
-import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
-import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
@@ -27,9 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.*;
 
 import static java.util.Objects.isNull;
@@ -57,11 +54,7 @@ class RaoIXmlResponseGeneratorTest {
     private final CoreCCMetadata coreCCMetadataErrorTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
     private final CoreCCMetadata coreCCMetadataRunningTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
     private final CoreCCMetadata coreCCMetadataSuccessTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
-    private final UUID uuidErrorTask = UUID.fromString("22711acb-ee59-47ed-b877-3c3688efe820");
-    private final UUID uuidRunningTask = UUID.fromString("259ebbe3-4639-4fa6-9687-cdb38a2f36cc");
-    private final UUID uuidSuccessTask = UUID.fromString("6df6092d-145b-47be-b412-54fc45a90a04");
     private final Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
-    private final ProcessFileDto processFileDto = new ProcessFileDto("/path/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", OffsetDateTime.of(2023, 8, 4, 16, 39, 0, 0, ZoneId.of("Europe/Brussels").getRules().getOffset(LocalDateTime.now())));
 
     @BeforeEach
     void setUp() {
@@ -129,29 +122,13 @@ class RaoIXmlResponseGeneratorTest {
     }
 
     private void initTasksForRaoResponse() {
-        TaskDto errorTask = Mockito.mock(TaskDto.class);
-        Mockito.doReturn(startInstant).when(errorTask).getTimestamp();
-        Mockito.doReturn(TaskStatus.ERROR).when(errorTask).getStatus();
-        Mockito.doReturn(uuidErrorTask).when(errorTask).getId();
-        Mockito.doReturn(List.of(processFileDto)).when(errorTask).getOutputs();
-        TaskDto runningTask = Mockito.mock(TaskDto.class);
-        Mockito.doReturn(startInstant).when(runningTask).getTimestamp();
-        Mockito.doReturn(TaskStatus.RUNNING).when(runningTask).getStatus();
-        Mockito.doReturn(uuidRunningTask).when(runningTask).getId();
-        Mockito.doReturn(List.of(processFileDto)).when(runningTask).getOutputs();
-        TaskDto successTask = Mockito.mock(TaskDto.class);
-        Mockito.doReturn(startInstant).when(successTask).getTimestamp();
-        Mockito.doReturn(TaskStatus.SUCCESS).when(successTask).getStatus();
-        Mockito.doReturn(uuidSuccessTask).when(successTask).getId();
-        Mockito.doReturn(List.of(processFileDto)).when(successTask).getOutputs();
-        taskDtos = Set.of(errorTask, runningTask, successTask);
-        Mockito.doReturn(List.of(processFileDto)).when(errorTask).getOutputs();
+        taskDtos = Set.of(Utils.makeTask(TaskStatus.ERROR), Utils.makeTask(TaskStatus.RUNNING), Utils.makeTask(TaskStatus.SUCCESS));
     }
 
     private void initMetadataMap() {
-        metadataMap.put(uuidErrorTask, coreCCMetadataErrorTask);
-        metadataMap.put(uuidRunningTask, coreCCMetadataRunningTask);
-        metadataMap.put(uuidSuccessTask, coreCCMetadataSuccessTask);
+        metadataMap.put(Utils.makeTask(TaskStatus.ERROR).getId(), coreCCMetadataErrorTask);
+        metadataMap.put(Utils.makeTask(TaskStatus.RUNNING).getId(), coreCCMetadataRunningTask);
+        metadataMap.put(Utils.makeTask(TaskStatus.SUCCESS).getId(), coreCCMetadataSuccessTask);
     }
 
     @Test
@@ -182,7 +159,7 @@ class RaoIXmlResponseGeneratorTest {
         // Only one response item has files and their order is random
         for (int index = 0; index < 3; index++) {
             ResponseItem responseItem = payload.getResponseItems().getResponseItem().get(index);
-            assertEquals("2023-08-04T14:46Z/2023-08-04T15:46Z", responseItem.getTimeInterval());
+            assertEquals("2023-08-21T15:16Z/2023-08-21T16:16Z", responseItem.getTimeInterval());
             if (!isNull(responseItem.getFiles())) {
                 assertEquals(3, responseItem.getFiles().getFile().size());
                 assertEquals("OPTIMIZED_CGM", responseItem.getFiles().getFile().get(0).getCode());
