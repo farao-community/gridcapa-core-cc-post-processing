@@ -7,6 +7,10 @@
 package com.farao_community.farao.core_cc_post_processing.app;
 
 import com.farao_community.farao.gridcapa.task_manager.api.*;
+import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
+import com.farao_community.farao.minio_adapter.starter.MinioAdapterProperties;
+import io.minio.MinioClient;
+import org.mockito.Mockito;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -29,4 +33,10 @@ public class Utils {
     public static final TaskDto SUCCESS_TASK = new TaskDto(UUID.fromString("4fb56583-bcec-4ed9-9839-0984b7324989"), OffsetDateTime.parse("2023-08-21T15:16:45Z"), TaskStatus.SUCCESS, INPUTS, OUTPUTS, PROCESS_EVENTS);
     public static final TaskDto ERROR_TASK = new TaskDto(UUID.fromString("6e3e0ef2-96e4-4649-82d4-374f103038d4"), OffsetDateTime.parse("2023-08-21T15:16:46Z"), TaskStatus.ERROR, INPUTS, OUTPUTS, PROCESS_EVENTS);
     public static final TaskDto RUNNING_TASK = new TaskDto(UUID.fromString("b4efda15-92c5-431b-a17f-9c5f6d8a6437"), OffsetDateTime.parse("2023-08-21T15:16:47Z"), TaskStatus.RUNNING, INPUTS, OUTPUTS, PROCESS_EVENTS);
+    public static final CoreCCMetadata CORE_CC_METADATA_SUCCESS = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "SUCCESS", "0", "This is an error.", 1);
+    public static final CoreCCMetadata CORE_CC_METADATA_ERROR = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "ERROR", "1", "This is an error.", 1);
+    public static final CoreCCMetadata CORE_CC_METADATA_RUNNING = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "RUNNING", "0", "This is an error.", 1);
+    private static final MinioAdapterProperties PROPERTIES = Mockito.mock(MinioAdapterProperties.class);
+    private static final MinioClient MINIO_CLIENT = Mockito.mock(MinioClient.class);
+    public static final MinioFileWriter MINIO_FILE_WRITER = new MinioFileWriter(PROPERTIES, MINIO_CLIENT);
 }

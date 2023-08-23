@@ -52,9 +52,6 @@ class RaoIXmlResponseGeneratorTest {
     private final Path xmlHeaderFilePath = Paths.get(Objects.requireNonNull(getClass().getResource(xmlHeaderFileName)).getPath());
     private final File xmlHeaderFile = new File(xmlHeaderFilePath.toString());
     private boolean raoResponseIsUploadedToMinio;
-    private final CoreCCMetadata coreCCMetadataErrorTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "ERROR", "1", "This is an error.", 1);
-    private final CoreCCMetadata coreCCMetadataRunningTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "RUNNING", "0", "This is an error.", 1);
-    private final CoreCCMetadata coreCCMetadataSuccessTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
     private final Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
 
     @Autowired
@@ -133,9 +130,9 @@ class RaoIXmlResponseGeneratorTest {
     }
 
     private void initMetadataMap() {
-        metadataMap.put(Utils.ERROR_TASK.getId(), coreCCMetadataErrorTask);
-        metadataMap.put(Utils.RUNNING_TASK.getId(), coreCCMetadataRunningTask);
-        metadataMap.put(Utils.SUCCESS_TASK.getId(), coreCCMetadataSuccessTask);
+        metadataMap.put(Utils.ERROR_TASK.getId(), Utils.CORE_CC_METADATA_ERROR);
+        metadataMap.put(Utils.RUNNING_TASK.getId(), Utils.CORE_CC_METADATA_RUNNING);
+        metadataMap.put(Utils.SUCCESS_TASK.getId(), Utils.CORE_CC_METADATA_SUCCESS);
     }
 
     @Test

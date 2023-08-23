@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.Utils;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
@@ -13,7 +14,6 @@ import com.farao_community.farao.minio_adapter.starter.MinioAdapterProperties;
 import io.minio.MinioClient;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
@@ -31,11 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 class CoreCCMetadataGeneratorTest {
 
-    private static final MinioAdapterProperties PROPERTIES = Mockito.mock(MinioAdapterProperties.class);
-    private static final MinioClient MINIO_CLIENT = Mockito.mock(MinioClient.class);
-    private final MinioAdapterWriter minioAdapter = new MinioAdapterWriter(PROPERTIES, MINIO_CLIENT);
-    private final CoreCCMetadata coreCCMetadata = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "SUCCESS", "0", "This is an error.", 1);
-    private final List<CoreCCMetadata> metadataList = List.of(coreCCMetadata);
+    private final List<CoreCCMetadata> metadataList = List.of(Utils.CORE_CC_METADATA_SUCCESS);
     private final RaoMetadata successMacroMetadata = new RaoMetadata();
     private final RaoMetadata errorMacroMetadata = new RaoMetadata();
 
@@ -68,7 +64,7 @@ class CoreCCMetadataGeneratorTest {
     @Test
     void exportSuccessMetadataFile() throws IOException {
         setUpSuccessMacroMetadata();
-        CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(minioAdapter);
+        CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(Utils.MINIO_FILE_WRITER);
         coreCCMetadataGenerator.exportMetadataFile("/tmp", metadataList, successMacroMetadata);
         String expectedFileContents = new String(getClass().getResourceAsStream("/services/metadataSuccess.csv").readAllBytes()).replace("\r", "");
         String actualFileContents = new String(Files.newInputStream(Paths.get("/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv")).readAllBytes()).replace("\r", "");
@@ -79,7 +75,7 @@ class CoreCCMetadataGeneratorTest {
     @Test
     void exportErrorMetadataFile() throws IOException {
         setUpErrorMacroMetadata();
-        CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(minioAdapter);
+        CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(Utils.MINIO_FILE_WRITER);
         coreCCMetadataGenerator.exportMetadataFile("/tmp", metadataList, errorMacroMetadata);
         String expectedFileContents = new String(getClass().getResourceAsStream("/services/metadataError.csv").readAllBytes()).replace("\r", "");
         String actualFileContents = new String(Files.newInputStream(Paths.get("/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv")).readAllBytes()).replace("\r", "");
