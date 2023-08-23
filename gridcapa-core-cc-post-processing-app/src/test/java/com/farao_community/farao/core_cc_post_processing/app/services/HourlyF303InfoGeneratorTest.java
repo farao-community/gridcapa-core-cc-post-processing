@@ -70,7 +70,7 @@ class HourlyF303InfoGeneratorTest {
     void generate() throws FileNotFoundException {
         importNetwork();
         importRaoResult();
-        taskDto = Utils.makeTask(TaskStatus.SUCCESS);
+        taskDto = Utils.SUCCESS_TASK;
         Mockito.doReturn(networkIS).when(minioAdapter).getFile("network.uct");
         Mockito.doReturn(raoResultIS).when(minioAdapter).getFile("raoResult.json");
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter);
@@ -111,7 +111,7 @@ class HourlyF303InfoGeneratorTest {
 
     @Test
     void generateForNotSuccessfulTask() {
-        taskDto = Utils.makeTask(TaskStatus.ERROR);
+        taskDto = Utils.ERROR_TASK;
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter);
         HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate();
         checkCriticalBranches(hourlyF303Info);

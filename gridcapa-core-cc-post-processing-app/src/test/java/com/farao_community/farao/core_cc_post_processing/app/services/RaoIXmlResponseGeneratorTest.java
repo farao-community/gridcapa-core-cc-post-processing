@@ -19,6 +19,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.*;
@@ -29,16 +31,15 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static java.util.Objects.isNull;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
+@SpringBootTest
 class RaoIXmlResponseGeneratorTest {
 
-    private MinioAdapter minioAdapter;
     private final LocalDate localDate = LocalDate.of(2023, 8, 4);
     private final String startInstantString = "2023-08-04T14:46:00Z";
     private final OffsetDateTime startInstant = OffsetDateTime.parse(startInstantString);
@@ -51,10 +52,16 @@ class RaoIXmlResponseGeneratorTest {
     private final Path xmlHeaderFilePath = Paths.get(Objects.requireNonNull(getClass().getResource(xmlHeaderFileName)).getPath());
     private final File xmlHeaderFile = new File(xmlHeaderFilePath.toString());
     private boolean raoResponseIsUploadedToMinio;
-    private final CoreCCMetadata coreCCMetadataErrorTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
-    private final CoreCCMetadata coreCCMetadataRunningTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
+    private final CoreCCMetadata coreCCMetadataErrorTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "ERROR", "1", "This is an error.", 1);
+    private final CoreCCMetadata coreCCMetadataRunningTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "RUNNING", "0", "This is an error.", 1);
     private final CoreCCMetadata coreCCMetadataSuccessTask = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "correlationId", "SUCCESS", "0", "This is an error.", 1);
     private final Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
+
+    @Autowired
+    RaoIXmlResponseGenerator raoIXmlResponseGenerator;
+
+    @Autowired
+    MinioAdapter minioAdapter;
 
     @BeforeEach
     void setUp() {
@@ -122,13 +129,13 @@ class RaoIXmlResponseGeneratorTest {
     }
 
     private void initTasksForRaoResponse() {
-        taskDtos = Set.of(Utils.makeTask(TaskStatus.ERROR), Utils.makeTask(TaskStatus.RUNNING), Utils.makeTask(TaskStatus.SUCCESS));
+        taskDtos = Set.of(Utils.ERROR_TASK, Utils.RUNNING_TASK, Utils.SUCCESS_TASK);
     }
 
     private void initMetadataMap() {
-        metadataMap.put(Utils.makeTask(TaskStatus.ERROR).getId(), coreCCMetadataErrorTask);
-        metadataMap.put(Utils.makeTask(TaskStatus.RUNNING).getId(), coreCCMetadataRunningTask);
-        metadataMap.put(Utils.makeTask(TaskStatus.SUCCESS).getId(), coreCCMetadataSuccessTask);
+        metadataMap.put(Utils.ERROR_TASK.getId(), coreCCMetadataErrorTask);
+        metadataMap.put(Utils.RUNNING_TASK.getId(), coreCCMetadataRunningTask);
+        metadataMap.put(Utils.SUCCESS_TASK.getId(), coreCCMetadataSuccessTask);
     }
 
     @Test
@@ -155,21 +162,29 @@ class RaoIXmlResponseGeneratorTest {
         RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
         raoIXmlResponseGenerator.generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap);
         PayloadType payload = responseMessage.getPayload();
+
         assertEquals(3, payload.getResponseItems().getResponseItem().size());
-        // Only one response item has files and their order is random
-        for (int index = 0; index < 3; index++) {
-            ResponseItem responseItem = payload.getResponseItems().getResponseItem().get(index);
-            assertEquals("2023-08-21T15:16Z/2023-08-21T16:16Z", responseItem.getTimeInterval());
-            if (!isNull(responseItem.getFiles())) {
-                assertEquals(3, responseItem.getFiles().getFile().size());
-                assertEquals("OPTIMIZED_CGM", responseItem.getFiles().getFile().get(0).getCode());
-                assertEquals("documentIdentification://22XCORESO------S-20230804-F304v1", responseItem.getFiles().getFile().get(0).getUrl());
-                assertEquals("OPTIMIZED_CB", responseItem.getFiles().getFile().get(1).getCode());
-                assertEquals("documentIdentification://22XCORESO------S-20230804-F303v1", responseItem.getFiles().getFile().get(1).getUrl());
-                assertEquals("RAO_REPORT", responseItem.getFiles().getFile().get(2).getCode());
-                assertEquals("documentIdentification://CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_20230804-F342-0V.zip", responseItem.getFiles().getFile().get(2).getUrl());
-            }
-        }
+
+        ResponseItem successResponseItem = payload.getResponseItems().getResponseItem().get(0);
+        assertEquals("2023-08-21T15:16Z/2023-08-21T16:16Z", successResponseItem.getTimeInterval());
+        assertEquals(3, successResponseItem.getFiles().getFile().size());
+        assertEquals("OPTIMIZED_CGM", successResponseItem.getFiles().getFile().get(0).getCode());
+        assertEquals("documentIdentification://22XCORESO------S-20230804-F304v1", successResponseItem.getFiles().getFile().get(0).getUrl());
+        assertEquals("OPTIMIZED_CB", successResponseItem.getFiles().getFile().get(1).getCode());
+        assertEquals("documentIdentification://22XCORESO------S-20230804-F303v1", successResponseItem.getFiles().getFile().get(1).getUrl());
+        assertEquals("RAO_REPORT", successResponseItem.getFiles().getFile().get(2).getCode());
+        assertEquals("documentIdentification://CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_20230804-F342-0V.zip", successResponseItem.getFiles().getFile().get(2).getUrl());
+
+        ResponseItem errorResponseItem = payload.getResponseItems().getResponseItem().get(1);
+        assertEquals("2023-08-21T15:16Z/2023-08-21T16:16Z", errorResponseItem.getTimeInterval());
+        assertEquals("1", errorResponseItem.getError().getCode());
+        assertEquals("FATAL", errorResponseItem.getError().getLevel());
+        assertNull(errorResponseItem.getFiles());
+
+        ResponseItem runningrResponseItem = payload.getResponseItems().getResponseItem().get(2);
+        assertEquals("2023-08-21T15:16Z/2023-08-21T16:16Z", runningrResponseItem.getTimeInterval());
+        assertEquals("INFORM", runningrResponseItem.getError().getLevel());
+        assertNull(runningrResponseItem.getFiles());
     }
 
     @Test

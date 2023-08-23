@@ -34,7 +34,7 @@ class PostProcessingServiceTest {
 
     private MinioAdapter minioAdapter;
     private final LocalDate localDate = LocalDate.of(2023, 8, 4);
-    private final Set<TaskDto> tasksToPostProcess = Set.of(Utils.makeTask(TaskStatus.SUCCESS));
+    private final Set<TaskDto> tasksToPostProcess = Set.of(Utils.SUCCESS_TASK);
     private final List<byte[]> logList = List.of();
     private boolean logsUploadedToMinio;
     private boolean cgmsUploadedToMinio;
