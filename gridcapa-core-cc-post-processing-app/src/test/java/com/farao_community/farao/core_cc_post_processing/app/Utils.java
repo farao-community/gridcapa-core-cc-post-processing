@@ -12,9 +12,14 @@ import com.farao_community.farao.minio_adapter.starter.MinioAdapterProperties;
 import io.minio.MinioClient;
 import org.mockito.Mockito;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
@@ -39,4 +44,33 @@ public class Utils {
     private static final MinioAdapterProperties PROPERTIES = Mockito.mock(MinioAdapterProperties.class);
     private static final MinioClient MINIO_CLIENT = Mockito.mock(MinioClient.class);
     public static final MinioFileWriter MINIO_FILE_WRITER = new MinioFileWriter(PROPERTIES, MINIO_CLIENT);
+
+    public static void neutralizeCreationDate(File file) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String pattern = "<Timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z</Timestamp>";
+        String replaceBy = "<Timestamp>yyyy-MM-ddTHH:mm:ss.SSSSSSZ</Timestamp>";
+        String line;
+        StringBuilder oldText = new StringBuilder();
+        while ((line = reader.readLine()) != null) {
+            oldText.append(line).append("\r\n");
+        }
+        reader.close();
+        String newText = oldText.toString().replaceAll(pattern, replaceBy);
+        FileWriter writer = new FileWriter(file.getAbsolutePath());
+        writer.write(newText);
+        writer.close();
+    }
+
+    public static void assertFilesContentEqual(String resource, String generatedFile, boolean removeCreationDate) throws IOException {
+        if (removeCreationDate) {
+            neutralizeCreationDate(new File(generatedFile));
+        }
+        String expectedFileContents = new String(Utils.class.getResourceAsStream(resource).readAllBytes()).replace("\r", "");
+        String actualFileContents = new String(Files.newInputStream(Paths.get(generatedFile)).readAllBytes()).replace("\r", "");
+        assertEquals(expectedFileContents, actualFileContents);
+    }
+
+    public static void assertFilesContentEqual(String resource, String generatedFile) throws IOException {
+        assertFilesContentEqual(resource, generatedFile, false);
+    }
 }

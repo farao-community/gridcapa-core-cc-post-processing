@@ -9,18 +9,12 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 import com.farao_community.farao.core_cc_post_processing.app.Utils;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
-import com.farao_community.farao.minio_adapter.starter.MinioAdapterProperties;
-import io.minio.MinioClient;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,9 +60,7 @@ class CoreCCMetadataGeneratorTest {
         setUpSuccessMacroMetadata();
         CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(Utils.MINIO_FILE_WRITER);
         coreCCMetadataGenerator.exportMetadataFile("/tmp", metadataList, successMacroMetadata);
-        String expectedFileContents = new String(getClass().getResourceAsStream("/services/metadataSuccess.csv").readAllBytes()).replace("\r", "");
-        String actualFileContents = new String(Files.newInputStream(Paths.get("/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv")).readAllBytes()).replace("\r", "");
-        assertEquals(expectedFileContents, actualFileContents);
+        Utils.assertFilesContentEqual("/services/metadataSuccess.csv", "/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv");
         FileUtils.deleteDirectory(new File("/tmp/outputs"));
     }
 
@@ -77,9 +69,7 @@ class CoreCCMetadataGeneratorTest {
         setUpErrorMacroMetadata();
         CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(Utils.MINIO_FILE_WRITER);
         coreCCMetadataGenerator.exportMetadataFile("/tmp", metadataList, errorMacroMetadata);
-        String expectedFileContents = new String(getClass().getResourceAsStream("/services/metadataError.csv").readAllBytes()).replace("\r", "");
-        String actualFileContents = new String(Files.newInputStream(Paths.get("/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv")).readAllBytes()).replace("\r", "");
-        assertEquals(expectedFileContents, actualFileContents);
+        Utils.assertFilesContentEqual("/services/metadataError.csv", "/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv");
         FileUtils.deleteDirectory(new File("/tmp/outputs"));
     }
 
@@ -91,26 +81,5 @@ class CoreCCMetadataGeneratorTest {
     @Test
     void generateOutputsDestinationPath() {
         assertEquals("path/outputs/file.csv", CoreCCMetadataGenerator.generateOutputsDestinationPath("path", "file.csv"));
-    }
-
-    private static class MinioAdapterWriter extends MinioAdapter {
-
-        public MinioAdapterWriter(MinioAdapterProperties properties, MinioClient minioClient) {
-            super(properties, minioClient);
-        }
-
-        @Override
-        public void uploadOutput(String path, InputStream inputStream) {
-            File tmpDir = new File("/tmp/outputs/");
-            if (!tmpDir.exists()) {
-                boolean created = tmpDir.mkdir();
-            }
-            File targetFile = new File(path);
-            try {
-                FileUtils.copyInputStreamToFile(inputStream, targetFile);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 }

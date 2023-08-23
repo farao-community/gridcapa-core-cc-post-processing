@@ -16,7 +16,6 @@ import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,13 +24,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -45,13 +41,9 @@ class RaoIXmlResponseGeneratorTest {
     private final OffsetDateTime startInstant = OffsetDateTime.parse(startInstantString);
     private final String endInstantString = "2023-08-04T14:47:00Z";
     private final OffsetDateTime endInstant = OffsetDateTime.parse(endInstantString);
-    private final String correlationId = "correlationId";
+    private final String correlationId = "6fe0a389-9315-417e-956d-b3fbaa479caz";
     private Set<TaskDto> taskDtos;
     private final String cgmsArchiveTempPath = "/tmp/gridcapa/cgms";
-    private final String xmlHeaderFileName = "/services/CGM_XML_Header.xml";
-    private final Path xmlHeaderFilePath = Paths.get(Objects.requireNonNull(getClass().getResource(xmlHeaderFileName)).getPath());
-    private final File xmlHeaderFile = new File(xmlHeaderFilePath.toString());
-    private boolean raoResponseIsUploadedToMinio;
     private final Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
 
     @Autowired
@@ -60,21 +52,17 @@ class RaoIXmlResponseGeneratorTest {
     @Autowired
     MinioAdapter minioAdapter;
 
-    @BeforeEach
-    void setUp() {
-        minioAdapter = Mockito.mock(MinioAdapter.class);
-        raoResponseIsUploadedToMinio = false;
-    }
-
     @Test
     void generateCgmXmlHeaderFile() throws IOException {
         initTasksForCgmXmlHeader();
-        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(Utils.MINIO_FILE_WRITER);
         File generatedXmlHeaderFile = new File(cgmsArchiveTempPath, "CGM_XML_Header.xml");
         // First pass with not existing directory
-        compareOriginalAndGeneratedXmlHeaders(raoIXmlResponseGenerator, generatedXmlHeaderFile);
+        raoIXmlResponseGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId);
+        Utils.assertFilesContentEqual("/services/CGM_XML_Header.xml", generatedXmlHeaderFile.toString(), true);
         // Second pass with already existing directory
-        compareOriginalAndGeneratedXmlHeaders(raoIXmlResponseGenerator, generatedXmlHeaderFile);
+        raoIXmlResponseGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId);
+        Utils.assertFilesContentEqual("/services/CGM_XML_Header.xml", generatedXmlHeaderFile.toString(), true);
         // Delete the temporary directory
         FileUtils.deleteDirectory(new File(generatedXmlHeaderFile.getParent()));
         assertFalse(Files.exists(generatedXmlHeaderFile.getParentFile().toPath()));
@@ -90,39 +78,14 @@ class RaoIXmlResponseGeneratorTest {
         taskDtos = Set.of(taskDtoStart, taskDtoEnd);
     }
 
-    private void changeDateInGeneratedCggmXmlHeader(File file) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        String pattern = "<Timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z</Timestamp>";
-        String replaceBy = "<Timestamp>2023-08-04T13:03:23.900189Z</Timestamp>";
-        String line;
-        StringBuilder oldText = new StringBuilder();
-        while ((line = reader.readLine()) != null) {
-            oldText.append(line).append("\r\n");
-        }
-        reader.close();
-        String newText = oldText.toString().replaceAll(pattern, replaceBy);
-        FileWriter writer = new FileWriter(file.getAbsolutePath());
-        writer.write(newText);
-        writer.close();
-    }
-
-    private void compareOriginalAndGeneratedXmlHeaders(RaoIXmlResponseGenerator raoIXmlResponseGenerator, File generatedXmlHeaderFile) throws IOException {
-        raoIXmlResponseGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId);
-        // File's generation date is automatically added and need to be changed to match the template's
-        changeDateInGeneratedCggmXmlHeader(generatedXmlHeaderFile);
-        assertTrue(Files.exists(generatedXmlHeaderFile.toPath()));
-        assertThat(xmlHeaderFile).hasSameTextualContentAs(generatedXmlHeaderFile);
-    }
-
     @Test
-    void generateRaoResponse() {
+    void generateRaoResponse() throws IOException {
         initTasksForRaoResponse();
         initMetadataMap();
-        Mockito.doAnswer(answer -> raoResponseIsUploadedToMinio = true).when(minioAdapter).uploadOutput(Mockito.eq("/minioFolder/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml"), Mockito.any());
-        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
-        String targetMinioFolder = "/minioFolder";
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(Utils.MINIO_FILE_WRITER);
+        String targetMinioFolder = "/tmp";
         raoIXmlResponseGenerator.generateRaoResponse(taskDtos, targetMinioFolder, localDate, correlationId, metadataMap);
-        assertTrue(raoResponseIsUploadedToMinio);
+        Utils.assertFilesContentEqual("/services/raoResponse.xml", "/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml", true);
     }
 
     private void initTasksForRaoResponse() {
@@ -138,7 +101,7 @@ class RaoIXmlResponseGeneratorTest {
     @Test
     void generateRaoResponseHeader() throws DatatypeConfigurationException {
         ResponseMessageType responseMessage = new ResponseMessageType();
-        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(Utils.MINIO_FILE_WRITER);
         raoIXmlResponseGenerator.generateRaoResponseHeader(responseMessage, localDate, correlationId);
         HeaderType header = responseMessage.getHeader();
         assertEquals("created", header.getVerb());
@@ -148,7 +111,7 @@ class RaoIXmlResponseGeneratorTest {
         assertEquals("22XCORESO------S", header.getSource());
         assertEquals("17XTSO-CS------W", header.getReplyAddress());
         assertEquals("22XCORESO------S-20230804-F305", header.getMessageID());
-        assertEquals("correlationId", header.getCorrelationID());
+        assertEquals("6fe0a389-9315-417e-956d-b3fbaa479caz", header.getCorrelationID());
     }
 
     @Test
@@ -156,7 +119,7 @@ class RaoIXmlResponseGeneratorTest {
         ResponseMessageType responseMessage = new ResponseMessageType();
         initTasksForRaoResponse();
         initMetadataMap();
-        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(Utils.MINIO_FILE_WRITER);
         raoIXmlResponseGenerator.generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap);
         PayloadType payload = responseMessage.getPayload();
 
@@ -187,7 +150,7 @@ class RaoIXmlResponseGeneratorTest {
     @Test
     void generateCgmXmlHeaderFileHeader() throws DatatypeConfigurationException {
         ResponseMessageType responseMessage = new ResponseMessageType();
-        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(Utils.MINIO_FILE_WRITER);
         raoIXmlResponseGenerator.generateCgmXmlHeaderFileHeader(responseMessage, localDate, correlationId);
         HeaderType header = responseMessage.getHeader();
         assertEquals("created", header.getVerb());
@@ -197,14 +160,14 @@ class RaoIXmlResponseGeneratorTest {
         assertEquals("22XCORESO------S", header.getSource());
         assertEquals("17XTSO-CS------W", header.getReplyAddress());
         assertEquals("22XCORESO------S-20230804-F304v1", header.getMessageID());
-        assertEquals("correlationId", header.getCorrelationID());
+        assertEquals("6fe0a389-9315-417e-956d-b3fbaa479caz", header.getCorrelationID());
     }
 
     @Test
     void generateCgmXmlHeaderFilePayLoad() {
         ResponseMessageType responseMessage = new ResponseMessageType();
         initTasksForCgmXmlHeader();
-        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(minioAdapter);
+        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(Utils.MINIO_FILE_WRITER);
         raoIXmlResponseGenerator.generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage);
         PayloadType payload = responseMessage.getPayload();
         assertEquals(1, payload.getResponseItems().getResponseItem().size());
