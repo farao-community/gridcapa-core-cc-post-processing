@@ -69,7 +69,6 @@ class DailyF303Generator2Test {
 
         String inputCracXmlFileUrl = "inputCracXml.xml";
 
-        DateTimeFormatter isoFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm'Z'");
         DateTimeFormatter fileNameFormatter = DateTimeFormatter.ofPattern("yyyyMMdd'_'HH'30UTC'");
 
         // tasks data
