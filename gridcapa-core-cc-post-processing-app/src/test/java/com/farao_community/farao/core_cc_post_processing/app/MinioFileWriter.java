@@ -28,4 +28,9 @@ public class MinioFileWriter extends MinioAdapter {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public InputStream getFile(String path) {
+        return getClass().getResourceAsStream("/services/" + path);
+    }
 }
