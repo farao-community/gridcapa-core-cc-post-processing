@@ -30,10 +30,8 @@ public class MinioFileWriter extends MinioAdapter {
         if (!tmpDir.exists()) {
             boolean created = tmpDir.mkdir();
         }
-        if (path.startsWith("RAO_OUTPUTS_DIR")) {
-            path = "/tmp/outputs/" + path;
-        }
-        File targetFile = new File(path);
+        String outputPath = path.startsWith("RAO_OUTPUTS_DIR") ? "/tmp/outputs/" + path : path;
+        File targetFile = new File(outputPath);
         try {
             FileUtils.copyInputStreamToFile(inputStream, targetFile);
         } catch (IOException e) {
