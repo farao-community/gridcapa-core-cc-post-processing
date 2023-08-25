@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<EventMessage xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://iec.ch/TC57/2011/schema/message" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Header>
+        <Verb>created</Verb>
+        <Noun>OptimizedRemedialActions</Noun>
+        <Revision>1</Revision>
+        <Context>PRODUCTION</Context>
+        <Timestamp>yyyy-MM-ddTHH:mm:ss.SSSSSSZ</Timestamp>
+        <Source>22XCORESO------S</Source>
+        <AsyncReplyFlag>false</AsyncReplyFlag>
+        <ReplyAddress>17XTSO-CS------W</ReplyAddress>
+        <AckRequired>false</AckRequired>
+        <MessageID>22XCORESO------S-20230804-F305</MessageID>
+        <CorrelationID>00000000-0000-0000-0000-000000000000</CorrelationID>
+    </Header>
+    <Payload>
+        <ResponseItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://unicorn.com/Response/response-payload" timeInterval="20230804">
+            <ResponseItem timeInterval="2023-08-21T15:16Z/2023-08-21T16:16Z">
+                <Files>
+                    <File code="OPTIMIZED_CGM" url="documentIdentification://22XCORESO------S-20230804-F304v1"/>
+                    <File code="OPTIMIZED_CB" url="documentIdentification://22XCORESO------S-20230804-F303v1"/>
+                    <File code="RAO_REPORT" url="documentIdentification://CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_20230804-F342-0V.zip"/>
+                </Files>
+            </ResponseItem>
+        </ResponseItems>
+    </Payload>
+</EventMessage>

@@ -30,7 +30,7 @@ public class Utils {
     private static final ProcessFileDto CRAC_PROCESS_FILE = new ProcessFileDto("/CORE/CC/crac.xml", "CBCORA", ProcessFileStatus.VALIDATED, "crac.xml", TIMESTAMP);
     private static final ProcessFileDto CNE_FILE_DTO = new ProcessFileDto("/CORE/CC/cne.xml", "CNE", ProcessFileStatus.VALIDATED, "cne.xml", TIMESTAMP);
     private static final ProcessFileDto CGM_FILE_DTO = new ProcessFileDto("/CORE/CC/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", TIMESTAMP);
-    private static final ProcessFileDto METADATA_FILE_DTO = new ProcessFileDto("/CORE/CC/metadata.csv", "METADATA", ProcessFileStatus.VALIDATED, "metadata.csv", TIMESTAMP);
+    private static final ProcessFileDto METADATA_FILE_DTO = new ProcessFileDto("/CORE/CC/metadata.json", "METADATA", ProcessFileStatus.VALIDATED, "metadata.json", TIMESTAMP);
     private static final ProcessFileDto RAO_RESULT_FILE_DTO = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult.json", TIMESTAMP);
     private static final List<ProcessFileDto> INPUTS = List.of(CRAC_PROCESS_FILE);
     private static final List<ProcessFileDto> OUTPUTS = List.of(CNE_FILE_DTO, CGM_FILE_DTO, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO);
@@ -47,8 +47,10 @@ public class Utils {
 
     public static void neutralizeCreationDate(File file) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
-        String pattern = "<Timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z</Timestamp>";
-        String replaceBy = "<Timestamp>yyyy-MM-ddTHH:mm:ss.SSSSSSZ</Timestamp>";
+        String regex = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z";
+        String replacer = "yyyy-MM-ddTHH:mm:ss.SSSSSSZ";
+        String pattern = file.getName().endsWith(".xml") ? "<Timestamp>" + regex + "</Timestamp>" : regex;
+        String replaceBy = file.getName().endsWith(".xml") ? "<Timestamp>" + replacer + "</Timestamp>" : replacer;
         String line;
         StringBuilder oldText = new StringBuilder();
         while ((line = reader.readLine()) != null) {
