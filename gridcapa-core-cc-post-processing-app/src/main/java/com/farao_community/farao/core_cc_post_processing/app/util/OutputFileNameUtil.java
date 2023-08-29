@@ -19,8 +19,8 @@ public final class OutputFileNameUtil {
     private OutputFileNameUtil() {
     }
 
-    public static String generateRaoIResponseFileName(LocalDate localDate) {
-        return OutputsNamingRules.RAO_INTEGRATION_RESPONSE_FILENAME_FORMATTER.format(localDate)
+    public static String generateRF305FileName(LocalDate localDate) {
+        return OutputsNamingRules.F305_FILENAME_FORMATTER.format(localDate)
                 .replace("0V", String.format("%02d", 1));
     }
 

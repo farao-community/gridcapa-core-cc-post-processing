@@ -49,8 +49,10 @@ import java.util.UUID;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 @Service
-public class RaoIXmlResponseGenerator {
+public class XmlGenerator {
 
+    public static final String F299_PATH = "%s-%s-F299v%s";
+    public static final String F303_PATH = "%s-%s-F303v%s";
     public static final String F304_PATH = "%s-%s-F304v%s";
     private final MinioAdapter minioAdapter;
     public static final String OPTIMIZED_CGM = "OPTIMIZED_CGM";
@@ -62,7 +64,7 @@ public class RaoIXmlResponseGenerator {
     public static final String SENDER_ID = "22XCORESO------S";
     public static final String RECEIVER_ID = "17XTSO-CS------W";
 
-    public RaoIXmlResponseGenerator(MinioAdapter minioAdapter) {
+    public XmlGenerator(MinioAdapter minioAdapter) {
         this.minioAdapter = minioAdapter;
     }
 
@@ -71,17 +73,17 @@ public class RaoIXmlResponseGenerator {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateRaoResponseHeader(responseMessage, localDate, correlationId);
             generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap);
-            exportRaoIntegrationResponse(responseMessage, targetMinioFolder, localDate);
+            exportF305(responseMessage, targetMinioFolder, localDate);
         } catch (Exception e) {
-            throw new CoreCCPostProcessingInternalException("Error occurred during Rao Integration Response file creation", e);
+            throw new CoreCCPostProcessingInternalException("Error occurred during F305 file creation", e);
         }
     }
 
-    public void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate, String correlationId) {
+    public void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate, String correlationId, String timeInterval) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateCgmXmlHeaderFileHeader(responseMessage, localDate, correlationId);
-            generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage);
+            generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage, timeInterval);
             exportCgmXmlHeaderFile(responseMessage, cgmsTempDirPath);
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Error occurred during CGM_XML_HEADER creation", e);
@@ -131,64 +133,70 @@ public class RaoIXmlResponseGenerator {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(IntervalUtil.getFormattedBusinessDay(localDate));
         taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
-                .forEach(taskDto -> {
-                    ResponseItem responseItem = new ResponseItem();
-                    //set time interval
-                    Instant instant = taskDto.getTimestamp().toInstant();
-                    Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
-                    responseItem.setTimeInterval(formatInterval(interval));
+            .forEach(taskDto -> {
+                ResponseItem responseItem = new ResponseItem();
+                //set time interval
+                Instant instant = taskDto.getTimestamp().toInstant();
+                Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
+                responseItem.setTimeInterval(formatInterval(interval));
+                boolean includeResponseItem = true;
 
-                    if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
-                        if (!metadataMap.containsKey(taskDto.getId())) {
-                            throw new CoreCCInvalidDataException("Wrong task id in metadataMap");
-                        }
-                        fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
-                    } else if (taskDto.getStatus().equals(TaskStatus.RUNNING)) {
-                        fillRunningHours(responseItem);
-                    } else {
-                        //set file
-                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
-                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
-
-                        file.setCode(OPTIMIZED_CGM);
-                        String outputCgmXmlHeaderMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
-                        file.setUrl(DOCUMENT_IDENTIFICATION + outputCgmXmlHeaderMessageId); //MessageID of the CGM F304 zip (from header file)
-                        files.getFile().add(file);
-
-                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
-                        file1.setCode(OPTIMIZED_CB);
-                        String outputFlowBasedConstraintDocumentMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
-                        file1.setUrl(DOCUMENT_IDENTIFICATION + outputFlowBasedConstraintDocumentMessageId); //MessageID of the f303
-                        files.getFile().add(file1);
-
-                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
-                        file2.setCode(RAO_REPORT);
-                        String networkFileName = taskDto.getOutputs().stream().filter(processFileDto -> processFileDto.getFileType().equals("CGM_OUT"))
-                            .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("Cannot find network file for task %s", taskDto.getTimestamp())))
-                            .getFilename();
-                        file2.setUrl(DOCUMENT_IDENTIFICATION + networkFileName);
-                        files.getFile().add(file2);
-
-                        responseItem.setFiles(files);
+                if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
+                    if (!metadataMap.containsKey(taskDto.getId())) {
+                        throw new CoreCCInvalidDataException(String.format("Wrong task id : %s not in metadataMap", taskDto.getId()));
                     }
+                    if (metadataMap.get(taskDto.getId()).getErrorMessage().equals("Missing raoRequest")) {
+                        // Do not generate a responseItem : raoRequest was not defined for this timestamp
+                        includeResponseItem = false;
+                    } else {
+                        fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
+                    }
+                } else if (taskDto.getStatus().equals(TaskStatus.RUNNING)) {
+                    // TODO : this should never happen. when was it supposed to happen in raoi?
+                    fillRunningHours(responseItem);
+                } else {
+                    //set file
+                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
+                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
+
+                    file.setCode(OPTIMIZED_CGM);
+                    String outputCgmXmlHeaderMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                    file.setUrl(DOCUMENT_IDENTIFICATION + outputCgmXmlHeaderMessageId); //MessageID of the CGM F304 zip (from header file)
+                    files.getFile().add(file);
+
+                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
+                    file1.setCode(OPTIMIZED_CB);
+                    String outputFlowBasedConstraintDocumentMessageId = String.format(F303_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                    file1.setUrl(DOCUMENT_IDENTIFICATION + outputFlowBasedConstraintDocumentMessageId); //MessageID of the f303
+                    files.getFile().add(file1);
+
+                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
+                    file2.setCode(RAO_REPORT);
+                    String outputLogsDocumentMessageId = String.format(F299_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                    file2.setUrl(DOCUMENT_IDENTIFICATION + outputLogsDocumentMessageId); //MessageID of the f299
+                    files.getFile().add(file2);
+
+                    responseItem.setFiles(files);
+                }
+                if (includeResponseItem) {
                     responseItems.getResponseItem().add(responseItem);
-                });
+                }
+            });
         PayloadType payload = new PayloadType();
         payload.setResponseItems(responseItems);
         responseMessage.setPayload(payload);
     }
 
-    void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage) {
+    void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
-        Instant start = taskDtos.stream().map(taskDto -> taskDto.getTimestamp().toInstant()).min(Instant::compareTo).orElseThrow();
-        Instant end = taskDtos.stream().map(taskDto -> taskDto.getTimestamp().toInstant()).max(Instant::compareTo).orElseThrow();
+        responseItems.setTimeInterval(timeInterval);
 
-        Interval interval = Interval.of(start, end);
-        responseItems.setTimeInterval(interval.toString());
+        String[] splitTimeInterval = timeInterval.split("/");
+        Instant start = parseInstantWithoutSeconds(splitTimeInterval[0]);
+        Instant end = parseInstantWithoutSeconds(splitTimeInterval[1]);
 
         for (Instant instant = start; instant.isBefore(end); instant = instant.plus(1, ChronoUnit.HOURS)) {
             Interval hourInterval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
-
             TaskDto taskDto = taskDtos.stream().filter(task -> hourInterval.contains(task.getTimestamp().toInstant())).findAny().orElse(null);
             ResponseItem responseItem = new ResponseItem();
             //set time interval
@@ -214,6 +222,10 @@ public class RaoIXmlResponseGenerator {
         responseMessage.setPayload(payload);
     }
 
+    private Instant parseInstantWithoutSeconds(String instant) {
+        return Instant.parse(instant.replace(":00Z", ":00:00Z"));
+    }
+
     private void fillMissingCgmInput(ResponseItem responseItem) {
         ErrorType error = new ErrorType();
         error.setCode("NOT_AVAILABLE");
@@ -237,15 +249,15 @@ public class RaoIXmlResponseGenerator {
         responseItem.setError(error);
     }
 
-    private void exportRaoIntegrationResponse(ResponseMessageType responseMessage, String targetMinioFolder, LocalDate localDate) {
+    private void exportF305(ResponseMessageType responseMessage, String targetMinioFolder, LocalDate localDate) {
         byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
-        String raoIResponseFileName = OutputFileNameUtil.generateRaoIResponseFileName(localDate);
-        String raoIntegrationResponseDestinationPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, raoIResponseFileName);
+        String f305FileName = OutputFileNameUtil.generateRF305FileName(localDate);
+        String f305DestinationPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, f305FileName);
 
         try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
-            minioAdapter.uploadOutput(raoIntegrationResponseDestinationPath, raoResponseIs);
+            minioAdapter.uploadOutput(f305DestinationPath, raoResponseIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading RAO response for business date %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F305 for business date %s", localDate));
         }
     }
 
@@ -278,10 +290,10 @@ public class RaoIXmlResponseGenerator {
             JAXBElement<ResponseMessageType> root = new JAXBElement<>(qName, ResponseMessageType.class, responseMessage);
             jaxbMarshaller.marshal(root, stringWriter);
             return stringWriter.toString()
-                    .replace("xsi:EventMessage", "EventMessage")
-                    .replace("<EventMessage", "<EventMessage xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"")
-                    .replace("<ResponseItems", "<ResponseItems xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"http://unicorn.com/Response/response-payload\"")
-                    .getBytes();
+                .replace("xsi:EventMessage", "EventMessage")
+                .replace("<EventMessage", "<EventMessage xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"")
+                .replace("<ResponseItems", "<ResponseItems xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"http://unicorn.com/Response/response-payload\"")
+                .getBytes();
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Exception occurred during RAO Response export.", e);
         }

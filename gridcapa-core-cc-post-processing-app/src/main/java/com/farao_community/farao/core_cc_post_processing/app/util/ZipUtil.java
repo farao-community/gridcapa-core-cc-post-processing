@@ -13,7 +13,6 @@ import org.springframework.util.FileSystemUtils;
 
 import java.io.*;
 import java.nio.file.*;
-import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -42,6 +41,7 @@ public final class ZipUtil {
         try (ByteArrayOutputStream os = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(os)) {
             recursiveZip(inputDirectory, zos, inputDirectory);
+            zos.close();
             return os.toByteArray();
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while compressing directory '%s'", inputDirectory), e);
@@ -54,7 +54,6 @@ public final class ZipUtil {
         Paths.get(dir2zip);
         //get a listing of the directory content
         String[] dirList = zipDir.list();
-        Arrays.stream(dirList).forEach(LOGGER::info);
         byte[] readBuffer = new byte[2156];
         int bytesIn;
         //loop through dirList, and zip the files
