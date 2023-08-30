@@ -19,7 +19,7 @@
                 <Files>
                     <File code="OPTIMIZED_CGM" url="documentIdentification://22XCORESO------S-20230804-F304v1"/>
                     <File code="OPTIMIZED_CB" url="documentIdentification://22XCORESO------S-20230804-F303v1"/>
-                    <File code="RAO_REPORT" url="documentIdentification://CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_20230804-F342-0V.zip"/>
+                    <File code="RAO_REPORT" url="documentIdentification://22XCORESO------S-20230804-F299v1"/>
                 </Files>
             </ResponseItem>
         </ResponseItems>

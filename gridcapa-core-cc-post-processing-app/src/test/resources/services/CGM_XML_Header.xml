@@ -12,7 +12,7 @@
         <CorrelationID>6fe0a389-9315-417e-956d-b3fbaa479caz</CorrelationID>
     </Header>
     <Payload>
-        <ResponseItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://unicorn.com/Response/response-payload" timeInterval="2023-08-04T14:46:00Z/2023-08-04T14:47:00Z">
+        <ResponseItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://unicorn.com/Response/response-payload" timeInterval="2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z">
             <ResponseItem timeInterval="2023-08-04T14:46Z/2023-08-04T15:46Z">
                 <Files>
                     <File code="CGM" url="fileName://20230804_1630_2D5_UX1.uct"/>

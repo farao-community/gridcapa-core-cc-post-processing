@@ -45,12 +45,12 @@ public class Utils {
     private static final MinioClient MINIO_CLIENT = Mockito.mock(MinioClient.class);
     public static final MinioFileWriter MINIO_FILE_WRITER = new MinioFileWriter(PROPERTIES, MINIO_CLIENT);
 
-    public static void neutralizeCreationDate(File file) throws IOException {
+    public static void neutralizeCreationDate(File file, boolean isXml) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String regex = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z";
         String replacer = "yyyy-MM-ddTHH:mm:ss.SSSSSSZ";
-        String pattern = file.getName().endsWith(".xml") ? "<Timestamp>" + regex + "</Timestamp>" : regex;
-        String replaceBy = file.getName().endsWith(".xml") ? "<Timestamp>" + replacer + "</Timestamp>" : replacer;
+        String pattern = isXml ? "<Timestamp>" + regex + "</Timestamp>" : regex;
+        String replaceBy = isXml ? "<Timestamp>" + replacer + "</Timestamp>" : replacer;
         String line;
         StringBuilder oldText = new StringBuilder();
         while ((line = reader.readLine()) != null) {
@@ -65,7 +65,8 @@ public class Utils {
 
     public static void assertFilesContentEqual(String resource, String generatedFile, boolean removeCreationDate) throws IOException {
         if (removeCreationDate) {
-            neutralizeCreationDate(new File(generatedFile));
+            boolean isXml = resource.endsWith(".xml");
+            neutralizeCreationDate(new File(generatedFile), isXml);
         }
         String expectedFileContents = new String(Utils.class.getResourceAsStream(resource).readAllBytes()).replace("\r", "");
         String actualFileContents = new String(Files.newInputStream(Paths.get(generatedFile)).readAllBytes()).replace("\r", "");

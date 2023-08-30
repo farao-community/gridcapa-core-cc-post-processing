@@ -8,22 +8,23 @@ package com.farao_community.farao.core_cc_post_processing.app;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyF303Generator;
-import com.farao_community.farao.core_cc_post_processing.app.services.RaoIXmlResponseGenerator;
+import com.farao_community.farao.core_cc_post_processing.app.services.XmlGenerator;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.FlowBasedConstraintDocument;
 import com.farao_community.farao.gridcapa.task_manager.api.*;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,7 +54,7 @@ class PostProcessingServiceTest {
     }
 
     private PostProcessingService initPostProcessingService(MinioAdapter adapter) {
-        RaoIXmlResponseGenerator raoIXmlResponseGenerator = new RaoIXmlResponseGenerator(adapter);
+        XmlGenerator raoIXmlResponseGenerator = new XmlGenerator(adapter);
         DailyF303Generator dailyF303Generator = Mockito.mock(DailyF303Generator.class);
         FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = Mockito.mock(FlowBasedConstraintDocument.class);
         Mockito.doReturn(dailyFlowBasedConstraintDocument).when(dailyF303Generator).generate(Mockito.any());
@@ -70,7 +71,10 @@ class PostProcessingServiceTest {
         Utils.assertFilesContentEqual("/services/export/F303.xml", outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F303_20230804-F303-01.xml", true);
         Utils.assertFilesContentEqual("/services/export/F305.xml", outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml", true);
         Utils.assertFilesContentEqual("/services/export/F341.csv", outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv", true);
-        // Zips not tested because of .gitignore
+        // Test zips content
+        unzipAndAssertF299Content();
+        unzipAndAssertF304Content();
+        // Delete /tmp/outputs test folder
         FileUtils.deleteDirectory(new File("/tmp/outputs/"));
     }
 
@@ -82,6 +86,47 @@ class PostProcessingServiceTest {
         assertTrue(new File(outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml").exists());
         assertTrue(new File(outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv").exists());
         assertTrue(new File(outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_20230804-F342-01.zip").exists());
+    }
+
+    private static List<File> extractZip(int fileId) throws IOException {
+        String outputDir = "/tmp/outputs/RAO_OUTPUTS_DIR/2023-08-04/outputs/";
+        String archiveName = "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F" + fileId + "_20230804-F" + fileId + "-01.zip";
+        ZipFile zipFile = new ZipFile(outputDir + archiveName);
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        List<File> unzippedFiles = new ArrayList<>();
+        int numberOfFiles = 0;
+        while (entries.hasMoreElements()) {
+            ZipEntry entry = entries.nextElement();
+            InputStream stream = zipFile.getInputStream(entry);
+            String tmpFile = "/tmp/outputs/tempFile-F" + fileId + "-" + numberOfFiles;
+            File targetFile = new File(tmpFile);
+            OutputStream outStream = new FileOutputStream(targetFile);
+            IOUtils.copy(stream, outStream);
+            unzippedFiles.add(targetFile);
+            numberOfFiles++;
+        }
+        return unzippedFiles;
+    }
+
+    private static void unzipAndAssertF299Content() throws IOException {
+        try {
+            List<File> unzippedFiles = extractZip(299);
+            assertEquals(1, unzippedFiles.size());
+            Utils.assertFilesContentEqual("/services/export/F299-cne.xml", unzippedFiles.get(0).getAbsolutePath());
+        } catch (IOException e) {
+            throw new IOException("File not found.");
+        }
+    }
+
+    private static void unzipAndAssertF304Content() throws IOException {
+        try {
+            List<File> unzippedFiles = extractZip(304);
+            assertEquals(2, unzippedFiles.size());
+            Utils.assertFilesContentEqual("/services/export/F304-CGM_XML_Header.xml", unzippedFiles.get(0).getAbsolutePath(), true);
+            Utils.assertFilesContentEqual("/services/export/F304-network.uct", unzippedFiles.get(1).getAbsolutePath());
+        } catch (IOException e) {
+            throw new IOException("File not found.");
+        }
     }
 
     // Tests on fetchMetadataFromMinio
