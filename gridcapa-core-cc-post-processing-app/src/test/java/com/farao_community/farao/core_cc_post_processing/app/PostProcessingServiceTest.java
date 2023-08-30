@@ -46,11 +46,8 @@ class PostProcessingServiceTest {
         Mockito.doReturn(inputMetadataInputStream).when(minioAdapter).getFile("coreCCMetadata.json");
     }
 
-    private void initLogs() {
-        String log1 = "This is the first log.";
-        String log2 = "Here is another one.";
-        String log3 = "Hello World!";
-        logList = List.of(log1.getBytes(), log2.getBytes(), log3.getBytes());
+    private void initLogs() throws IOException {
+        logList = List.of(fileToByteArray("logs1.txt"), fileToByteArray("logs2.txt"));
     }
 
     private PostProcessingService initPostProcessingService(MinioAdapter adapter) {
@@ -74,6 +71,7 @@ class PostProcessingServiceTest {
         // Test zips content
         unzipAndAssertF299Content();
         unzipAndAssertF304Content();
+        // TODO: F342
         // Delete /tmp/outputs test folder
         FileUtils.deleteDirectory(new File("/tmp/outputs/"));
     }
@@ -127,6 +125,11 @@ class PostProcessingServiceTest {
         } catch (IOException e) {
             throw new IOException("File not found.");
         }
+    }
+
+    private byte[] fileToByteArray(String filename) throws IOException {
+        String filePath = "/services/" + filename;
+        return getClass().getResourceAsStream(filePath).readAllBytes();
     }
 
     // Tests on fetchMetadataFromMinio
