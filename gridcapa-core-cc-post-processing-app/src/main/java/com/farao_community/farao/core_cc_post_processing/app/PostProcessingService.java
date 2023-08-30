@@ -9,7 +9,7 @@ package com.farao_community.farao.core_cc_post_processing.app;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMetadataGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyF303Generator;
-import com.farao_community.farao.core_cc_post_processing.app.services.RaoIXmlResponseGenerator;
+import com.farao_community.farao.core_cc_post_processing.app.services.XmlGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
@@ -47,13 +47,13 @@ public class PostProcessingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostProcessingService.class);
     public static final String CORE_CC = "CORE/CC/";
     private final MinioAdapter minioAdapter;
-    private final RaoIXmlResponseGenerator raoIXmlResponseGenerator;
+    private final XmlGenerator xmlGenerator;
     private final DailyF303Generator dailyF303Generator;
     private RaoMetadata raoMetadata = new RaoMetadata();
 
-    public PostProcessingService(MinioAdapter minioAdapter, RaoIXmlResponseGenerator raoIXmlResponseGenerator, DailyF303Generator dailyF303Generator) {
+    public PostProcessingService(MinioAdapter minioAdapter, XmlGenerator xmlGenerator, DailyF303Generator dailyF303Generator) {
         this.minioAdapter = minioAdapter;
-        this.raoIXmlResponseGenerator = raoIXmlResponseGenerator;
+        this.xmlGenerator = xmlGenerator;
         this.dailyF303Generator = dailyF303Generator;
     }
 
@@ -69,7 +69,9 @@ public class PostProcessingService {
         // -- metadata file
         Map<UUID, CoreCCMetadata> metadataMap = fetchMetadataFromMinio(metadataPerTask);
         try {
-            new CoreCCMetadataGenerator(minioAdapter).exportMetadataFile(outputsTargetMinioFolder, metadataMap.values().stream().collect(Collectors.toList()), raoMetadata);
+            // Only write metadata for timestamps with a RaoRequestInstant defined
+            Map<UUID, CoreCCMetadata> metadataMapWithDefinedRaoRequestInstants = metadataMap.entrySet().stream().filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant())).collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
+            new CoreCCMetadataGenerator(minioAdapter).exportMetadataFile(outputsTargetMinioFolder, metadataMapWithDefinedRaoRequestInstants.values().stream().collect(Collectors.toList()), raoMetadata);
         } catch (Exception e) {
             LOGGER.error("Could not generate metadata file for core cc : {}", e.getMessage());
             throw new CoreCCPostProcessingInternalException("Could not generate metadata file");
@@ -79,14 +81,14 @@ public class PostProcessingService {
         zipAndUploadLogs(logList, OutputFileNameUtil.generateZippedLogsName(raoMetadata.getRaoRequestInstant(), outputsTargetMinioFolder, raoMetadata.getVersion()));
 
         // -- cgms
-        zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId());
+        zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId(), raoMetadata.getTimeInterval());
         // -- cnes
         zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate);
         // -- flowBasedConstraintDocument
         FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(tasksToPostProcess);
         uploadDailyOutputFlowBasedConstraintDocument(dailyFlowBasedConstraintDocument, outputsTargetMinioFolder, localDate);
         // -- RaoResponse
-        raoIXmlResponseGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap); //f305 rao response
+        xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap); //f305 rao response
     }
 
     private String generateTargetMinioFolder(LocalDate localDate) {
@@ -146,14 +148,14 @@ public class PostProcessingService {
         raoMetadata.setStatus(generateOverallStatus(metadataMap.values().stream().map(CoreCCMetadata::getStatus).collect(Collectors.toSet())));
         raoMetadata.setTimeInterval(metadataMap.values().stream().map(CoreCCMetadata::getTimeInterval).collect(Collectors.toSet()).iterator().next());
         raoMetadata.setRequestReceivedInstant(getFirstInstant(metadataMap.values().stream().map(CoreCCMetadata::getRequestReceivedInstant).collect(Collectors.toSet())));
-        raoMetadata.setComputationStartInstant(getFirstInstant(metadataMap.values().stream().map(CoreCCMetadata::getComputationStart).collect(Collectors.toSet())));
-        raoMetadata.setComputationEndInstant(getLastInstant(metadataMap.values().stream().map(CoreCCMetadata::getComputationEnd).collect(Collectors.toSet())));
         raoMetadata.setRaoRequestFileName(metadataMap.values().stream().map(CoreCCMetadata::getRaoRequestFileName).collect(Collectors.toSet()).iterator().next());
         raoMetadata.setVersion(metadataMap.values().stream().map(CoreCCMetadata::getVersion).collect(Collectors.toSet()).iterator().next());
-        raoMetadata.setRaoRequestInstant(getLastInstant(metadataMap.values().stream().map(CoreCCMetadata::getRaoRequestInstant).collect(Collectors.toSet())));
         raoMetadata.setCorrelationId(metadataMap.values().stream().map(CoreCCMetadata::getCorrelationId).collect(Collectors.toSet()).iterator().next());
         raoMetadata.setOutputsSendingInstant(Instant.now().toString());
-
+        // The following metadata can be null
+        raoMetadata.setComputationStartInstant(getFirstInstant(metadataMap.values().stream().map(CoreCCMetadata::getComputationStart).filter(Objects::nonNull).collect(Collectors.toSet())));
+        raoMetadata.setComputationEndInstant(getLastInstant(metadataMap.values().stream().map(CoreCCMetadata::getComputationEnd).filter(Objects::nonNull).collect(Collectors.toSet())));
+        raoMetadata.setRaoRequestInstant(getLastInstant(metadataMap.values().stream().map(CoreCCMetadata::getRaoRequestInstant).filter(Objects::nonNull).collect(Collectors.toSet())));
         return metadataMap;
     }
 
@@ -163,18 +165,23 @@ public class PostProcessingService {
             for (byte[] bytes : logList) {
                 ZipUtil.collectAndZip(zos, bytes);
             }
+            zos.close();
             // upload zipped result
-            minioAdapter.uploadOutput(logFileName, new ByteArrayInputStream(baos.toByteArray()));
+            try (InputStream logZipIs = new ByteArrayInputStream(baos.toByteArray())) {
+                minioAdapter.uploadOutput(logFileName, logZipIs);
+            } catch (IOException e) {
+                throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
+            }
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
         }
     }
 
     // TODO : verifier temporalite : intervalles etc. Difference d'objets : OffsetDateTime etc
-    private void zipCgmsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> cgms, LocalDate localDate, String correlationId) {
+    private void zipCgmsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> cgms, LocalDate localDate, String correlationId, String timeInterval) {
         String cgmZipTmpDir = "/tmp/cgms_out/" + localDate.toString() + "/";
         // add cgm xml header to tmp folder
-        raoIXmlResponseGenerator.generateCgmXmlHeaderFile(cgms.keySet(), cgmZipTmpDir, localDate, correlationId);
+        xmlGenerator.generateCgmXmlHeaderFile(cgms.keySet(), cgmZipTmpDir, localDate, correlationId, timeInterval);
 
         // Add all cgms from minio to tmp folder
         cgms.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(cgm -> {

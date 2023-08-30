@@ -75,6 +75,10 @@ public class CoreCCMetadataGenerator {
         // Second key is timestamp (or whole business day)
         // Value is the value of the indicator for the given timestamp
         MultiKeyMap data = new MultiKeyMap();
+
+        // Compute updated overall status : only timestamps with a RaoRequestInstant defined are considered
+        macroMetada.setStatus(RaoMetadata.generateOverallStatus(metadataList.stream().map(CoreCCMetadata::getStatus).collect(Collectors.toSet())));
+
         data.put(RAO_REQUESTS_RECEIVED, macroMetada.getTimeInterval(), macroMetada.getRaoRequestFileName());
         data.put(RAO_REQUEST_RECEPTION_TIME, macroMetada.getTimeInterval(), macroMetada.getRequestReceivedInstant());
         data.put(RAO_OUTPUTS_SENT, macroMetada.getTimeInterval(), macroMetada.getStatus().equals("SUCCESS") ? "YES" : "NO");

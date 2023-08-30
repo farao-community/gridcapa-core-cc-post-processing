@@ -47,11 +47,10 @@ public class DailyF303Generator {
             .getFilePath();
 
         try (InputStream cracXmlInputStream = minioAdapter.getFile(cracFilePath.split("CORE/CC/")[1])) {
-
             // get native CRAC
             FbConstraint nativeCrac = new FbConstraintImporter().importNativeCrac(cracXmlInputStream);
 
-            // generate F303Info for each 24 hours of the initial CRAC
+            // generate F303Info for each hour of the initial CRAC
             Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(nativeCrac.getDocument().getConstraintTimeInterval().getV());
             List<HourlyF303Info> hourlyF303Infos = new ArrayList<>();
             positionMap.values().forEach(interval -> hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, getTaskDtoOfInterval(interval, taskDtos), minioAdapter).generate()));
