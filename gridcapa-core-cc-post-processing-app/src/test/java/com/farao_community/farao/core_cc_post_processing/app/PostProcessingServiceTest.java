@@ -23,10 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,7 +35,7 @@ class PostProcessingServiceTest {
     private final MinioAdapter minioAdapter = Mockito.mock(MinioAdapter.class);
     private final LocalDate localDate = LocalDate.of(2023, 8, 4);
     private final Set<TaskDto> tasksToPostProcess = Set.of(Utils.SUCCESS_TASK);
-    private final List<byte[]> logList = List.of();
+    private List<byte[]> logList = new ArrayList<>();
     private final InputStream inputMetadataInputStream = getClass().getResourceAsStream("/services/metadatas/coreCCMetadata.json");
     private final ProcessFileDto metadataProcessFile = new ProcessFileDto("/CORE/CC/coreCCMetadata.json", "METADATA", ProcessFileStatus.VALIDATED, "coreCCMetadata.json", OffsetDateTime.parse("2019-01-08T12:30Z"));
     private final TaskDto task = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000001"), OffsetDateTime.parse("2019-01-08T12:30Z"), TaskStatus.SUCCESS, List.of(metadataProcessFile), List.of(), List.of());
@@ -46,6 +43,13 @@ class PostProcessingServiceTest {
     @BeforeEach
     void setUp() {
         Mockito.doReturn(inputMetadataInputStream).when(minioAdapter).getFile("coreCCMetadata.json");
+    }
+
+    private void initLogs() {
+        String log1 = "This is the first log.";
+        String log2 = "Here is another one.";
+        String log3 = "Hello World!";
+        logList = List.of(log1.getBytes(), log2.getBytes(), log3.getBytes());
     }
 
     private PostProcessingService initPostProcessingService(MinioAdapter adapter) {
@@ -58,6 +62,7 @@ class PostProcessingServiceTest {
 
     @Test
     void processTasks() throws IOException {
+        initLogs();
         PostProcessingService postProcessingService = initPostProcessingService(Utils.MINIO_FILE_WRITER);
         postProcessingService.processTasks(localDate, tasksToPostProcess, logList);
         String outputDir = "/tmp/outputs/RAO_OUTPUTS_DIR/2023-08-04/outputs/";
