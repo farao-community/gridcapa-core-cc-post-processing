@@ -68,11 +68,11 @@ public class XmlGenerator {
         this.minioAdapter = minioAdapter;
     }
 
-    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap) {
+    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateRaoResponseHeader(responseMessage, localDate, correlationId);
-            generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap);
+            generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap, timeInterval);
             exportF305(responseMessage, targetMinioFolder, localDate);
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Error occurred during F305 file creation", e);
@@ -129,9 +129,9 @@ public class XmlGenerator {
         return String.format("%s/%s", formatter.format(interval.getStart()), formatter.format(interval.getEnd()));
     }
 
-    void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap) {
+    void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
-        responseItems.setTimeInterval(IntervalUtil.getFormattedBusinessDay(localDate));
+        responseItems.setTimeInterval(timeInterval);
         taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
             .forEach(taskDto -> {
                 ResponseItem responseItem = new ResponseItem();

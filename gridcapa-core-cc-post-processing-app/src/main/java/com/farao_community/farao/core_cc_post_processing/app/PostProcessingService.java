@@ -88,7 +88,7 @@ public class PostProcessingService {
         FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(tasksToPostProcess);
         uploadDailyOutputFlowBasedConstraintDocument(dailyFlowBasedConstraintDocument, outputsTargetMinioFolder, localDate);
         // -- RaoResponse
-        xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap); //f305 rao response
+        xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()); //f305 rao response
     }
 
     private String generateTargetMinioFolder(LocalDate localDate) {

@@ -198,6 +198,7 @@ class HourlyF303InfoGenerator {
         }
     }
 
+    // TODO : handle this the same way as other intermediate outputs, via PostProcessingService::fillMapsOfOutputs
     private RaoResult getRaoResultOfTaskDto(Crac crac) {
         RaoResultImporter raoResultImporter = new RaoResultImporter();
         ProcessFileDto raoResultFileDto = taskDto.getOutputs()
