@@ -49,7 +49,7 @@ public class PostProcessingService {
     private final MinioAdapter minioAdapter;
     private final XmlGenerator xmlGenerator;
     private final DailyF303Generator dailyF303Generator;
-    private RaoMetadata raoMetadata = new RaoMetadata();
+    private final RaoMetadata raoMetadata = new RaoMetadata();
 
     public PostProcessingService(MinioAdapter minioAdapter, XmlGenerator xmlGenerator, DailyF303Generator dailyF303Generator) {
         this.minioAdapter = minioAdapter;
@@ -70,8 +70,8 @@ public class PostProcessingService {
         Map<UUID, CoreCCMetadata> metadataMap = fetchMetadataFromMinio(metadataPerTask);
         try {
             // Only write metadata for timestamps with a RaoRequestInstant defined
-            Map<UUID, CoreCCMetadata> metadataMapWithDefinedRaoRequestInstants = metadataMap.entrySet().stream().filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant())).collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue()));
-            new CoreCCMetadataGenerator(minioAdapter).exportMetadataFile(outputsTargetMinioFolder, metadataMapWithDefinedRaoRequestInstants.values().stream().collect(Collectors.toList()), raoMetadata);
+            Map<UUID, CoreCCMetadata> metadataMapWithDefinedRaoRequestInstants = metadataMap.entrySet().stream().filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            new CoreCCMetadataGenerator(minioAdapter).exportMetadataFile(outputsTargetMinioFolder, new ArrayList<>(metadataMapWithDefinedRaoRequestInstants.values()), raoMetadata);
         } catch (Exception e) {
             LOGGER.error("Could not generate metadata file for core cc : {}", e.getMessage());
             throw new CoreCCPostProcessingInternalException("Could not generate metadata file");
@@ -165,13 +165,16 @@ public class PostProcessingService {
             for (byte[] bytes : logList) {
                 ZipUtil.collectAndZip(zos, bytes);
             }
-            zos.close();
             // upload zipped result
-            try (InputStream logZipIs = new ByteArrayInputStream(baos.toByteArray())) {
-                minioAdapter.uploadOutput(logFileName, logZipIs);
-            } catch (IOException e) {
-                throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
-            }
+            uploadZippedLogsToMinio(logFileName, baos);
+        } catch (IOException e) {
+            throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
+        }
+    }
+
+    private void uploadZippedLogsToMinio(String logFileName, ByteArrayOutputStream baos) {
+        try (InputStream logZipIs = new ByteArrayInputStream(baos.toByteArray())) {
+            minioAdapter.uploadOutput(logFileName, logZipIs);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
         }
