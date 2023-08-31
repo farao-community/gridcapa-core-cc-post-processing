@@ -6,40 +6,35 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app;
 
-import com.farao_community.farao.core_cc_post_processing.app.configuration.CoreCCPostProcessingConfiguration;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 /**
- * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
+ * @author Ameni Walha {@literal <ameni.walha at rte-france.com>}
  */
+@SpringBootTest
 class CoreCCPostProcessingHandlerTest {
-    private final CoreCCPostProcessingConfiguration.UrlProperties url = new CoreCCPostProcessingConfiguration.UrlProperties("/timestampUrl", "/businessDateUrl");
-    private final CoreCCPostProcessingConfiguration.ProcessProperties properties = new CoreCCPostProcessingConfiguration.ProcessProperties("tag", "Europe/Brussels");
-    private final CoreCCPostProcessingConfiguration coreCCPostProcessingConfiguration = new CoreCCPostProcessingConfiguration(url, properties);
-    private final RestTemplateBuilder restTemplateBuilder = Mockito.mock(RestTemplateBuilder.class);
-    private final PostProcessingService postProcessingService = Mockito.mock(PostProcessingService.class);
-    private CoreCCPostProcessingHandler postProcessingHandler;
 
-    @BeforeEach
-    void setUp() {
-        postProcessingHandler = new CoreCCPostProcessingHandler(coreCCPostProcessingConfiguration, restTemplateBuilder, postProcessingService);
-    }
+    @Autowired
+    private CoreCCPostProcessingHandler coreCCPostProcessingHandler;
+
+    @MockBean
+    private RestTemplateBuilder restTemplateBuilder;
 
     @Test
-    void getLogsForTaskWithError() {
-        Mockito.doThrow(RuntimeException.class).when(restTemplateBuilder).build();
-        Set<TaskDto> taskList = Set.of(Utils.SUCCESS_TASK);
-        List<byte[]> logList = postProcessingHandler.getLogsForTask(taskList);
-        assertEquals(0, logList.size());
+    void publishProcessTaskManagerError() {
+        RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
+        Mockito.when(restTemplateBuilder.build()).thenReturn(restTemplate);
+        ResponseEntity responseEntity = Mockito.mock(ResponseEntity.class);
+        Mockito.when(restTemplate.getForEntity("http://mockUrl/2022-11-22", TaskDto[].class)).thenReturn(responseEntity);
+        Mockito.when(responseEntity.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

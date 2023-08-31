@@ -88,7 +88,7 @@ public class PostProcessingService {
         FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(tasksToPostProcess);
         uploadDailyOutputFlowBasedConstraintDocument(dailyFlowBasedConstraintDocument, outputsTargetMinioFolder, localDate);
         // -- RaoResponse
-        xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap); //f305 rao response
+        xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()); //f305 rao response
     }
 
     private String generateTargetMinioFolder(LocalDate localDate) {
@@ -118,7 +118,7 @@ public class PostProcessingService {
         );
     }
 
-    Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(Map<TaskDto, ProcessFileDto> metadatas) {
+    private Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(Map<TaskDto, ProcessFileDto> metadatas) {
         Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
         metadatas.entrySet().stream().filter(md -> md.getValue().getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).
             forEach(metadata -> {
