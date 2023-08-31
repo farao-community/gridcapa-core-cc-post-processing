@@ -13,6 +13,7 @@ import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.Fl
 import com.farao_community.farao.gridcapa.task_manager.api.*;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,7 +73,7 @@ class PostProcessingServiceTest {
         unzipAndAssertF304Content();
         // TODO: F342
         // Delete /tmp/outputs test folder
-        // FileUtils.deleteDirectory(new File("/tmp/outputs/"));
+        FileUtils.deleteDirectory(new File("/tmp/outputs/"));
     }
 
     private static void assertAllOutputsGenerated(String outputDir) {
