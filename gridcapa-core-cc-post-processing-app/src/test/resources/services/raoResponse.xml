@@ -14,7 +14,7 @@
         <CorrelationID>6fe0a389-9315-417e-956d-b3fbaa479caz</CorrelationID>
     </Header>
     <Payload>
-        <ResponseItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://unicorn.com/Response/response-payload" timeInterval="20230804">
+        <ResponseItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://unicorn.com/Response/response-payload" timeInterval="2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z">
             <ResponseItem timeInterval="2023-08-21T15:16Z/2023-08-21T16:16Z">
                 <Files>
                     <File code="OPTIMIZED_CGM" url="documentIdentification://22XCORESO------S-20230804-F304v1"/>

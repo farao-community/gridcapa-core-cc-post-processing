@@ -84,7 +84,7 @@ class XmlGeneratorTest {
         initMetadataMap();
         XmlGenerator raoIXmlResponseGenerator = new XmlGenerator(Utils.MINIO_FILE_WRITER);
         String targetMinioFolder = "/tmp";
-        raoIXmlResponseGenerator.generateRaoResponse(taskDtos, targetMinioFolder, localDate, correlationId, metadataMap);
+        raoIXmlResponseGenerator.generateRaoResponse(taskDtos, targetMinioFolder, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         Utils.assertFilesContentEqual("/services/raoResponse.xml", "/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml", true);
         FileUtils.deleteDirectory(new File("/tmp/outputs/"));
     }
@@ -121,7 +121,7 @@ class XmlGeneratorTest {
         initTasksForRaoResponse();
         initMetadataMap();
         XmlGenerator raoIXmlResponseGenerator = new XmlGenerator(Utils.MINIO_FILE_WRITER);
-        raoIXmlResponseGenerator.generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap);
+        raoIXmlResponseGenerator.generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
 
         assertEquals(3, payload.getResponseItems().getResponseItem().size());
