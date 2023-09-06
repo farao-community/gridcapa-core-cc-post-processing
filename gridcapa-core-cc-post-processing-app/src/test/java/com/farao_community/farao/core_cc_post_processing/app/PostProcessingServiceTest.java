@@ -48,7 +48,7 @@ class PostProcessingServiceTest {
     }
 
     private void initLogs() throws IOException {
-        logList = List.of(fileToByteArray("logs1.txt"), fileToByteArray("logs2.txt"));
+        logList = List.of(fileToByteArray("logs.zip"));
     }
 
     private PostProcessingService initPostProcessingService(MinioAdapter adapter) {
@@ -72,7 +72,7 @@ class PostProcessingServiceTest {
         // Test zips content
         unzipAndAssertF299Content();
         unzipAndAssertF304Content();
-        // TODO: F342
+        unzipAndAssertF342Content();
         // Delete /tmp/outputs test folder
         FileUtils.deleteDirectory(new File(TEMP_DIR + "/outputs/"));
     }
@@ -125,6 +125,17 @@ class PostProcessingServiceTest {
             Utils.assertFilesContentEqual("/services/export/F304-network.uct", unzippedFiles.get(1).getAbsolutePath());
         } catch (IOException e) {
             throw new IOException("File not found.");
+        }
+    }
+
+    private static void unzipAndAssertF342Content() throws IOException {
+        try {
+            List<File> unzippedFiles = extractZip(342);
+            assertEquals(2, unzippedFiles.size());
+            Utils.assertFilesContentEqual("/services/export/logs1.txt", unzippedFiles.get(0).getAbsolutePath());
+            Utils.assertFilesContentEqual("/services/export/logs2.txt", unzippedFiles.get(1).getAbsolutePath());
+        } catch (IOException e) {
+            throw new IOException("File not found.", e);
         }
     }
 

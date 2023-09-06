@@ -166,6 +166,7 @@ public class PostProcessingService {
             for (byte[] bytes : logList) {
                 ZipUtil.collectAndZip(zos, bytes);
             }
+            zos.close();
             // upload zipped result
             uploadZippedLogsToMinio(logFileName, baos);
         } catch (IOException e) {
