@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_DIR;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -63,7 +64,7 @@ class PostProcessingServiceTest {
         initLogs();
         PostProcessingService postProcessingService = initPostProcessingService(Utils.MINIO_FILE_WRITER);
         postProcessingService.processTasks(localDate, tasksToPostProcess, logList);
-        String outputDir = "/tmp/outputs/RAO_OUTPUTS_DIR/2023-08-04/outputs/";
+        String outputDir = TEMP_DIR + "/outputs/RAO_OUTPUTS_DIR/2023-08-04/outputs/";
         assertAllOutputsGenerated(outputDir);
         Utils.assertFilesContentEqual("/services/export/F303.xml", outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F303_20230804-F303-01.xml", true);
         Utils.assertFilesContentEqual("/services/export/F305.xml", outputDir + "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml", true);
@@ -73,7 +74,7 @@ class PostProcessingServiceTest {
         unzipAndAssertF304Content();
         // TODO: F342
         // Delete /tmp/outputs test folder
-        FileUtils.deleteDirectory(new File("/tmp/outputs/"));
+        FileUtils.deleteDirectory(new File(TEMP_DIR + "/outputs/"));
     }
 
     private static void assertAllOutputsGenerated(String outputDir) {
@@ -87,7 +88,7 @@ class PostProcessingServiceTest {
     }
 
     private static List<File> extractZip(int fileId) throws IOException {
-        String outputDir = "/tmp/outputs/RAO_OUTPUTS_DIR/2023-08-04/outputs/";
+        String outputDir = TEMP_DIR + "/outputs/RAO_OUTPUTS_DIR/2023-08-04/outputs/";
         String archiveName = "CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F" + fileId + "_20230804-F" + fileId + "-01.zip";
         ZipFile zipFile = new ZipFile(outputDir + archiveName);
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -96,7 +97,7 @@ class PostProcessingServiceTest {
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             InputStream stream = zipFile.getInputStream(entry);
-            String tmpFile = "/tmp/outputs/tempFile-F" + fileId + "-" + numberOfFiles;
+            String tmpFile = TEMP_DIR + "/outputs/tempFile-F" + fileId + "-" + numberOfFiles;
             File targetFile = new File(tmpFile);
             OutputStream outStream = new FileOutputStream(targetFile);
             IOUtils.copy(stream, outStream);

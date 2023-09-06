@@ -44,6 +44,7 @@ public class Utils {
     private static final MinioAdapterProperties PROPERTIES = Mockito.mock(MinioAdapterProperties.class);
     private static final MinioClient MINIO_CLIENT = Mockito.mock(MinioClient.class);
     public static final MinioFileWriter MINIO_FILE_WRITER = new MinioFileWriter(PROPERTIES, MINIO_CLIENT);
+    public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
     public static void neutralizeCreationDate(File file, boolean isXml) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));

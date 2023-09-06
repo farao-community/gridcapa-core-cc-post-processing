@@ -46,6 +46,7 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
 public class PostProcessingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostProcessingService.class);
     public static final String CORE_CC = "CORE/CC/";
+    public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
     private final MinioAdapter minioAdapter;
     private final XmlGenerator xmlGenerator;
     private final DailyF303Generator dailyF303Generator;
@@ -182,7 +183,7 @@ public class PostProcessingService {
 
     // TODO : verifier temporalite : intervalles etc. Difference d'objets : OffsetDateTime etc
     private void zipCgmsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> cgms, LocalDate localDate, String correlationId, String timeInterval) {
-        String cgmZipTmpDir = "/tmp/cgms_out/" + localDate.toString() + "/";
+        String cgmZipTmpDir = TEMP_DIR + "/cgms_out/" + localDate.toString() + "/";
         // add cgm xml header to tmp folder
         xmlGenerator.generateCgmXmlHeaderFile(cgms.keySet(), cgmZipTmpDir, localDate, correlationId, timeInterval);
 
@@ -213,7 +214,7 @@ public class PostProcessingService {
     }
 
     private void zipCnesAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> cnes, LocalDate localDate) {
-        String cneZipTmpDir = "/tmp/cnes_out/" + localDate.toString() + "/";
+        String cneZipTmpDir = TEMP_DIR + "/cnes_out/" + localDate.toString() + "/";
 
         // Add all cnes from minio to tmp folder
         cnes.values().stream()

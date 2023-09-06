@@ -15,6 +15,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_DIR;
+
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
@@ -26,11 +28,11 @@ public class MinioFileWriter extends MinioAdapter {
 
     @Override
     public void uploadOutput(String path, InputStream inputStream) {
-        File tmpDir = new File("/tmp/outputs/");
-        if (!tmpDir.exists()) {
-            boolean created = tmpDir.mkdir();
+        File outputDir = new File(TEMP_DIR + "/outputs/");
+        if (!outputDir.exists()) {
+            boolean created = outputDir.mkdir();
         }
-        String outputPath = path.startsWith("RAO_OUTPUTS_DIR") ? "/tmp/outputs/" + path : path;
+        String outputPath = path.startsWith("RAO_OUTPUTS_DIR") ? TEMP_DIR + "/outputs/" + path : path;
         File targetFile = new File(outputPath);
         try {
             FileUtils.copyInputStreamToFile(inputStream, targetFile);

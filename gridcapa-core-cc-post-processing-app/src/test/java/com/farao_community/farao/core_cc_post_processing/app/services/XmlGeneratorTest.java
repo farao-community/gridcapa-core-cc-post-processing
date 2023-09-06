@@ -28,6 +28,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_DIR;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -55,7 +56,7 @@ class XmlGeneratorTest {
     void generateCgmXmlHeaderFile() throws IOException {
         initTasksForCgmXmlHeader();
         XmlGenerator raoIXmlResponseGenerator = new XmlGenerator(Utils.MINIO_FILE_WRITER);
-        String cgmsArchiveTempPath = "/tmp/gridcapa/cgms";
+        String cgmsArchiveTempPath = TEMP_DIR + "/gridcapa/cgms";
         File generatedXmlHeaderFile = new File(cgmsArchiveTempPath, "CGM_XML_Header.xml");
         // First pass with not existing directory
         raoIXmlResponseGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
@@ -83,10 +84,9 @@ class XmlGeneratorTest {
         initTasksForRaoResponse();
         initMetadataMap();
         XmlGenerator raoIXmlResponseGenerator = new XmlGenerator(Utils.MINIO_FILE_WRITER);
-        String targetMinioFolder = "/tmp";
-        raoIXmlResponseGenerator.generateRaoResponse(taskDtos, targetMinioFolder, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
-        Utils.assertFilesContentEqual("/services/raoResponse.xml", "/tmp/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml", true);
-        FileUtils.deleteDirectory(new File("/tmp/outputs/"));
+        raoIXmlResponseGenerator.generateRaoResponse(taskDtos, TEMP_DIR, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+        Utils.assertFilesContentEqual("/services/raoResponse.xml", TEMP_DIR + "/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_20230804-F305-01.xml", true);
+        FileUtils.deleteDirectory(new File(TEMP_DIR + "/outputs/"));
     }
 
     private void initTasksForRaoResponse() {
