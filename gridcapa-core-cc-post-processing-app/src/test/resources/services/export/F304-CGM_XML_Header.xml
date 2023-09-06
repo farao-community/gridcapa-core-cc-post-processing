@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<EventMessage xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://iec.ch/TC57/2011/schema/message" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Header>
+        <Verb>created</Verb>
+        <Noun>OptimizedCommonGridModel</Noun>
+        <Revision>1</Revision>
+        <Context>PRODUCTION</Context>
+        <Timestamp>yyyy-MM-ddTHH:mm:ss.SSSSSSZ</Timestamp>
+        <Source>22XCORESO------S</Source>
+        <ReplyAddress>17XTSO-CS------W</ReplyAddress>
+        <MessageID>22XCORESO------S-20230804-F304v1</MessageID>
+        <CorrelationID>00000000-0000-0000-0000-000000000000</CorrelationID>
+    </Header>
+    <Payload>
+        <ResponseItems xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://unicorn.com/Response/response-payload" timeInterval="2023-08-03T23:00:00.000Z/2023-08-04T23:00:00.000Z">
+            <ResponseItem timeInterval="2023-08-03T23:00Z/2023-08-04T00:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T00:00Z/2023-08-04T01:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T01:00Z/2023-08-04T02:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T02:00Z/2023-08-04T03:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T03:00Z/2023-08-04T04:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T04:00Z/2023-08-04T05:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T05:00Z/2023-08-04T06:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T06:00Z/2023-08-04T07:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T07:00Z/2023-08-04T08:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T08:00Z/2023-08-04T09:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T09:00Z/2023-08-04T10:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T10:00Z/2023-08-04T11:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T11:00Z/2023-08-04T12:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T12:00Z/2023-08-04T13:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T13:00Z/2023-08-04T14:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T14:00Z/2023-08-04T15:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T15:00Z/2023-08-04T16:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T16:00Z/2023-08-04T17:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T17:00Z/2023-08-04T18:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T18:00Z/2023-08-04T19:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T19:00Z/2023-08-04T20:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T20:00Z/2023-08-04T21:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T21:00Z/2023-08-04T22:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+            <ResponseItem timeInterval="2023-08-04T22:00Z/2023-08-04T23:00Z">
+                <Error>
+                    <Code>NOT_AVAILABLE</Code>
+                    <Reason>UCT file is not available for this time interval</Reason>
+                </Error>
+            </ResponseItem>
+        </ResponseItems>
+    </Payload>
+</EventMessage>
