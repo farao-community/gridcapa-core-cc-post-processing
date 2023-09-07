@@ -52,9 +52,9 @@
 
 
     <properties>
-        <core-cc-runner.version>1.0.0</core-cc-runner.version>
+        <core-cc-runner.version>1.0.1</core-cc-runner.version>
         <task-manager.version>1.20.0</task-manager.version>
-        <farao.dependencies.version>1.13.0</farao.dependencies.version>
+        <farao.dependencies.version>1.19.0</farao.dependencies.version>
         <gridcapa.starter.minio.version>1.0.0</gridcapa.starter.minio.version>
         <jsonapi.converter.version>0.11</jsonapi.converter.version>
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
