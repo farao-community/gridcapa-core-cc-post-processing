@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
@@ -16,8 +17,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -39,9 +38,7 @@ public class CoreCCMetadataGenerator {
         this.minioAdapter = minioAdapter;
     }
 
-    public static final ZoneId ZONE_ID = ZoneId.of("Europe/Brussels");
     public static final String OUTPUTS = "%s/outputs/%s"; // destination/filename
-    public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_'yyyyMMdd'-F341-0V.csv'").withZone(ZONE_ID);
 
     public void exportMetadataFile(String targetMinioFolder, List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
         byte[] csv = generateMetadataCsv(metadataList, macroMetadata).getBytes();
@@ -56,7 +53,7 @@ public class CoreCCMetadataGenerator {
     }
 
     public static String generateMetadataFileName(String instant, int version) {
-        return METADATA_FILENAME_FORMATTER.format(Instant.parse(instant))
+        return NamingRules.METADATA_FILENAME_FORMATTER.format(Instant.parse(instant))
             .replace("0V", String.format("%02d", version));
     }
 
