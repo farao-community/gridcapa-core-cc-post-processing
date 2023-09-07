@@ -11,7 +11,7 @@ import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMeta
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyF303Generator;
 import com.farao_community.farao.core_cc_post_processing.app.services.XmlGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
-import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
+import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.core_cc_post_processing.app.util.ZipUtil;
 import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.FlowBasedConstraintDocument;
@@ -78,7 +78,7 @@ public class PostProcessingService {
         }
 
         // -- zipped logs
-        zipAndUploadLogs(logList, OutputFileNameUtil.generateZippedLogsName(raoMetadata.getRaoRequestInstant(), outputsTargetMinioFolder, raoMetadata.getVersion()));
+        zipAndUploadLogs(logList, NamingRules.generateZippedLogsName(raoMetadata.getRaoRequestInstant(), outputsTargetMinioFolder, raoMetadata.getVersion()));
 
         // -- cgms
         zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId(), raoMetadata.getTimeInterval());
@@ -177,7 +177,6 @@ public class PostProcessingService {
         }
     }
 
-    // TODO : verifier temporalite : intervalles etc. Difference d'objets : OffsetDateTime etc
     private void zipCgmsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> cgms, LocalDate localDate, String correlationId, String timeInterval) {
         String cgmZipTmpDir = "/tmp/cgms_out/" + localDate.toString() + "/";
         // add cgm xml header to tmp folder
@@ -196,8 +195,8 @@ public class PostProcessingService {
 
         // Zip tmp folder
         byte[] cgmsZipResult = ZipUtil.zipDirectory(cgmZipTmpDir);
-        String targetCgmsFolderName = OutputFileNameUtil.generateCgmZipName(localDate);
-        String targetCgmsFolderPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, targetCgmsFolderName);
+        String targetCgmsFolderName = NamingRules.generateCgmZipName(localDate);
+        String targetCgmsFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetCgmsFolderName);
 
         try (InputStream cgmZipIs = new ByteArrayInputStream(cgmsZipResult)) {
             minioAdapter.uploadOutput(targetCgmsFolderPath, cgmZipIs);
@@ -226,8 +225,8 @@ public class PostProcessingService {
             });
 
         byte[] cneZipResult = ZipUtil.zipDirectory(cneZipTmpDir);
-        String targetCneFolderName = OutputFileNameUtil.generateCneZipName(localDate);
-        String targetCneFolderPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, targetCneFolderName);
+        String targetCneFolderName = NamingRules.generateCneZipName(localDate);
+        String targetCneFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetCneFolderName);
 
         try (InputStream cneZipIs = new ByteArrayInputStream(cneZipResult)) {
             minioAdapter.uploadOutput(targetCneFolderPath, cneZipIs);
@@ -240,8 +239,8 @@ public class PostProcessingService {
 
     void uploadDailyOutputFlowBasedConstraintDocument(FlowBasedConstraintDocument dailyFbDocument, String targetMinioFolder, LocalDate localDate) {
         byte[] dailyFbConstraint = JaxbUtil.writeInBytes(FlowBasedConstraintDocument.class, dailyFbDocument);
-        String fbConstraintFileName = OutputFileNameUtil.generateOptimizedCbFileName(localDate);
-        String fbConstraintDestinationPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, fbConstraintFileName);
+        String fbConstraintFileName = NamingRules.generateOptimizedCbFileName(localDate);
+        String fbConstraintDestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, fbConstraintFileName);
 
         try (InputStream dailyFbIs = new ByteArrayInputStream(dailyFbConstraint)) {
             minioAdapter.uploadOutput(fbConstraintDestinationPath, dailyFbIs);

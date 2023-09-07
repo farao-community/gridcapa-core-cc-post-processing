@@ -9,8 +9,7 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
-import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
-import com.farao_community.farao.core_cc_post_processing.app.util.OutputsNamingRules;
+import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInvalidDataException;
@@ -33,9 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.Map;
@@ -124,11 +120,6 @@ public class XmlGenerator {
         responseMessage.setHeader(header);
     }
 
-    private String formatInterval(Interval interval) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy'-'MM'-'dd'T'HH':'mm'Z'").withZone(ZoneId.from(ZoneOffset.UTC));
-        return String.format("%s/%s", formatter.format(interval.getStart()), formatter.format(interval.getEnd()));
-    }
-
     void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
@@ -138,7 +129,7 @@ public class XmlGenerator {
                 //set time interval
                 Instant instant = taskDto.getTimestamp().toInstant();
                 Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
-                responseItem.setTimeInterval(formatInterval(interval));
+                responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(interval));
                 boolean includeResponseItem = true;
 
                 if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
@@ -200,7 +191,7 @@ public class XmlGenerator {
             TaskDto taskDto = taskDtos.stream().filter(task -> hourInterval.contains(task.getTimestamp().toInstant())).findAny().orElse(null);
             ResponseItem responseItem = new ResponseItem();
             //set time interval
-            responseItem.setTimeInterval(formatInterval(hourInterval));
+            responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(hourInterval));
 
             if (taskDto == null) {
                 // If there's no result object then there was no request object
@@ -211,7 +202,7 @@ public class XmlGenerator {
                 com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
 
                 file.setCode(CGM);
-                file.setUrl(FILENAME + OutputFileNameUtil.generateUctFileName(instant.toString(), 1));
+                file.setUrl(FILENAME + NamingRules.generateUctFileName(instant.toString(), 1));
                 files.getFile().add(file);
                 responseItem.setFiles(files);
             }
@@ -251,8 +242,8 @@ public class XmlGenerator {
 
     private void exportF305(ResponseMessageType responseMessage, String targetMinioFolder, LocalDate localDate) {
         byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
-        String f305FileName = OutputFileNameUtil.generateRF305FileName(localDate);
-        String f305DestinationPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, f305FileName);
+        String f305FileName = NamingRules.generateRF305FileName(localDate);
+        String f305DestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, f305FileName);
 
         try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
             minioAdapter.uploadOutput(f305DestinationPath, raoResponseIs);
@@ -264,7 +255,7 @@ public class XmlGenerator {
     private void exportCgmXmlHeaderFile(ResponseMessageType responseMessage, String cgmsArchiveTempPath) {
         try {
             byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
-            File targetFile = new File(cgmsArchiveTempPath, OutputsNamingRules.CGM_XML_HEADER_FILENAME); //NOSONAR
+            File targetFile = new File(cgmsArchiveTempPath, NamingRules.CGM_XML_HEADER_FILENAME); //NOSONAR
 
             if (!Files.exists(targetFile.getParentFile().toPath())) {
                 targetFile.getParentFile().mkdirs();

@@ -8,9 +8,7 @@ package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import org.threeten.extra.Interval;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,6 +20,7 @@ import java.util.TreeMap;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 public final class IntervalUtil {
+    public static final ZoneId ZONE_ID = ZoneId.of("Europe/Brussels");
 
     private IntervalUtil() {
         throw new AssertionError("Utility class should not be constructed");
@@ -64,4 +63,10 @@ public final class IntervalUtil {
     public static String getFormattedBusinessDay(LocalDate localDate) {
         return getFormattedBusinessDay(localDate, "yyyyMMdd");
     }
+
+    public static String formatIntervalInUtc(Interval interval) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy'-'MM'-'dd'T'HH':'mm'Z'").withZone(ZoneId.from(ZoneOffset.UTC));
+        return String.format("%s/%s", formatter.format(interval.getStart()), formatter.format(interval.getEnd()));
+    }
+
 }
