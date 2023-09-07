@@ -52,7 +52,7 @@
 
 
     <properties>
-        <core-cc-runner.version>1.0.1</core-cc-runner.version>
+        <core-cc-runner.version>1.0.2-SNAPSHOT</core-cc-runner.version>
         <task-manager.version>1.20.0</task-manager.version>
         <farao.dependencies.version>1.19.0</farao.dependencies.version>
         <gridcapa.starter.minio.version>1.0.0</gridcapa.starter.minio.version>
