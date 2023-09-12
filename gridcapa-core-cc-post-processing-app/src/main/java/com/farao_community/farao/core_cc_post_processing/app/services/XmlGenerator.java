@@ -64,7 +64,7 @@ public class XmlGenerator {
         this.minioAdapter = minioAdapter;
     }
 
-    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
+    public void generateRaoResponse(String targetMinioFolder, Set<TaskDto> taskDtos, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateRaoResponseHeader(responseMessage, localDate, correlationId);

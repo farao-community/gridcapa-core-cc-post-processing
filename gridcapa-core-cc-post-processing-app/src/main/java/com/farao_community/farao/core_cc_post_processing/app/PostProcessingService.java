@@ -63,7 +63,8 @@ public class PostProcessingService {
         Map<TaskDto, ProcessFileDto> cnePerTask = new HashMap<>();
         Map<TaskDto, ProcessFileDto> cgmPerTask = new HashMap<>();
         Map<TaskDto, ProcessFileDto> metadataPerTask = new HashMap<>();
-        fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask);
+        Map<TaskDto, ProcessFileDto> raoResultPerTask = new HashMap<>();
+        fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask, raoResultPerTask);
 
         // Generate outputs
         // -- metadata file
@@ -85,10 +86,10 @@ public class PostProcessingService {
         // -- cnes
         zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate);
         // -- flowBasedConstraintDocument
-        FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(tasksToPostProcess);
+        FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(raoResultPerTask);
         uploadDailyOutputFlowBasedConstraintDocument(dailyFlowBasedConstraintDocument, outputsTargetMinioFolder, localDate);
         // -- RaoResponse
-        xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()); //f305 rao response
+        xmlGenerator.generateRaoResponse(outputsTargetMinioFolder, tasksToPostProcess, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()); //f305 rao response
     }
 
     private String generateTargetMinioFolder(LocalDate localDate) {
@@ -98,7 +99,8 @@ public class PostProcessingService {
     private void fillMapsOfOutputs(Set<TaskDto> tasksToProcess,
                                    Map<TaskDto, ProcessFileDto> cnes,
                                    Map<TaskDto, ProcessFileDto> cgms,
-                                   Map<TaskDto, ProcessFileDto> metadatas) {
+                                   Map<TaskDto, ProcessFileDto> metadatas,
+                                   Map<TaskDto, ProcessFileDto> raoResults) {
         tasksToProcess.forEach(taskDto ->
             taskDto.getOutputs().forEach(processFileDto -> {
                 switch (processFileDto.getFileType()) {
@@ -110,6 +112,9 @@ public class PostProcessingService {
                         break;
                     case "METADATA":
                         metadatas.put(taskDto, processFileDto);
+                        break;
+                    case "RAO_RESULT":
+                        raoResults.put(taskDto, processFileDto);
                         break;
                     default:
                         // do nothing, other outputs are available but we won't be collecting them

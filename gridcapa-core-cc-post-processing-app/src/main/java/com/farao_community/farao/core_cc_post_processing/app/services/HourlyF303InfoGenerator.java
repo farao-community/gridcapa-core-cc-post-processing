@@ -31,6 +31,7 @@ import com.farao_community.farao.data.rao_result_json.RaoResultImporter;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
+import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.powsybl.iidm.network.Network;
 import org.threeten.extra.Interval;
@@ -58,18 +59,23 @@ class HourlyF303InfoGenerator {
     private final FbConstraint nativeCrac;
     private final Interval interval;
     private final TaskDto taskDto;
+    private final ProcessFileDto raoResultProcessFile;
     private final MinioAdapter minioAdapter;
 
-    HourlyF303InfoGenerator(FbConstraint nativeCrac, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter) {
+    HourlyF303InfoGenerator(FbConstraint nativeCrac, Interval interval, TaskDto taskDto, ProcessFileDto raoResultProcessFile, MinioAdapter minioAdapter) {
         this.nativeCrac = nativeCrac;
         this.interval = interval;
         this.taskDto = taskDto;
+        this.raoResultProcessFile = raoResultProcessFile;
         this.minioAdapter = minioAdapter;
     }
 
     HourlyF303Info generate() {
         if (taskDto == null || !taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
             return getInfoForNonRequestedOrFailedInterval();
+        }
+        if (raoResultProcessFile == null) {
+            throw new CoreCCInternalException(String.format("raoResult is null although task status is %s", taskDto.getStatus().toString()));
         }
 
         return getInfoForSuccessfulInterval();
@@ -198,13 +204,9 @@ class HourlyF303InfoGenerator {
         }
     }
 
-    // TODO : handle this the same way as other intermediate outputs, via PostProcessingService::fillMapsOfOutputs
     private RaoResult getRaoResultOfTaskDto(Crac crac) {
         RaoResultImporter raoResultImporter = new RaoResultImporter();
-        ProcessFileDto raoResultFileDto = taskDto.getOutputs()
-            .stream().filter(processFileDto -> processFileDto.getFileType().equals("RAO_RESULT"))
-            .findFirst().orElseThrow();
-        try (InputStream raoResultInputStream = minioAdapter.getFile(raoResultFileDto.getFilePath().split("CORE/CC/")[1])) {
+        try (InputStream raoResultInputStream = minioAdapter.getFile(raoResultProcessFile.getFilePath().split("CORE/CC/")[1])) {
             return raoResultImporter.importRaoResult(raoResultInputStream, crac);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Cannot import RAO result of hourly RAO response of instant %s", taskDto.getTimestamp()));
