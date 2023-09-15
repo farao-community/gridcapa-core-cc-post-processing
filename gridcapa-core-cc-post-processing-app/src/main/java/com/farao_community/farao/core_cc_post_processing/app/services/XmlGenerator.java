@@ -38,7 +38,7 @@ import java.util.UUID;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 @Service
-public class XmlGenerator {
+public final class XmlGenerator {
 
     public static final String F299_PATH = "%s-%s-F299v%s";
     public static final String F303_PATH = "%s-%s-F303v%s";
@@ -54,6 +54,7 @@ public class XmlGenerator {
 
     private XmlGenerator() {
     }
+
     public static ResponseMessageType generateRaoResponse(Set<TaskDto> taskDtos, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();

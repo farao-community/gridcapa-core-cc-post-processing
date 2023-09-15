@@ -24,7 +24,7 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  */
-public class CoreCCMetadataGenerator {
+public final class CoreCCMetadataGenerator {
     private CoreCCMetadataGenerator() {
     }
 
