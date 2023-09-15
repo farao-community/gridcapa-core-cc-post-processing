@@ -68,4 +68,9 @@ public final class NamingRules {
         return String.format(NamingRules.OUTPUTS, outputsTargetMinioFolder, NamingRules.LOGS_OUTPUT_FORMATTER.format(Instant.parse(instant))
             .replace("0V", String.format("%02d", version)));
     }
+
+    public static String generateMetadataFileName(String instant, int version) {
+        return NamingRules.METADATA_FILENAME_FORMATTER.format(Instant.parse(instant))
+            .replace("0V", String.format("%02d", version));
+    }
 }
