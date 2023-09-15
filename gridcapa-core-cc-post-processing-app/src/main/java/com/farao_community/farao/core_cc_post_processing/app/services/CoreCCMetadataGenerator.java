@@ -6,15 +6,10 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
-import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
-import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.collections.map.MultiKeyMap;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -30,8 +25,7 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  */
 public class CoreCCMetadataGenerator {
-
-    public CoreCCMetadataGenerator() {
+    private CoreCCMetadataGenerator() {
     }
 
     public static String generateMetadataCsv(List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {

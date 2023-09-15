@@ -7,6 +7,7 @@
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
+import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -60,7 +61,7 @@ public class RaoMetadata {
         } else if (statusSet.stream().anyMatch(s -> s.equals("PENDING"))) {
             return "PENDING";
         } else if (statusSet.stream().anyMatch(s -> s.equals("RUNNING"))) {
-            return "RUNNING";
+            throw new CoreCCInternalException("No task should be set to RUNNING");
         } else if (statusSet.stream().allMatch(s -> s.equals("SUCCESS"))) {
             return "SUCCESS";
         } else {

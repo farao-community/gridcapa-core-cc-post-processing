@@ -36,7 +36,7 @@ public class DailyF303Generator {
         this.minioAdapter = minioAdapter;
     }
 
-    public FlowBasedConstraintDocument generate(Map<TaskDto, ProcessFileDto> raoResults) {
+    public FlowBasedConstraintDocument generate(Map<TaskDto, ProcessFileDto> raoResults, Map<TaskDto, ProcessFileDto> cgms) {
         String cracFilePath = raoResults.keySet().stream()
             .findFirst().orElseThrow()
             .getInputs()
@@ -53,7 +53,7 @@ public class DailyF303Generator {
             List<HourlyF303Info> hourlyF303Infos = new ArrayList<>();
             positionMap.values().forEach(interval -> {
                 TaskDto taskDto =  getTaskDtoOfInterval(interval, raoResults.keySet());
-                hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, raoResults.get(taskDto), minioAdapter).generate());
+                hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter).generate(raoResults.get(taskDto), cgms.get(taskDto)));
             });
 
             // gather hourly info in one common document, cluster the elements that can be clusterized
