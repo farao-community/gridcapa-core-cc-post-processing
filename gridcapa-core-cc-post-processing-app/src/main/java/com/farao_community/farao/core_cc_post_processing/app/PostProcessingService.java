@@ -89,6 +89,7 @@ public class PostProcessingService {
         uploadDailyOutputFlowBasedConstraintDocument(dailyFlowBasedConstraintDocument, outputsTargetMinioFolder, localDate);
         // -- RaoResponse
         xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()); //f305 rao response
+        LOGGER.info("END - All outputs have been uploaded");
     }
 
     private String generateTargetMinioFolder(LocalDate localDate) {
