@@ -6,16 +6,10 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
-import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
-import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.apache.commons.collections.map.MultiKeyMap;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -30,38 +24,11 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  */
-public class CoreCCMetadataGenerator {
-
-    private final MinioAdapter minioAdapter;
-
-    public CoreCCMetadataGenerator(MinioAdapter minioAdapter) {
-        this.minioAdapter = minioAdapter;
+public final class CoreCCMetadataGenerator {
+    private CoreCCMetadataGenerator() {
     }
 
-    public static final String OUTPUTS = "%s/outputs/%s"; // destination/filename
-
-    public void exportMetadataFile(String targetMinioFolder, List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
-        byte[] csv = generateMetadataCsv(metadataList, macroMetadata).getBytes();
-        String metadataFileName = generateMetadataFileName(macroMetadata.getRaoRequestInstant(), macroMetadata.getVersion());
-        String metadataDestinationPath = generateOutputsDestinationPath(targetMinioFolder, metadataFileName);
-
-        try (InputStream csvIs = new ByteArrayInputStream(csv)) {
-            minioAdapter.uploadOutput(metadataDestinationPath, csvIs);
-        } catch (IOException e) {
-            throw new CoreCCInternalException("Exception occurred while uploading metadata file");
-        }
-    }
-
-    public static String generateMetadataFileName(String instant, int version) {
-        return NamingRules.METADATA_FILENAME_FORMATTER.format(Instant.parse(instant))
-            .replace("0V", String.format("%02d", version));
-    }
-
-    public static String generateOutputsDestinationPath(String destinationPrefix, String fileName) {
-        return String.format(OUTPUTS, destinationPrefix, fileName);
-    }
-
-    private static String generateMetadataCsv(List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
+    public static String generateMetadataCsv(List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
         MultiKeyMap data = structureDataFromTask(metadataList, macroMetadata);
         return writeCsvFromMap(data, metadataList, macroMetadata.getTimeInterval());
     }

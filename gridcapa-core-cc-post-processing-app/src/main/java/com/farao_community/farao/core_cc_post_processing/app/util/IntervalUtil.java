@@ -20,8 +20,6 @@ import java.util.TreeMap;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 public final class IntervalUtil {
-    public static final ZoneId ZONE_ID = ZoneId.of("Europe/Brussels");
-
     private IntervalUtil() {
         throw new AssertionError("Utility class should not be constructed");
     }

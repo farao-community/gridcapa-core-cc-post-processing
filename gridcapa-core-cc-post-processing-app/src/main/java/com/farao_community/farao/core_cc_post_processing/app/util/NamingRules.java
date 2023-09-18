@@ -8,10 +8,8 @@ package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
+import com.farao_community.farao.gridcapa_core_cc.api.util.IntervalUtil;
 
 /**
  * @author Mohamed BenRejeb {@literal <mohamed.ben-rejeb at rte-france.com>}
@@ -44,7 +42,7 @@ public final class NamingRules {
         String output = NamingRules.UCT_FILENAME_FORMATTER.format(Instant.parse(instant));
         output = output.replace("2D0", "2D" + Instant.parse(instant).atZone(IntervalUtil.ZONE_ID).getDayOfWeek().getValue())
             .replace("_UXV", "_UX" + version);
-        return handle25TimestampCase(output, instant);
+        return com.farao_community.farao.gridcapa_core_cc.api.util.IntervalUtil.handle25TimestampCase(output, instant);
     }
 
     public static String generateOptimizedCbFileName(LocalDate localDate) {
@@ -66,21 +64,13 @@ public final class NamingRules {
             .replace("0V", String.format("%02d", 1));
     }
 
-    /**
-     * For 25-timestamp business day, replace the duplicate hour "_HH30_" with "_BH30_"
-     */
-    private static String handle25TimestampCase(String filename, String instant) {
-        ZoneOffset previousOffset = OffsetDateTime.from(Instant.parse(instant).minus(1, ChronoUnit.HOURS).atZone(IntervalUtil.ZONE_ID)).getOffset();
-        ZoneOffset currentOffset = OffsetDateTime.from(Instant.parse(instant).atZone(IntervalUtil.ZONE_ID)).getOffset();
-        if (previousOffset == ZoneOffset.ofHours(2) && currentOffset == ZoneOffset.ofHours(1)) {
-            return filename.replace("_0", "_B");
-        } else {
-            return filename;
-        }
-    }
-
     public static String generateZippedLogsName(String instant, String outputsTargetMinioFolder, int version) {
         return String.format(NamingRules.OUTPUTS, outputsTargetMinioFolder, NamingRules.LOGS_OUTPUT_FORMATTER.format(Instant.parse(instant))
             .replace("0V", String.format("%02d", version)));
+    }
+
+    public static String generateMetadataFileName(String instant, int version) {
+        return NamingRules.METADATA_FILENAME_FORMATTER.format(Instant.parse(instant))
+            .replace("0V", String.format("%02d", version));
     }
 }

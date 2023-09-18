@@ -9,23 +9,16 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
+import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInvalidDataException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import com.farao_community.farao.gridcapa_core_cc.api.resource.HourlyRaoResult;
-import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
-
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import javax.xml.namespace.QName;
 import java.io.*;
 import java.io.File;
 import java.nio.file.Files;
@@ -45,12 +38,11 @@ import java.util.UUID;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 @Service
-public class XmlGenerator {
+public final class XmlGenerator {
 
     public static final String F299_PATH = "%s-%s-F299v%s";
     public static final String F303_PATH = "%s-%s-F303v%s";
     public static final String F304_PATH = "%s-%s-F304v%s";
-    private final MinioAdapter minioAdapter;
     public static final String OPTIMIZED_CGM = "OPTIMIZED_CGM";
     public static final String OPTIMIZED_CB = "OPTIMIZED_CB";
     public static final String RAO_REPORT = "RAO_REPORT";
@@ -60,22 +52,21 @@ public class XmlGenerator {
     public static final String SENDER_ID = "22XCORESO------S";
     public static final String RECEIVER_ID = "17XTSO-CS------W";
 
-    public XmlGenerator(MinioAdapter minioAdapter) {
-        this.minioAdapter = minioAdapter;
+    private XmlGenerator() {
     }
 
-    public void generateRaoResponse(Set<TaskDto> taskDtos, String targetMinioFolder, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
+    public static ResponseMessageType generateRaoResponse(Set<TaskDto> taskDtos, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateRaoResponseHeader(responseMessage, localDate, correlationId);
             generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap, timeInterval);
-            exportF305(responseMessage, targetMinioFolder, localDate);
+            return responseMessage;
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Error occurred during F305 file creation", e);
         }
     }
 
-    public void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate, String correlationId, String timeInterval) {
+    public static void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate, String correlationId, String timeInterval) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateCgmXmlHeaderFileHeader(responseMessage, localDate, correlationId);
@@ -86,7 +77,7 @@ public class XmlGenerator {
         }
     }
 
-    void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
+    private static void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
         header.setNoun("OptimizedRemedialActions");
@@ -102,7 +93,7 @@ public class XmlGenerator {
         responseMessage.setHeader(header);
     }
 
-    void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
+    private static void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
         header.setNoun("OptimizedCommonGridModel");
@@ -120,7 +111,7 @@ public class XmlGenerator {
         responseMessage.setHeader(header);
     }
 
-    void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
+    private static void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
         taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
@@ -142,9 +133,6 @@ public class XmlGenerator {
                     } else {
                         fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
                     }
-                } else if (taskDto.getStatus().equals(TaskStatus.RUNNING)) {
-                    // TODO : this should never happen. when was it supposed to happen in raoi?
-                    fillRunningHours(responseItem);
                 } else {
                     //set file
                     com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
@@ -178,7 +166,7 @@ public class XmlGenerator {
         responseMessage.setPayload(payload);
     }
 
-    void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
+    private static void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
 
@@ -213,18 +201,18 @@ public class XmlGenerator {
         responseMessage.setPayload(payload);
     }
 
-    private Instant parseInstantWithoutSeconds(String instant) {
+    private static Instant parseInstantWithoutSeconds(String instant) {
         return Instant.parse(instant.replace(":00Z", ":00:00Z"));
     }
 
-    private void fillMissingCgmInput(ResponseItem responseItem) {
+    private static void fillMissingCgmInput(ResponseItem responseItem) {
         ErrorType error = new ErrorType();
         error.setCode("NOT_AVAILABLE");
         error.setReason("UCT file is not available for this time interval");
         responseItem.setError(error);
     }
 
-    private void fillFailedHours(ResponseItem responseItem, String errorCode, String errorMessage) {
+    private static void fillFailedHours(ResponseItem responseItem, String errorCode, String errorMessage) {
         ErrorType error = new ErrorType();
         error.setCode(errorCode);
         error.setLevel("FATAL");
@@ -232,29 +220,9 @@ public class XmlGenerator {
         responseItem.setError(error);
     }
 
-    private void fillRunningHours(ResponseItem responseItem) {
-        ErrorType error = new ErrorType();
-        error.setCode(HourlyRaoResult.ErrorCode.RUNNING.getCode());
-        error.setLevel("INFORM");
-        error.setReason("Running not finished yet");
-        responseItem.setError(error);
-    }
-
-    private void exportF305(ResponseMessageType responseMessage, String targetMinioFolder, LocalDate localDate) {
-        byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
-        String f305FileName = NamingRules.generateRF305FileName(localDate);
-        String f305DestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, f305FileName);
-
-        try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
-            minioAdapter.uploadOutput(f305DestinationPath, raoResponseIs);
-        } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F305 for business date %s", localDate));
-        }
-    }
-
-    private void exportCgmXmlHeaderFile(ResponseMessageType responseMessage, String cgmsArchiveTempPath) {
+    private static void exportCgmXmlHeaderFile(ResponseMessageType responseMessage, String cgmsArchiveTempPath) {
         try {
-            byte[] responseMessageBytes = marshallMessageAndSetJaxbProperties(responseMessage);
+            byte[] responseMessageBytes = JaxbUtil.marshallMessageAndSetJaxbProperties(responseMessage);
             File targetFile = new File(cgmsArchiveTempPath, NamingRules.CGM_XML_HEADER_FILENAME); //NOSONAR
 
             if (!Files.exists(targetFile.getParentFile().toPath())) {
@@ -267,26 +235,6 @@ public class XmlGenerator {
 
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException("Exception occurred during CGM_XML_HEADER Response export.", e);
-        }
-    }
-
-    private byte[] marshallMessageAndSetJaxbProperties(ResponseMessageType responseMessage) {
-        try {
-            StringWriter stringWriter = new StringWriter();
-            JAXBContext jaxbContext = JAXBContext.newInstance(ResponseMessageType.class);
-            Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            String eventMessage = "EventMessage";
-            QName qName = new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, eventMessage);
-            JAXBElement<ResponseMessageType> root = new JAXBElement<>(qName, ResponseMessageType.class, responseMessage);
-            jaxbMarshaller.marshal(root, stringWriter);
-            return stringWriter.toString()
-                .replace("xsi:EventMessage", "EventMessage")
-                .replace("<EventMessage", "<EventMessage xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"")
-                .replace("<ResponseItems", "<ResponseItems xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"http://unicorn.com/Response/response-payload\"")
-                .getBytes();
-        } catch (Exception e) {
-            throw new CoreCCPostProcessingInternalException("Exception occurred during RAO Response export.", e);
         }
     }
 }
