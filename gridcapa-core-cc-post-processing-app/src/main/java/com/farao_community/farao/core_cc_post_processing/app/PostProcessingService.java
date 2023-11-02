@@ -124,8 +124,7 @@ public class PostProcessingService {
         Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
         metadatas.entrySet().stream().filter(md -> md.getValue().getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).
             forEach(metadata -> {
-                // TODO : more robust way of fetching un-presigned url
-                InputStream inputStream = minioAdapter.getFile(metadata.getValue().getFilePath().split(CORE_CC)[1]);
+                InputStream inputStream = minioAdapter.getFileFromFullPath(metadata.getValue().getFilePath());
                 try {
                     CoreCCMetadata coreCCMetadata = new ObjectMapper().readValue(IOUtils.toString(inputStream, StandardCharsets.UTF_8), CoreCCMetadata.class);
                     metadataMap.put(metadata.getKey().getId(), coreCCMetadata);
@@ -188,7 +187,7 @@ public class PostProcessingService {
 
         // Add all cgms from minio to tmp folder
         cgms.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(cgm -> {
-            InputStream inputStream = minioAdapter.getFile(cgm.getFilePath().split(CORE_CC)[1]);
+            InputStream inputStream = minioAdapter.getFileFromFullPath(cgm.getFilePath());
             File cgmFile = new File(cgmZipTmpDir + cgm.getFilename());
             try {
                 FileUtils.copyInputStreamToFile(inputStream, cgmFile);
@@ -219,7 +218,7 @@ public class PostProcessingService {
         cnes.values().stream()
             .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
             .forEach(cne -> {
-                InputStream inputStream = minioAdapter.getFile(cne.getFilePath().split(CORE_CC)[1]);
+                InputStream inputStream = minioAdapter.getFileFromFullPath(cne.getFilePath());
                 File cneFile = new File(cneZipTmpDir + cne.getFilename());
                 try {
                     FileUtils.copyInputStreamToFile(inputStream, cneFile);
