@@ -38,7 +38,7 @@ import java.util.UUID;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 @Service
-public final class XmlGenerator {
+public final class F305XmlGenerator {
 
     public static final String F299_PATH = "%s-%s-F299v%s";
     public static final String F303_PATH = "%s-%s-F303v%s";
@@ -52,7 +52,7 @@ public final class XmlGenerator {
     public static final String SENDER_ID = "22XCORESO------S";
     public static final String RECEIVER_ID = "17XTSO-CS------W";
 
-    private XmlGenerator() {
+    private F305XmlGenerator() {
     }
 
     public static ResponseMessageType generateRaoResponse(Set<TaskDto> taskDtos, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
@@ -117,8 +117,8 @@ public final class XmlGenerator {
         taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
             .forEach(taskDto -> {
                 ResponseItem responseItem = new ResponseItem();
-                //set time interval
-                Instant instant = taskDto.getTimestamp().toInstant();
+                //set time interval to [taskDto - 30 minutes, taskDto + 30 minutes] (taskDto has a timestamp of x:30 but we want x:00 - y:00)
+                Instant instant = taskDto.getTimestamp().toInstant().minus(30, ChronoUnit.MINUTES);
                 Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
                 responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(interval));
                 boolean includeResponseItem = true;
