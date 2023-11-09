@@ -71,7 +71,8 @@ public class PostProcessingService {
                     .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue())).values()
                     .stream().collect(Collectors.toList()), raoMetadata).getBytes());
         } catch (Exception e) {
-            LOGGER.error("Could not generate metadata file for core cc : {}", e.getMessage());
+            String errorMessage = "Could not generate metadata file for core cc : " + e.getMessage();
+            LOGGER.error(errorMessage);
             throw new CoreCCPostProcessingInternalException("Could not generate metadata file", e);
         }
 
