@@ -33,7 +33,7 @@ public final class ZipUtil {
         try {
             FileSystemUtils.deleteRecursively(path);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException("Exception occurred while trying to delete recursively from path: " + path.toString());
+            throw new CoreCCPostProcessingInternalException("Exception occurred while trying to delete recursively from path: " + path.toString(), e);
         }
     }
 
