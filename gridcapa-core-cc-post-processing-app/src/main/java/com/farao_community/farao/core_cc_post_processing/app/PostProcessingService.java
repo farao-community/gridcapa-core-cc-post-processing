@@ -71,8 +71,9 @@ public class PostProcessingService {
                     .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue())).values()
                     .stream().collect(Collectors.toList()), raoMetadata).getBytes());
         } catch (Exception e) {
-            LOGGER.error("Could not generate metadata file for core cc : {}", e.getMessage());
-            throw new CoreCCPostProcessingInternalException("Could not generate metadata file");
+            String errorMessage = "Could not generate metadata file for core cc : " + e.getMessage();
+            LOGGER.error(errorMessage);
+            throw new CoreCCPostProcessingInternalException("Could not generate metadata file", e);
         }
 
         // -- F342 : zipped logs
@@ -204,7 +205,7 @@ public class PostProcessingService {
         try (InputStream cgmZipIs = new ByteArrayInputStream(cgmsZipResult)) {
             minioAdapter.uploadOutput(targetCgmsFolderPath, cgmZipIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CGMs of business day %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CGMs of business day %s", localDate), e);
         } finally {
             ZipUtil.deletePath(Paths.get(cgmZipTmpDir)); //NOSONAR
         }
@@ -234,7 +235,7 @@ public class PostProcessingService {
         try (InputStream cneZipIs = new ByteArrayInputStream(cneZipResult)) {
             minioAdapter.uploadOutput(targetCneFolderPath, cneZipIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CNEs of business day %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CNEs of business day %s", localDate), e);
         } finally {
             ZipUtil.deletePath(Paths.get(cneZipTmpDir)); //NOSONAR
         }
@@ -248,7 +249,7 @@ public class PostProcessingService {
         try (InputStream dailyFbIs = new ByteArrayInputStream(dailyFbConstraint)) {
             minioAdapter.uploadOutput(fbConstraintDestinationPath, dailyFbIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F303 file of business day %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F303 file of business day %s", localDate), e);
         }
     }
 
@@ -258,7 +259,7 @@ public class PostProcessingService {
         try (InputStream csvIs = new ByteArrayInputStream(csv)) {
             minioAdapter.uploadOutput(metadataDestinationPath, csvIs);
         } catch (IOException e) {
-            throw new CoreCCInternalException("Exception occurred while uploading metadata file");
+            throw new CoreCCInternalException("Exception occurred while uploading metadata file", e);
         }
     }
 
@@ -270,7 +271,7 @@ public class PostProcessingService {
         try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
             minioAdapter.uploadOutput(f305DestinationPath, raoResponseIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F305 for business date %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F305 for business date %s", localDate), e);
         }
     }
 }

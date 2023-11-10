@@ -190,7 +190,7 @@ class HourlyF303InfoGenerator {
         try (InputStream networkInputStream = minioAdapter.getFileFromFullPath(cgmProcessFile.getFilePath())) {
             return Network.read(cgmProcessFile.getFilename(), networkInputStream);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Cannot import network of task %s", taskDto.getTimestamp()));
+            throw new CoreCCPostProcessingInternalException(String.format("Cannot import network of task %s", taskDto.getTimestamp()), e);
         }
     }
 
@@ -199,7 +199,7 @@ class HourlyF303InfoGenerator {
         try (InputStream raoResultInputStream = minioAdapter.getFileFromFullPath(raoResultProcessFile.getFilePath())) {
             return raoResultImporter.importRaoResult(raoResultInputStream, crac);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Cannot import RAO result of hourly RAO response of instant %s", taskDto.getTimestamp()));
+            throw new CoreCCPostProcessingInternalException(String.format("Cannot import RAO result of hourly RAO response of instant %s", taskDto.getTimestamp()), e);
         }
     }
 
