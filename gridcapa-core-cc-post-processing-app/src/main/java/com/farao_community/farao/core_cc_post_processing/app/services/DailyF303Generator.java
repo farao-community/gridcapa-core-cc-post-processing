@@ -14,6 +14,8 @@ import com.farao_community.farao.data.crac_creation.creator.fb_constraint.import
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
 
@@ -30,6 +32,7 @@ import java.util.*;
 @Service
 public class DailyF303Generator {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DailyF303Generator.class);
     private final MinioAdapter minioAdapter;
 
     public DailyF303Generator(MinioAdapter minioAdapter) {
@@ -52,8 +55,14 @@ public class DailyF303Generator {
             Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(nativeCrac.getDocument().getConstraintTimeInterval().getV());
             List<HourlyF303Info> hourlyF303Infos = new ArrayList<>();
             positionMap.values().forEach(interval -> {
-                TaskDto taskDto =  getTaskDtoOfInterval(interval, raoResults.keySet());
-                hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter).generate(raoResults.get(taskDto), cgms.get(taskDto)));
+                Optional<TaskDto> taskDtoOptional =  getTaskDtoOfInterval(interval, raoResults.keySet());
+                if (taskDtoOptional.isPresent()) {
+                    TaskDto taskDto = taskDtoOptional.get();
+                    hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter).generate(raoResults.get(taskDto), cgms.get(taskDto)));
+                } else {
+                    LOGGER.warn(String.format("Cannot find taskDto for interval %s", interval));
+                    hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, null, minioAdapter).generate(null, null));
+                }
             });
 
             // gather hourly info in one common document, cluster the elements that can be clusterized
@@ -63,8 +72,7 @@ public class DailyF303Generator {
         }
     }
 
-    private TaskDto getTaskDtoOfInterval(Interval interval, Set<TaskDto> taskDtos) {
-        return taskDtos.stream().filter(taskDto -> interval.contains(taskDto.getTimestamp().toInstant())).findFirst()
-            .orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("Cannot find taskDto for interval %s", interval)));
+    private Optional<TaskDto> getTaskDtoOfInterval(Interval interval, Set<TaskDto> taskDtos) {
+        return taskDtos.stream().filter(taskDto -> interval.contains(taskDto.getTimestamp().toInstant())).findFirst();
     }
 }
