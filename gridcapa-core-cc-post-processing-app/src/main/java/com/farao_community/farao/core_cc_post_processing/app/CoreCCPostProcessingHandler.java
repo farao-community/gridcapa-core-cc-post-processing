@@ -52,17 +52,21 @@ public class CoreCCPostProcessingHandler {
      * Launch processTasks if all tasks associated to localDate are finished
      */
     private void postProcessFinishedTasks(TaskDto taskDtoUpdated) {
-        if (taskDtoUpdated.getStatus().isOver()) {
-            // propagate in logs MDC the task id as an extra field to be able to match microservices logs with calculation tasks.
-            // This should be done only once, as soon as the information to add in mdc is available.
-            LocalDate localDate = taskDtoUpdated.getTimestamp().toLocalDate();
-            if (checkIfAllHourlyTasksAreFinished(localDate)) {
-                Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
-                // Only perform post processing if a task from local date was updated
-                if (taskDtoForBusinessDate.stream().map(TaskDto::getId).anyMatch(uuid -> uuid.equals(taskDtoUpdated.getId()))) {
-                    postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
+        try {
+            if (taskDtoUpdated.getStatus().isOver()) {
+                // propagate in logs MDC the task id as an extra field to be able to match microservices logs with calculation tasks.
+                // This should be done only once, as soon as the information to add in mdc is available.
+                LocalDate localDate = taskDtoUpdated.getTimestamp().toLocalDate();
+                if (checkIfAllHourlyTasksAreFinished(localDate)) {
+                    Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
+                    // Only perform post processing if a task from local date was updated
+                    if (taskDtoForBusinessDate.stream().map(TaskDto::getId).anyMatch(uuid -> uuid.equals(taskDtoUpdated.getId()))) {
+                        postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
+                    }
                 }
             }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
         }
     }
 
