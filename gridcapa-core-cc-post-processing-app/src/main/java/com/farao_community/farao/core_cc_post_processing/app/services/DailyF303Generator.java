@@ -61,7 +61,6 @@ public class DailyF303Generator {
                     hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter).generate(raoResults.get(taskDto), cgms.get(taskDto)));
                 } else {
                     LOGGER.warn(String.format("Cannot find taskDto for interval %s", interval));
-                    hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, null, minioAdapter).generate(null, null));
                 }
             });
 
