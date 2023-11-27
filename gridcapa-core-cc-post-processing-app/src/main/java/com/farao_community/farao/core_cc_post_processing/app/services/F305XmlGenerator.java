@@ -13,7 +13,6 @@ import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
-import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInvalidDataException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -125,10 +124,7 @@ public final class F305XmlGenerator {
                 boolean includeResponseItem = true;
 
                 if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
-                    if (!metadataMap.containsKey(taskDto.getId())) {
-                        throw new CoreCCInvalidDataException(String.format("Wrong task id : %s not in metadataMap", taskDto.getId()));
-                    }
-                    if (StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
+                    if (!metadataMap.containsKey(taskDto.getId()) || StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
                         // Do not generate a responseItem : raoRequest was not defined for this timestamp
                         includeResponseItem = false;
                     } else {
