@@ -9,6 +9,7 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -25,6 +26,9 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  */
 public final class CoreCCMetadataGenerator {
+
+    private static final String UNDEFINED_COMPUTATION_TIME = "UNDEFINED";
+
     private CoreCCMetadataGenerator() {
     }
 
@@ -50,11 +54,19 @@ public final class CoreCCMetadataGenerator {
         data.put(RAO_COMPUTATION_STATUS, macroMetada.getTimeInterval(), macroMetada.getStatus());
         data.put(RAO_START_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationStartInstant());
         data.put(RAO_END_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationEndInstant());
-        data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(macroMetada.getComputationStartInstant()), Instant.parse(macroMetada.getComputationEndInstant()))));
+        if (StringUtils.isBlank(macroMetada.getComputationStartInstant()) || StringUtils.isBlank(macroMetada.getComputationEndInstant())) {
+            data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), UNDEFINED_COMPUTATION_TIME);
+        } else {
+            data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(macroMetada.getComputationStartInstant()), Instant.parse(macroMetada.getComputationEndInstant()))));
+        }
         metadataList.forEach(individualMetadata -> {
             data.put(RAO_START_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationStart());
             data.put(RAO_END_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationEnd());
-            data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(individualMetadata.getComputationStart()), Instant.parse(individualMetadata.getComputationEnd()))));
+            if (StringUtils.isBlank(individualMetadata.getComputationStart()) || StringUtils.isBlank(individualMetadata.getComputationEnd())) {
+                data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), UNDEFINED_COMPUTATION_TIME);
+            } else {
+                data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(individualMetadata.getComputationStart()), Instant.parse(individualMetadata.getComputationEnd()))));
+            }
             data.put(RAO_RESULTS_PROVIDED, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
             data.put(RAO_COMPUTATION_STATUS, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus());
         });
