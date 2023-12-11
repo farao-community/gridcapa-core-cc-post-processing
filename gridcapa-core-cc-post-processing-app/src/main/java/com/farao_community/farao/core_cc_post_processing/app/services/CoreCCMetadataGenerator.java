@@ -54,19 +54,11 @@ public final class CoreCCMetadataGenerator {
         data.put(RAO_COMPUTATION_STATUS, macroMetada.getTimeInterval(), macroMetada.getStatus());
         data.put(RAO_START_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationStartInstant());
         data.put(RAO_END_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationEndInstant());
-        if (StringUtils.isBlank(macroMetada.getComputationStartInstant()) || StringUtils.isBlank(macroMetada.getComputationEndInstant())) {
-            data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), UNDEFINED_COMPUTATION_TIME);
-        } else {
-            data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(macroMetada.getComputationStartInstant()), Instant.parse(macroMetada.getComputationEndInstant()))));
-        }
+        data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), getComputationTime(macroMetada.getComputationStartInstant(), macroMetada.getComputationEndInstant()));
         metadataList.forEach(individualMetadata -> {
             data.put(RAO_START_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationStart());
             data.put(RAO_END_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationEnd());
-            if (StringUtils.isBlank(individualMetadata.getComputationStart()) || StringUtils.isBlank(individualMetadata.getComputationEnd())) {
-                data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), UNDEFINED_COMPUTATION_TIME);
-            } else {
-                data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(individualMetadata.getComputationStart()), Instant.parse(individualMetadata.getComputationEnd()))));
-            }
+            data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), getComputationTime(individualMetadata.getComputationStart(), individualMetadata.getComputationEnd()));
             data.put(RAO_RESULTS_PROVIDED, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
             data.put(RAO_COMPUTATION_STATUS, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus());
         });
@@ -91,12 +83,20 @@ public final class CoreCCMetadataGenerator {
         for (String timestamp : timestamps) {
             csvBuilder.append(timestamp);
             for (RaoMetadata.Indicator indicator : indicators) {
-                String value = data.containsKey(indicator, timestamp) ? data.get(indicator, timestamp).toString() : "";
+                String value = data.containsKey(indicator, timestamp) && data.get(indicator, timestamp) != null ? data.get(indicator, timestamp).toString() : "";
                 csvBuilder.append(delimiter);
                 csvBuilder.append(value);
             }
             csvBuilder.append(cr);
         }
         return csvBuilder.toString();
+    }
+
+    private static String getComputationTime(String startTime, String endTime) {
+        if (StringUtils.isBlank(startTime) || StringUtils.isBlank(endTime)) {
+            return UNDEFINED_COMPUTATION_TIME;
+        } else {
+            return String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(startTime), Instant.parse(endTime)));
+        }
     }
 }
