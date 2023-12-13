@@ -7,6 +7,7 @@
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.FileSystemUtils;
@@ -54,6 +55,9 @@ public final class ZipUtil {
         Paths.get(dir2zip);
         //get a listing of the directory content
         String[] dirList = zipDir.list();
+        if (ArrayUtils.isEmpty(dirList)) {
+            return;
+        }
         byte[] readBuffer = new byte[2156];
         int bytesIn;
         //loop through dirList, and zip the files

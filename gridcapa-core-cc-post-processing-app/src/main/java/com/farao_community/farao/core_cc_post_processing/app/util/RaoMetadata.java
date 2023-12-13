@@ -17,6 +17,8 @@ import java.util.TreeSet;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 public class RaoMetadata {
+
+    private static final String EMPTY_STRING = "";
     String raoRequestFileName;
     String timeInterval;
     String requestReceivedInstant;
@@ -70,12 +72,18 @@ public class RaoMetadata {
     }
 
     public static String getFirstInstant(Set<String> instantSet) {
+        if (instantSet == null || instantSet.isEmpty()) {
+            return EMPTY_STRING;
+        }
         TreeSet<String> ts = new TreeSet<>();
         ts.addAll(instantSet);
         return ts.first();
     }
 
     public static String getLastInstant(Set<String> instantSet) {
+        if (instantSet == null || instantSet.isEmpty()) {
+            return EMPTY_STRING;
+        }
         TreeSet<String> ts = new TreeSet<>();
         ts.addAll(instantSet);
         return ts.last();
