@@ -25,13 +25,13 @@ public final class NamingRules {
 
     // DateTimeFormatter are systematically rezoned even applied on offsetDateTimes as a security measure
     public static final DateTimeFormatter UCT_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'_'HH'30_2D0_UXV.uct'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter UCT_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F304_'yyyyMMdd'-F304-0V.zip'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter F305_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F305_'yyyyMMdd'-F305-0V.xml'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter CNE_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F299_'yyyyMMdd'-F299-0V.zip'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter OPTIMIZED_CB_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F303_'yyyyMMdd'-F303-0V.xml'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter UCT_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-304_'yyyyMMdd'-F304-0V.zip'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter F305_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-305_'yyyyMMdd'-F305-0V.xml'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter CNE_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A43-299_'yyyyMMdd'-F299-0V.zip'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter OPTIMIZED_CB_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A01-303_'yyyyMMdd'-F303-0V.xml'").withZone(IntervalUtil.ZONE_ID);
     public static final String CGM_XML_HEADER_FILENAME = "CGM_XML_Header.xml";
-    public static final DateTimeFormatter LOGS_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F342_'yyyyMMdd'-F342-0V.zip'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_'yyyyMMdd'-F341-0V.csv'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter LOGS_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-342_'yyyyMMdd'-F342-0V.zip'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-341_'yyyyMMdd'-F341-0V.csv'").withZone(IntervalUtil.ZONE_ID);
 
     public static String generateRF305FileName(LocalDate localDate) {
         return NamingRules.F305_FILENAME_FORMATTER.format(localDate)
