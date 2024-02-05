@@ -6,8 +6,8 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.CriticalBranchType;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.IndependantComplexVariant;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.CriticalBranchType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.IndependantComplexVariant;
 
 import java.util.ArrayList;
 import java.util.List;
