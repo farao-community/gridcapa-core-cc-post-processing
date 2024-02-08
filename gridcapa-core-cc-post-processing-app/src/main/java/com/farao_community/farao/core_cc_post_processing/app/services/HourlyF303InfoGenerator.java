@@ -8,26 +8,25 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
-import com.farao_community.farao.data.crac_api.Crac;
-import com.farao_community.farao.data.crac_api.Instant;
-import com.farao_community.farao.data.crac_api.RemedialAction;
-import com.farao_community.farao.data.crac_api.State;
-import com.farao_community.farao.data.crac_api.network_action.NetworkAction;
-import com.farao_community.farao.data.crac_api.range_action.PstRangeAction;
-import com.farao_community.farao.data.crac_api.range_action.RangeAction;
-import com.farao_community.farao.data.crac_creation.creator.api.CracCreationContext;
-import com.farao_community.farao.data.crac_creation.creator.api.ImportStatus;
-import com.farao_community.farao.data.crac_creation.creator.api.parameters.CracCreationParameters;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.FbConstraint;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.crac_creator.FbConstraintCracCreator;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.crac_creator.FbConstraintCreationContext;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.ActionType;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.CriticalBranchType;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.IndependantComplexVariant;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.ObjectFactory;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.etso.TimeIntervalType;
-import com.farao_community.farao.data.rao_result_api.RaoResult;
-import com.farao_community.farao.data.rao_result_json.RaoResultImporter;
+import com.powsybl.openrao.data.cracapi.Crac;
+import com.powsybl.openrao.data.cracapi.RemedialAction;
+import com.powsybl.openrao.data.cracapi.State;
+import com.powsybl.openrao.data.cracapi.networkaction.NetworkAction;
+import com.powsybl.openrao.data.cracapi.rangeaction.PstRangeAction;
+import com.powsybl.openrao.data.cracapi.rangeaction.RangeAction;
+import com.powsybl.openrao.data.craccreation.creator.api.CracCreationContext;
+import com.powsybl.openrao.data.craccreation.creator.api.ImportStatus;
+import com.powsybl.openrao.data.craccreation.creator.api.parameters.CracCreationParameters;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraint;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.craccreator.FbConstraintCracCreator;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.craccreator.FbConstraintCreationContext;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ActionType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.CriticalBranchType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.IndependantComplexVariant;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ObjectFactory;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.etso.TimeIntervalType;
+import com.powsybl.openrao.data.raoresultapi.RaoResult;
+import com.powsybl.openrao.data.raoresultjson.RaoResultImporter;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
@@ -148,7 +147,7 @@ class HourlyF303InfoGenerator {
                     patlCb.setTimeInterval(ti);
                     patlCb.setId(refCb.getId() + PATL);
                     patlCb.setOriginalId(refCb.getId());
-                    patlCb.setComplexVariantId(statesWithCrac.get(cracCreationContext.getCrac().getState(refCb.getOutage().getId(), Instant.CURATIVE)));
+                    patlCb.setComplexVariantId(statesWithCrac.get(cracCreationContext.getCrac().getState(refCb.getOutage().getId(), cracCreationContext.getCrac().getLastInstant())));
                     setPermanentLimit(patlCb);
                     criticalBranches.add(patlCb);
                 }
@@ -313,7 +312,7 @@ class HourlyF303InfoGenerator {
         int uniqueIdIterator = 1;
         Map<State, String> stateMap = new HashMap<>();
 
-        for (State state : cracCreationContext.getCrac().getStates(Instant.CURATIVE)) {
+        for (State state : cracCreationContext.getCrac().getStates(cracCreationContext.getCrac().getLastInstant())) {
             if (!raoResult.getActivatedNetworkActionsDuringState(state).isEmpty() || !raoResult.getActivatedRangeActionsDuringState(state).isEmpty()) {
                 stateMap.put(state, String.format("CRA_%02d%04d", hour, uniqueIdIterator));
                 uniqueIdIterator++;

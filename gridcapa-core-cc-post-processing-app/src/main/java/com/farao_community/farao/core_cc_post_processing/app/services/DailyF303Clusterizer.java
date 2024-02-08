@@ -7,9 +7,9 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.util.XmlOutputsUtil;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.FbConstraint;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.*;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.etso.*;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraint;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.*;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.etso.*;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.time.OffsetDateTime;
