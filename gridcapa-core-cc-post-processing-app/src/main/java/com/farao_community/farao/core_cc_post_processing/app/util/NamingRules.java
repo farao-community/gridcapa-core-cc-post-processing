@@ -25,29 +25,31 @@ public final class NamingRules {
 
     // DateTimeFormatter are systematically rezoned even applied on offsetDateTimes as a security measure
     public static final DateTimeFormatter UCT_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'_'HH'30_2D0_UXV.uct'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter UCT_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-304_'yyyyMMdd'-F304-0V.zip'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter F305_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-305_'yyyyMMdd'-F305-0V.xml'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter CNE_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A43-299_'yyyyMMdd'-F299-0V.zip'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter OPTIMIZED_CB_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A01-303_'yyyyMMdd'-F303-0V.xml'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter UCT_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-304_'yyyyMMdd'-F304-<version>.zip'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter F305_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-305_'yyyyMMdd'-F305-<version>.xml'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter CNE_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A43-299_'yyyyMMdd'-F299-<version>.zip'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter OPTIMIZED_CB_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A01-303_'yyyyMMdd'-F303-<version>.xml'").withZone(IntervalUtil.ZONE_ID);
     public static final String CGM_XML_HEADER_FILENAME = "CGM_XML_Header.xml";
-    public static final DateTimeFormatter LOGS_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-342_'yyyyMMdd'-F342-0V.zip'").withZone(IntervalUtil.ZONE_ID);
-    public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-341_'yyyyMMdd'-F341-0V.csv'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter LOGS_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-342_'yyyyMMdd'-F342-<version>.zip'").withZone(IntervalUtil.ZONE_ID);
+    public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-341_'yyyyMMdd'-F341-<version>.csv'").withZone(IntervalUtil.ZONE_ID);
 
     public static String generateRF305FileName(LocalDate localDate) {
-        return NamingRules.F305_FILENAME_FORMATTER.format(localDate)
-            .replace("0V", String.format("%02d", 1));
+        return formatVersion(NamingRules.F305_FILENAME_FORMATTER.format(localDate), 1);
+    }
+
+    private static String formatVersion(String filename, int v) {
+        return filename.replace("<version>", String.format("%02d", v));
     }
 
     public static String generateUctFileName(String instant, int version) {
         String output = NamingRules.UCT_FILENAME_FORMATTER.format(Instant.parse(instant));
         output = output.replace("2D0", "2D" + Instant.parse(instant).atZone(IntervalUtil.ZONE_ID).getDayOfWeek().getValue())
-            .replace("_UXV", "_UX" + version);
+                .replace("_UXV", "_UX" + version);
         return com.farao_community.farao.gridcapa_core_cc.api.util.IntervalUtil.handle25TimestampCase(output, instant);
     }
 
     public static String generateOptimizedCbFileName(LocalDate localDate) {
-        return NamingRules.OPTIMIZED_CB_FILENAME_FORMATTER.format(localDate)
-            .replace("0V", String.format("%02d", 1));
+        return formatVersion(NamingRules.OPTIMIZED_CB_FILENAME_FORMATTER.format(localDate), 1);
     }
 
     public static String generateOutputsDestinationPath(String destinationPrefix, String fileName) {
@@ -55,22 +57,18 @@ public final class NamingRules {
     }
 
     public static String generateCgmZipName(LocalDate localDate) {
-        return NamingRules.UCT_OUTPUT_FORMATTER.format(localDate)
-            .replace("0V", String.format("%02d", 1));
+        return formatVersion(NamingRules.UCT_OUTPUT_FORMATTER.format(localDate), 1);
     }
 
     public static String generateCneZipName(LocalDate localDate) {
-        return NamingRules.CNE_OUTPUT_FORMATTER.format(localDate)
-            .replace("0V", String.format("%02d", 1));
+        return formatVersion(NamingRules.CNE_OUTPUT_FORMATTER.format(localDate), 1);
     }
 
     public static String generateZippedLogsName(String instant, String outputsTargetMinioFolder, int version) {
-        return String.format(NamingRules.OUTPUTS, outputsTargetMinioFolder, NamingRules.LOGS_OUTPUT_FORMATTER.format(Instant.parse(instant))
-            .replace("0V", String.format("%02d", version)));
+        return String.format(NamingRules.OUTPUTS, outputsTargetMinioFolder, formatVersion(NamingRules.LOGS_OUTPUT_FORMATTER.format(Instant.parse(instant)), version));
     }
 
     public static String generateMetadataFileName(String instant, int version) {
-        return NamingRules.METADATA_FILENAME_FORMATTER.format(Instant.parse(instant))
-            .replace("0V", String.format("%02d", version));
+        return formatVersion(NamingRules.METADATA_FILENAME_FORMATTER.format(Instant.parse(instant)), version);
     }
 }
