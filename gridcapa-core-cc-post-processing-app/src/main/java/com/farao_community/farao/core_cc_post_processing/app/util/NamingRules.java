@@ -44,7 +44,7 @@ public final class NamingRules {
     public static String generateUctFileName(String instant, int version) {
         String output = NamingRules.UCT_FILENAME_FORMATTER.format(Instant.parse(instant));
         output = output.replace("2D0", "2D" + Instant.parse(instant).atZone(IntervalUtil.ZONE_ID).getDayOfWeek().getValue())
-                .replace("_UXV", "_UX" + version);
+            .replace("_UXV", "_UX" + version);
         return com.farao_community.farao.gridcapa_core_cc.api.util.IntervalUtil.handle25TimestampCase(output, instant);
     }
 

@@ -22,6 +22,7 @@ class NamingRulesTest {
     void generateMetadataFileNameTest() {
         assertEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-341_20230727-F341-01.csv", NamingRules.generateMetadataFileName("2023-07-27T14:02:00Z", 1));
         assertEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-341_20230723-F341-02.csv", NamingRules.generateMetadataFileName("2023-07-23T14:02:00Z", 2));
+        assertNotEquals("22XCORESO------S_1011001C--00236Y_CORE-FB-341_20230723-F341-02.csv", NamingRules.generateMetadataFileName("2023-07-23T14:02:00Z", 2));
     }
 
     @Test
