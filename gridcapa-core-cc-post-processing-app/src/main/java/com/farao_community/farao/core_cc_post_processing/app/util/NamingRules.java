@@ -34,41 +34,41 @@ public final class NamingRules {
     public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-341_'yyyyMMdd'-F341-<version>.csv'").withZone(IntervalUtil.ZONE_ID);
 
     public static String generateRF305FileName(LocalDate localDate) {
-        return formatVersion(NamingRules.F305_FILENAME_FORMATTER.format(localDate), 1);
-    }
-
-    private static String formatVersion(String filename, int v) {
-        return filename.replace("<version>", String.format("%02d", v));
+        return formatVersion(F305_FILENAME_FORMATTER.format(localDate), 1);
     }
 
     public static String generateUctFileName(String instant, int version) {
-        String output = NamingRules.UCT_FILENAME_FORMATTER.format(Instant.parse(instant));
+        String output = UCT_FILENAME_FORMATTER.format(Instant.parse(instant));
         output = output.replace("2D0", "2D" + Instant.parse(instant).atZone(IntervalUtil.ZONE_ID).getDayOfWeek().getValue())
             .replace("_UXV", "_UX" + version);
         return com.farao_community.farao.gridcapa_core_cc.api.util.IntervalUtil.handle25TimestampCase(output, instant);
     }
 
     public static String generateOptimizedCbFileName(LocalDate localDate) {
-        return formatVersion(NamingRules.OPTIMIZED_CB_FILENAME_FORMATTER.format(localDate), 1);
+        return formatVersion(OPTIMIZED_CB_FILENAME_FORMATTER.format(localDate), 1);
     }
 
     public static String generateOutputsDestinationPath(String destinationPrefix, String fileName) {
-        return String.format(NamingRules.OUTPUTS, destinationPrefix, fileName);
+        return String.format(OUTPUTS, destinationPrefix, fileName);
     }
 
     public static String generateCgmZipName(LocalDate localDate) {
-        return formatVersion(NamingRules.UCT_OUTPUT_FORMATTER.format(localDate), 1);
+        return formatVersion(UCT_OUTPUT_FORMATTER.format(localDate), 1);
     }
 
     public static String generateCneZipName(LocalDate localDate) {
-        return formatVersion(NamingRules.CNE_OUTPUT_FORMATTER.format(localDate), 1);
+        return formatVersion(CNE_OUTPUT_FORMATTER.format(localDate), 1);
     }
 
     public static String generateZippedLogsName(String instant, String outputsTargetMinioFolder, int version) {
-        return String.format(NamingRules.OUTPUTS, outputsTargetMinioFolder, formatVersion(NamingRules.LOGS_OUTPUT_FORMATTER.format(Instant.parse(instant)), version));
+        return String.format(OUTPUTS, outputsTargetMinioFolder, formatVersion(NamingRules.LOGS_OUTPUT_FORMATTER.format(Instant.parse(instant)), version));
     }
 
     public static String generateMetadataFileName(String instant, int version) {
-        return formatVersion(NamingRules.METADATA_FILENAME_FORMATTER.format(Instant.parse(instant)), version);
+        return formatVersion(METADATA_FILENAME_FORMATTER.format(Instant.parse(instant)), version);
+    }
+
+    private static String formatVersion(String filename, int v) {
+        return filename.replace("<version>", String.format("%02d", v));
     }
 }
