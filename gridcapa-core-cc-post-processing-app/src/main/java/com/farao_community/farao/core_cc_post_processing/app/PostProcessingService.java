@@ -61,6 +61,8 @@ public class PostProcessingService {
         fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask, raoResultPerTask);
 
         // Generate outputs
+        //Rao Result files to one zip
+        zipRaoResultsAndSendToOutputs(outputsTargetMinioFolder, raoResultPerTask, localDate);
         // -- F341 : metadata file
         Map<UUID, CoreCCMetadata> metadataMap = fetchMetadataFromMinio(metadataPerTask);
         try {
@@ -274,4 +276,34 @@ public class PostProcessingService {
             throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F305 for business date %s", localDate), e);
         }
     }
+
+    private void zipRaoResultsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> raoResults, LocalDate localDate) {
+        String raoResultZipTmpDir = "/tmp/raoResults_out/" + localDate.toString() + "/";
+
+        // Add all raoResult json files from minio to tmp folder
+        raoResults.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(raoResult -> {
+            InputStream inputStream = minioAdapter.getFileFromFullPath(raoResult.getFilePath());
+            File raoResultFile = new File(raoResultZipTmpDir + raoResult.getFilename());
+            try {
+                FileUtils.copyInputStreamToFile(inputStream, raoResultFile);
+            } catch (IOException e) {
+                throw new CoreCCPostProcessingInternalException("error while copying cgm to tmp folder", e);
+            }
+        });
+
+        // Zip tmp folder
+        byte[] raoResultZipResult = ZipUtil.zipDirectory(raoResultZipTmpDir);
+        String targetRaoResultFolderName = NamingRules.generateRaoResultFilename(localDate);
+        String targetRaoResultFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetRaoResultFolderName);
+
+        try (InputStream raoResultZipIs = new ByteArrayInputStream(raoResultZipResult)) {
+            minioAdapter.uploadOutput(targetRaoResultFolderPath, raoResultZipIs);
+        } catch (IOException e) {
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping RaoResults of business day %s", localDate), e);
+        } finally {
+            ZipUtil.deletePath(Paths.get(raoResultZipTmpDir)); //NOSONAR
+        }
+
+    }
+
 }

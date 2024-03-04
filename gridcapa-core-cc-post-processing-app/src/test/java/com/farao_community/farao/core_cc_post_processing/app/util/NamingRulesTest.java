@@ -48,4 +48,9 @@ class NamingRulesTest {
         assertEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A43-299_20230731-F299-01.zip", NamingRules.generateCneZipName(LocalDate.of(2023, 07, 31)));
         assertNotEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A43-299_20230731-F299-02.zip", NamingRules.generateCneZipName(LocalDate.of(2023, 07, 31)));
     }
+
+    @Test
+    void generateRaoResultFilenameTest() {
+        assertEquals("CASTOR-INTERNAL-RESULTS_20230731.zip", NamingRules.generateRaoResultFilename(LocalDate.of(2023, 07, 31)));
+    }
 }
