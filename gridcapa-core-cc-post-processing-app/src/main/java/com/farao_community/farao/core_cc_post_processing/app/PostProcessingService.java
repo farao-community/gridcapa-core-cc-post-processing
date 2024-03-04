@@ -282,9 +282,8 @@ public class PostProcessingService {
 
         // Add all raoResult json files from minio to tmp folder
         raoResults.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(raoResult -> {
-            InputStream inputStream = minioAdapter.getFileFromFullPath(raoResult.getFilePath());
-            File raoResultFile = new File(raoResultZipTmpDir + raoResult.getFilename());
-            try {
+            try (InputStream inputStream = minioAdapter.getFileFromFullPath(raoResult.getFilePath())) {
+                File raoResultFile = new File(raoResultZipTmpDir + raoResult.getFilename());
                 FileUtils.copyInputStreamToFile(inputStream, raoResultFile);
             } catch (IOException e) {
                 throw new CoreCCPostProcessingInternalException("error while copying cgm to tmp folder", e);
@@ -293,11 +292,11 @@ public class PostProcessingService {
 
         // Zip tmp folder
         byte[] raoResultZipResult = ZipUtil.zipDirectory(raoResultZipTmpDir);
-        String targetRaoResultFolderName = NamingRules.generateRaoResultFilename(localDate);
-        String targetRaoResultFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetRaoResultFolderName);
+        String targetRaoResultZipName = NamingRules.generateRaoResultFilename(localDate);
+        String targetRaoResultZipPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetRaoResultZipName);
 
         try (InputStream raoResultZipIs = new ByteArrayInputStream(raoResultZipResult)) {
-            minioAdapter.uploadOutput(targetRaoResultFolderPath, raoResultZipIs);
+            minioAdapter.uploadOutput(targetRaoResultZipPath, raoResultZipIs);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping RaoResults of business day %s", localDate), e);
         } finally {
