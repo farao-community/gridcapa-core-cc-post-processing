@@ -33,6 +33,8 @@ public final class NamingRules {
     public static final DateTimeFormatter LOGS_OUTPUT_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-342_'yyyyMMdd'-F342-<version>.zip'").withZone(IntervalUtil.ZONE_ID);
     public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-341_'yyyyMMdd'-F341-<version>.csv'").withZone(IntervalUtil.ZONE_ID);
 
+    private static final DateTimeFormatter RAO_RESULT_ZIP_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-INTERNAL-RESULTS_'yyyyMMdd'.zip'");
+
     public static String generateRF305FileName(LocalDate localDate) {
         return formatVersion(F305_FILENAME_FORMATTER.format(localDate), 1);
     }
@@ -66,6 +68,10 @@ public final class NamingRules {
 
     public static String generateMetadataFileName(String instant, int version) {
         return formatVersion(METADATA_FILENAME_FORMATTER.format(Instant.parse(instant)), version);
+    }
+
+    public static String generateRaoResultFilename(LocalDate localDate) {
+        return RAO_RESULT_ZIP_FORMATTER.format(localDate);
     }
 
     private static String formatVersion(String filename, int v) {
