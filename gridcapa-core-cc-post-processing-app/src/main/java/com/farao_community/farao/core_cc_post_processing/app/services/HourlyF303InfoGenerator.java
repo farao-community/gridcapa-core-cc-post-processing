@@ -59,12 +59,14 @@ class HourlyF303InfoGenerator {
     private final Interval interval;
     private final TaskDto taskDto;
     private final MinioAdapter minioAdapter;
+    private final CracCreationParameters cracCreationParameters;
 
-    HourlyF303InfoGenerator(FbConstraint nativeCrac, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter) {
+    HourlyF303InfoGenerator(FbConstraint nativeCrac, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter, CracCreationParameters cracCreationParameters) {
         this.nativeCrac = nativeCrac;
         this.interval = interval;
         this.taskDto = taskDto;
         this.minioAdapter = minioAdapter;
+        this.cracCreationParameters = cracCreationParameters;
     }
 
     HourlyF303Info generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile) {
@@ -99,7 +101,7 @@ class HourlyF303InfoGenerator {
     private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile) {
 
         Network network = getNetworkOfTaskDto(cgmProcessFile);
-        FbConstraintCreationContext cracCreationContext = new FbConstraintCracCreator().createCrac(nativeCrac, network, taskDto.getTimestamp(), getCracCreationParameters());
+        FbConstraintCreationContext cracCreationContext = new FbConstraintCracCreator().createCrac(nativeCrac, network, taskDto.getTimestamp(), cracCreationParameters);
         RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac(), raoResultProcessFile);
 
         Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());
@@ -343,11 +345,5 @@ class HourlyF303InfoGenerator {
             }
         }
         return nativeVariants;
-    }
-
-    private static CracCreationParameters getCracCreationParameters() {
-        CracCreationParameters parameters = CracCreationParameters.load();
-        parameters.setDefaultMonitoredLineSide(CracCreationParameters.MonitoredLineSide.MONITOR_LINES_ON_LEFT_SIDE);
-        return parameters;
     }
 }
