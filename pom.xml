@@ -11,7 +11,7 @@
     </parent>
 
     <artifactId>gridcapa-core-cc-post-processing</artifactId>
-    <version>1.3.2-SNAPSHOT</version>
+    <version>1.3.2</version>
     <packaging>pom</packaging>
 
     <name>GridCapa CORE CC post-processing</name>
