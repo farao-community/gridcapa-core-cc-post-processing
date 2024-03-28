@@ -7,9 +7,9 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.util.XmlOutputsUtil;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.FbConstraint;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.*;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.etso.*;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraint;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.*;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.etso.*;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.time.OffsetDateTime;
@@ -130,9 +130,9 @@ class DailyF303Clusterizer {
         }
 
         // Check that the applied CRAs are the same between the two timestamps
-        if ((headBranch.getComplexVariantId() == null && tailBranch.getComplexVariantId() != null)
-                || (headBranch.getComplexVariantId() != null && tailBranch.getComplexVariantId() == null)
-                || (headBranch.getComplexVariantId() != null && tailBranch.getComplexVariantId() != null && !headBranch.getComplexVariantId().equals(tailBranch.getComplexVariantId()))) {
+        if (headBranch.getComplexVariantId() == null && tailBranch.getComplexVariantId() != null
+                || headBranch.getComplexVariantId() != null && tailBranch.getComplexVariantId() == null
+                || headBranch.getComplexVariantId() != null && tailBranch.getComplexVariantId() != null && !headBranch.getComplexVariantId().equals(tailBranch.getComplexVariantId())) {
             return false;
         }
 
@@ -225,14 +225,46 @@ class DailyF303Clusterizer {
 
     private static boolean areCriticalBranchesEquivalent(CriticalBranchType cb1, CriticalBranchType cb2) {
         return cb1.getBranch().equals(cb2.getBranch())
-                && ((cb1.getImaxFactor() == null && cb2.getImaxFactor() == null) || (cb1.getImaxFactor() != null && cb2.getImaxFactor() != null && Math.abs(cb1.getImaxFactor().doubleValue() - cb2.getImaxFactor().doubleValue()) < 1e-6))
-                && ((cb1.getImaxA() == null && cb2.getImaxA() == null) || (cb1.getImaxA() != null && cb2.getImaxA() != null && Math.abs(cb1.getImaxA().doubleValue() - cb2.getImaxA().doubleValue()) < 1e-6))
-                && ((cb1.getMinRAMfactor() == null && cb2.getMinRAMfactor() == null) || (cb1.getMinRAMfactor() != null && cb2.getMinRAMfactor() != null && Math.abs(cb1.getMinRAMfactor().doubleValue() - cb2.getMinRAMfactor().doubleValue()) < 1e-6))
-                && ((cb1.getOutage() == null && cb2.getOutage() == null) || (cb1.getOutage() != null && cb2.getOutage() != null && cb1.getOutage().equals(cb2.getOutage())))
-                && ((cb1.getDirection() == null && cb2.getDirection() == null) || (cb1.getDirection() != null && cb2.getDirection() != null && cb1.getDirection().equals(cb2.getDirection())))
-                && ((cb1.getTsoOrigin() == null && cb2.getTsoOrigin() == null) || (cb1.getTsoOrigin() != null && cb2.getTsoOrigin() != null && cb1.getTsoOrigin().equals(cb2.getTsoOrigin())))
+                && areImaxFactorsEqual(cb1, cb2)
+                && areImaxEqual(cb1, cb2)
+                && areMinRamFactorEqual(cb1, cb2)
+                && areOutageEqual(cb1, cb2)
+                && areDirectionEqual(cb1, cb2)
+                && areOriginEqual(cb1, cb2)
                 && Math.abs(cb1.getFrmMw() - cb2.getFrmMw()) < 1e-6
-                && ((cb1.isMNEC() && cb2.isMNEC()) || (!cb1.isMNEC() && !cb2.isMNEC()))
-                && ((cb1.isCNEC() && cb2.isCNEC()) || (!cb1.isCNEC() && !cb2.isCNEC()));
+                && areMnecEqual(cb1, cb2)
+                && areCnecEqual(cb1, cb2);
+    }
+
+    private static boolean areCnecEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.isCNEC() && cb2.isCNEC() || !cb1.isCNEC() && !cb2.isCNEC();
+    }
+
+    private static boolean areMnecEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.isMNEC() && cb2.isMNEC() || !cb1.isMNEC() && !cb2.isMNEC();
+    }
+
+    private static boolean areOriginEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.getTsoOrigin() == null && cb2.getTsoOrigin() == null || cb1.getTsoOrigin() != null && cb2.getTsoOrigin() != null && cb1.getTsoOrigin().equals(cb2.getTsoOrigin());
+    }
+
+    private static boolean areDirectionEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.getDirection() == null && cb2.getDirection() == null || cb1.getDirection() != null && cb2.getDirection() != null && cb1.getDirection().equals(cb2.getDirection());
+    }
+
+    private static boolean areOutageEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.getOutage() == null && cb2.getOutage() == null || cb1.getOutage() != null && cb2.getOutage() != null && cb1.getOutage().equals(cb2.getOutage());
+    }
+
+    private static boolean areMinRamFactorEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.getMinRAMfactor() == null && cb2.getMinRAMfactor() == null || cb1.getMinRAMfactor() != null && cb2.getMinRAMfactor() != null && Math.abs(cb1.getMinRAMfactor().doubleValue() - cb2.getMinRAMfactor().doubleValue()) < 1e-6;
+    }
+
+    private static boolean areImaxEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.getImaxA() == null && cb2.getImaxA() == null || cb1.getImaxA() != null && cb2.getImaxA() != null && Math.abs(cb1.getImaxA().doubleValue() - cb2.getImaxA().doubleValue()) < 1e-6;
+    }
+
+    private static boolean areImaxFactorsEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
+        return cb1.getImaxFactor() == null && cb2.getImaxFactor() == null || cb1.getImaxFactor() != null && cb2.getImaxFactor() != null && Math.abs(cb1.getImaxFactor().doubleValue() - cb2.getImaxFactor().doubleValue()) < 1e-6;
     }
 }

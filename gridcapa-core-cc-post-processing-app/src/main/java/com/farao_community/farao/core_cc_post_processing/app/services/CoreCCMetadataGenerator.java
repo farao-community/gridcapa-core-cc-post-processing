@@ -7,17 +7,11 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
-import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.lang3.StringUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -31,40 +25,14 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  */
-public class CoreCCMetadataGenerator {
+public final class CoreCCMetadataGenerator {
 
-    private final MinioAdapter minioAdapter;
+    private static final String UNDEFINED_COMPUTATION_TIME = "UNDEFINED";
 
-    public CoreCCMetadataGenerator(MinioAdapter minioAdapter) {
-        this.minioAdapter = minioAdapter;
+    private CoreCCMetadataGenerator() {
     }
 
-    public static final ZoneId ZONE_ID = ZoneId.of("Europe/Brussels");
-    public static final String OUTPUTS = "%s/outputs/%s"; // destination/filename
-    public static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_'yyyyMMdd'-F341-0V.csv'").withZone(ZONE_ID);
-
-    public void exportMetadataFile(String targetMinioFolder, List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
-        byte[] csv = generateMetadataCsv(metadataList, macroMetadata).getBytes();
-        String metadataFileName = generateMetadataFileName(macroMetadata.getRaoRequestInstant(), macroMetadata.getVersion());
-        String metadataDestinationPath = generateOutputsDestinationPath(targetMinioFolder, metadataFileName);
-
-        try (InputStream csvIs = new ByteArrayInputStream(csv)) {
-            minioAdapter.uploadOutput(metadataDestinationPath, csvIs);
-        } catch (IOException e) {
-            throw new CoreCCInternalException("Exception occurred while uploading metadata file");
-        }
-    }
-
-    public static String generateMetadataFileName(String instant, int version) {
-        return METADATA_FILENAME_FORMATTER.format(Instant.parse(instant))
-            .replace("0V", String.format("%02d", version));
-    }
-
-    public static String generateOutputsDestinationPath(String destinationPrefix, String fileName) {
-        return String.format(OUTPUTS, destinationPrefix, fileName);
-    }
-
-    private static String generateMetadataCsv(List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
+    public static String generateMetadataCsv(List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
         MultiKeyMap data = structureDataFromTask(metadataList, macroMetadata);
         return writeCsvFromMap(data, metadataList, macroMetadata.getTimeInterval());
     }
@@ -86,11 +54,11 @@ public class CoreCCMetadataGenerator {
         data.put(RAO_COMPUTATION_STATUS, macroMetada.getTimeInterval(), macroMetada.getStatus());
         data.put(RAO_START_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationStartInstant());
         data.put(RAO_END_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationEndInstant());
-        data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(macroMetada.getComputationStartInstant()), Instant.parse(macroMetada.getComputationEndInstant()))));
+        data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), getComputationTime(macroMetada.getComputationStartInstant(), macroMetada.getComputationEndInstant()));
         metadataList.forEach(individualMetadata -> {
             data.put(RAO_START_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationStart());
             data.put(RAO_END_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationEnd());
-            data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(individualMetadata.getComputationStart()), Instant.parse(individualMetadata.getComputationEnd()))));
+            data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), getComputationTime(individualMetadata.getComputationStart(), individualMetadata.getComputationEnd()));
             data.put(RAO_RESULTS_PROVIDED, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
             data.put(RAO_COMPUTATION_STATUS, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus());
         });
@@ -115,12 +83,20 @@ public class CoreCCMetadataGenerator {
         for (String timestamp : timestamps) {
             csvBuilder.append(timestamp);
             for (RaoMetadata.Indicator indicator : indicators) {
-                String value = data.containsKey(indicator, timestamp) ? data.get(indicator, timestamp).toString() : "";
+                String value = data.containsKey(indicator, timestamp) && data.get(indicator, timestamp) != null ? data.get(indicator, timestamp).toString() : "";
                 csvBuilder.append(delimiter);
                 csvBuilder.append(value);
             }
             csvBuilder.append(cr);
         }
         return csvBuilder.toString();
+    }
+
+    private static String getComputationTime(String startTime, String endTime) {
+        if (StringUtils.isBlank(startTime) || StringUtils.isBlank(endTime)) {
+            return UNDEFINED_COMPUTATION_TIME;
+        } else {
+            return String.valueOf(ChronoUnit.MINUTES.between(Instant.parse(startTime), Instant.parse(endTime)));
+        }
     }
 }

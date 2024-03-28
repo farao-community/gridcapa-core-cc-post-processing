@@ -7,17 +7,14 @@
 package com.farao_community.farao.core_cc_post_processing.app;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMetadataGenerator;
-import com.farao_community.farao.core_cc_post_processing.app.services.DailyF303Generator;
-import com.farao_community.farao.core_cc_post_processing.app.services.XmlGenerator;
-import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
-import com.farao_community.farao.core_cc_post_processing.app.util.OutputFileNameUtil;
-import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
-import com.farao_community.farao.core_cc_post_processing.app.util.ZipUtil;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.FlowBasedConstraintDocument;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
+import com.farao_community.farao.core_cc_post_processing.app.services.*;
+import com.farao_community.farao.core_cc_post_processing.app.util.*;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.FlowBasedConstraintDocument;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
+import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,16 +43,12 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
 public class PostProcessingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostProcessingService.class);
     public static final String CORE_CC = "CORE/CC/";
-    public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
+    public static final String OUTPUTS_DIR = "RAO_OUTPUTS_DIR/";
     private final MinioAdapter minioAdapter;
-    private final XmlGenerator xmlGenerator;
-    private final DailyF303Generator dailyF303Generator;
-    private final RaoMetadata raoMetadata = new RaoMetadata();
+    private RaoMetadata raoMetadata = new RaoMetadata();
 
-    public PostProcessingService(MinioAdapter minioAdapter, XmlGenerator xmlGenerator, DailyF303Generator dailyF303Generator) {
+    public PostProcessingService(MinioAdapter minioAdapter) {
         this.minioAdapter = minioAdapter;
-        this.xmlGenerator = xmlGenerator;
-        this.dailyF303Generator = dailyF303Generator;
     }
 
     public void processTasks(LocalDate localDate, Set<TaskDto> tasksToPostProcess, List<byte[]> logList) {
@@ -64,42 +57,50 @@ public class PostProcessingService {
         Map<TaskDto, ProcessFileDto> cnePerTask = new HashMap<>();
         Map<TaskDto, ProcessFileDto> cgmPerTask = new HashMap<>();
         Map<TaskDto, ProcessFileDto> metadataPerTask = new HashMap<>();
-        fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask);
+        Map<TaskDto, ProcessFileDto> raoResultPerTask = new HashMap<>();
+        fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask, raoResultPerTask);
 
         // Generate outputs
-        // -- metadata file
+        //Rao Result files to one zip
+        zipRaoResultsAndSendToOutputs(outputsTargetMinioFolder, raoResultPerTask, localDate);
+        // -- F341 : metadata file
         Map<UUID, CoreCCMetadata> metadataMap = fetchMetadataFromMinio(metadataPerTask);
         try {
             // Only write metadata for timestamps with a RaoRequestInstant defined
-            Map<UUID, CoreCCMetadata> metadataMapWithDefinedRaoRequestInstants = metadataMap.entrySet().stream().filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-            new CoreCCMetadataGenerator(minioAdapter).exportMetadataFile(outputsTargetMinioFolder, new ArrayList<>(metadataMapWithDefinedRaoRequestInstants.values()), raoMetadata);
+            uploadF341ToMinio(outputsTargetMinioFolder,
+                CoreCCMetadataGenerator.generateMetadataCsv(metadataMap.entrySet().stream()
+                    .filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant()))
+                    .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue())).values()
+                    .stream().collect(Collectors.toList()), raoMetadata).getBytes());
         } catch (Exception e) {
-            LOGGER.error("Could not generate metadata file for core cc : {}", e.getMessage());
-            throw new CoreCCPostProcessingInternalException("Could not generate metadata file");
+            String errorMessage = "Could not generate metadata file for core cc : " + e.getMessage();
+            LOGGER.error(errorMessage);
+            throw new CoreCCPostProcessingInternalException("Could not generate metadata file", e);
         }
 
-        // -- zipped logs
-        zipAndUploadLogs(logList, OutputFileNameUtil.generateZippedLogsName(raoMetadata.getRaoRequestInstant(), outputsTargetMinioFolder, raoMetadata.getVersion()));
+        // -- F342 : zipped logs
+        zipAndUploadLogs(logList, NamingRules.generateZippedLogsName(raoMetadata.getRaoRequestInstant(), outputsTargetMinioFolder, raoMetadata.getVersion()));
 
-        // -- cgms
+        // -- F304 : cgms
         zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId(), raoMetadata.getTimeInterval());
-        // -- cnes
+        // -- F299 : cnes
         zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate);
-        // -- flowBasedConstraintDocument
-        FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = dailyF303Generator.generate(tasksToPostProcess);
-        uploadDailyOutputFlowBasedConstraintDocument(dailyFlowBasedConstraintDocument, outputsTargetMinioFolder, localDate);
-        // -- RaoResponse
-        xmlGenerator.generateRaoResponse(tasksToPostProcess, outputsTargetMinioFolder, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()); //f305 rao response
+        // -- F303 : flowBasedConstraintDocument
+        uploadF303ToMinio(new DailyF303Generator(minioAdapter).generate(raoResultPerTask, cgmPerTask), outputsTargetMinioFolder, localDate);
+        // -- F305 : RaoResponse
+        uploadF305ToMinio(outputsTargetMinioFolder, F305XmlGenerator.generateRaoResponse(tasksToPostProcess, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()), localDate);
+        LOGGER.info("All outputs were uploaded");
     }
 
     private String generateTargetMinioFolder(LocalDate localDate) {
-        return "RAO_OUTPUTS_DIR/" + localDate;
+        return OUTPUTS_DIR + localDate;
     }
 
     private void fillMapsOfOutputs(Set<TaskDto> tasksToProcess,
                                    Map<TaskDto, ProcessFileDto> cnes,
                                    Map<TaskDto, ProcessFileDto> cgms,
-                                   Map<TaskDto, ProcessFileDto> metadatas) {
+                                   Map<TaskDto, ProcessFileDto> metadatas,
+                                   Map<TaskDto, ProcessFileDto> raoResults) {
         tasksToProcess.forEach(taskDto ->
             taskDto.getOutputs().forEach(processFileDto -> {
                 switch (processFileDto.getFileType()) {
@@ -112,6 +113,9 @@ public class PostProcessingService {
                     case "METADATA":
                         metadatas.put(taskDto, processFileDto);
                         break;
+                    case "RAO_RESULT":
+                        raoResults.put(taskDto, processFileDto);
+                        break;
                     default:
                         // do nothing, other outputs are available but we won't be collecting them
                 }
@@ -119,12 +123,11 @@ public class PostProcessingService {
         );
     }
 
-    Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(Map<TaskDto, ProcessFileDto> metadatas) {
+    private Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(Map<TaskDto, ProcessFileDto> metadatas) {
         Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
         metadatas.entrySet().stream().filter(md -> md.getValue().getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).
             forEach(metadata -> {
-                // TODO : more robust way of fetching un-presigned url
-                InputStream inputStream = minioAdapter.getFile(metadata.getValue().getFilePath().split(CORE_CC)[1]);
+                InputStream inputStream = minioAdapter.getFileFromFullPath(metadata.getValue().getFilePath());
                 try {
                     CoreCCMetadata coreCCMetadata = new ObjectMapper().readValue(IOUtils.toString(inputStream, StandardCharsets.UTF_8), CoreCCMetadata.class);
                     metadataMap.put(metadata.getKey().getId(), coreCCMetadata);
@@ -160,6 +163,8 @@ public class PostProcessingService {
         return metadataMap;
     }
 
+    // -------------------- MINIO UPLOADS ---------------
+
     private void zipAndUploadLogs(List<byte[]> logList, String logFileName) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(baos)) {
@@ -168,29 +173,24 @@ public class PostProcessingService {
             }
             zos.close();
             // upload zipped result
-            uploadZippedLogsToMinio(logFileName, baos);
+            try (InputStream logZipIs = new ByteArrayInputStream(baos.toByteArray())) {
+                minioAdapter.uploadOutput(logFileName, logZipIs);
+            } catch (IOException e) {
+                throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
+            }
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
         }
     }
 
-    private void uploadZippedLogsToMinio(String logFileName, ByteArrayOutputStream baos) {
-        try (InputStream logZipIs = new ByteArrayInputStream(baos.toByteArray())) {
-            minioAdapter.uploadOutput(logFileName, logZipIs);
-        } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException("Error while unzipping logs", e);
-        }
-    }
-
-    // TODO : verifier temporalite : intervalles etc. Difference d'objets : OffsetDateTime etc
     private void zipCgmsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> cgms, LocalDate localDate, String correlationId, String timeInterval) {
-        String cgmZipTmpDir = TEMP_DIR + "/cgms_out/" + localDate.toString() + "/";
+        String cgmZipTmpDir = "/tmp/cgms_out/" + localDate.toString() + "/";
         // add cgm xml header to tmp folder
-        xmlGenerator.generateCgmXmlHeaderFile(cgms.keySet(), cgmZipTmpDir, localDate, correlationId, timeInterval);
+        F305XmlGenerator.generateCgmXmlHeaderFile(cgms.keySet(), cgmZipTmpDir, localDate, correlationId, timeInterval);
 
         // Add all cgms from minio to tmp folder
         cgms.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(cgm -> {
-            InputStream inputStream = minioAdapter.getFile(cgm.getFilePath().split(CORE_CC)[1]);
+            InputStream inputStream = minioAdapter.getFileFromFullPath(cgm.getFilePath());
             File cgmFile = new File(cgmZipTmpDir + cgm.getFilename());
             try {
                 FileUtils.copyInputStreamToFile(inputStream, cgmFile);
@@ -201,13 +201,13 @@ public class PostProcessingService {
 
         // Zip tmp folder
         byte[] cgmsZipResult = ZipUtil.zipDirectory(cgmZipTmpDir);
-        String targetCgmsFolderName = OutputFileNameUtil.generateCgmZipName(localDate);
-        String targetCgmsFolderPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, targetCgmsFolderName);
+        String targetCgmsFolderName = NamingRules.generateCgmZipName(localDate);
+        String targetCgmsFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetCgmsFolderName);
 
         try (InputStream cgmZipIs = new ByteArrayInputStream(cgmsZipResult)) {
             minioAdapter.uploadOutput(targetCgmsFolderPath, cgmZipIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CGMs of business day %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CGMs of business day %s", localDate), e);
         } finally {
             ZipUtil.deletePath(Paths.get(cgmZipTmpDir)); //NOSONAR
         }
@@ -215,13 +215,13 @@ public class PostProcessingService {
     }
 
     private void zipCnesAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> cnes, LocalDate localDate) {
-        String cneZipTmpDir = TEMP_DIR + "/cnes_out/" + localDate.toString() + "/";
+        String cneZipTmpDir = "/tmp/cnes_out/" + localDate.toString() + "/";
 
         // Add all cnes from minio to tmp folder
         cnes.values().stream()
             .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
             .forEach(cne -> {
-                InputStream inputStream = minioAdapter.getFile(cne.getFilePath().split(CORE_CC)[1]);
+                InputStream inputStream = minioAdapter.getFileFromFullPath(cne.getFilePath());
                 File cneFile = new File(cneZipTmpDir + cne.getFilename());
                 try {
                     FileUtils.copyInputStreamToFile(inputStream, cneFile);
@@ -231,27 +231,78 @@ public class PostProcessingService {
             });
 
         byte[] cneZipResult = ZipUtil.zipDirectory(cneZipTmpDir);
-        String targetCneFolderName = OutputFileNameUtil.generateCneZipName(localDate);
-        String targetCneFolderPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, targetCneFolderName);
+        String targetCneFolderName = NamingRules.generateCneZipName(localDate);
+        String targetCneFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetCneFolderName);
 
         try (InputStream cneZipIs = new ByteArrayInputStream(cneZipResult)) {
             minioAdapter.uploadOutput(targetCneFolderPath, cneZipIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CNEs of business day %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping CNEs of business day %s", localDate), e);
         } finally {
             ZipUtil.deletePath(Paths.get(cneZipTmpDir)); //NOSONAR
         }
     }
 
-    void uploadDailyOutputFlowBasedConstraintDocument(FlowBasedConstraintDocument dailyFbDocument, String targetMinioFolder, LocalDate localDate) {
+    void uploadF303ToMinio(FlowBasedConstraintDocument dailyFbDocument, String targetMinioFolder, LocalDate localDate) {
         byte[] dailyFbConstraint = JaxbUtil.writeInBytes(FlowBasedConstraintDocument.class, dailyFbDocument);
-        String fbConstraintFileName = OutputFileNameUtil.generateOptimizedCbFileName(localDate);
-        String fbConstraintDestinationPath = OutputFileNameUtil.generateOutputsDestinationPath(targetMinioFolder, fbConstraintFileName);
+        String fbConstraintFileName = NamingRules.generateOptimizedCbFileName(localDate);
+        String fbConstraintDestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, fbConstraintFileName);
 
         try (InputStream dailyFbIs = new ByteArrayInputStream(dailyFbConstraint)) {
             minioAdapter.uploadOutput(fbConstraintDestinationPath, dailyFbIs);
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F303 file of business day %s", localDate));
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F303 file of business day %s", localDate), e);
         }
     }
+
+    void uploadF341ToMinio(String targetMinioFolder, byte[] csv) {
+        String metadataFileName = NamingRules.generateMetadataFileName(raoMetadata.getRaoRequestInstant(), raoMetadata.getVersion());
+        String metadataDestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, metadataFileName);
+        try (InputStream csvIs = new ByteArrayInputStream(csv)) {
+            minioAdapter.uploadOutput(metadataDestinationPath, csvIs);
+        } catch (IOException e) {
+            throw new CoreCCInternalException("Exception occurred while uploading metadata file", e);
+        }
+    }
+
+    private void uploadF305ToMinio(String targetMinioFolder, ResponseMessageType responseMessage, LocalDate localDate) {
+        byte[] responseMessageBytes = JaxbUtil.marshallMessageAndSetJaxbProperties(responseMessage);
+        String f305FileName = NamingRules.generateRF305FileName(localDate);
+        String f305DestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, f305FileName);
+
+        try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
+            minioAdapter.uploadOutput(f305DestinationPath, raoResponseIs);
+        } catch (IOException e) {
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while uploading F305 for business date %s", localDate), e);
+        }
+    }
+
+    private void zipRaoResultsAndSendToOutputs(String targetMinioFolder, Map<TaskDto, ProcessFileDto> raoResults, LocalDate localDate) {
+        String raoResultZipTmpDir = "/tmp/raoResults_out/" + localDate.toString() + "/";
+
+        // Add all raoResult json files from minio to tmp folder
+        raoResults.values().stream().filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).forEach(raoResult -> {
+            try (InputStream inputStream = minioAdapter.getFileFromFullPath(raoResult.getFilePath())) {
+                File raoResultFile = new File(raoResultZipTmpDir + raoResult.getFilename());
+                FileUtils.copyInputStreamToFile(inputStream, raoResultFile);
+            } catch (IOException e) {
+                throw new CoreCCPostProcessingInternalException("error while copying cgm to tmp folder", e);
+            }
+        });
+
+        // Zip tmp folder
+        byte[] raoResultZipResult = ZipUtil.zipDirectory(raoResultZipTmpDir);
+        String targetRaoResultZipName = NamingRules.generateRaoResultFilename(localDate);
+        String targetRaoResultZipPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetRaoResultZipName);
+
+        try (InputStream raoResultZipIs = new ByteArrayInputStream(raoResultZipResult)) {
+            minioAdapter.uploadOutput(targetRaoResultZipPath, raoResultZipIs);
+        } catch (IOException e) {
+            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while zipping RaoResults of business day %s", localDate), e);
+        } finally {
+            ZipUtil.deletePath(Paths.get(raoResultZipTmpDir)); //NOSONAR
+        }
+
+    }
+
 }

@@ -7,6 +7,7 @@
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
+import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -16,6 +17,8 @@ import java.util.TreeSet;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 public class RaoMetadata {
+
+    private static final String EMPTY_STRING = "";
     String raoRequestFileName;
     String timeInterval;
     String requestReceivedInstant;
@@ -60,7 +63,7 @@ public class RaoMetadata {
         } else if (statusSet.stream().anyMatch(s -> s.equals("PENDING"))) {
             return "PENDING";
         } else if (statusSet.stream().anyMatch(s -> s.equals("RUNNING"))) {
-            return "RUNNING";
+            throw new CoreCCInternalException("No task should be set to RUNNING");
         } else if (statusSet.stream().allMatch(s -> s.equals("SUCCESS"))) {
             return "SUCCESS";
         } else {
@@ -69,12 +72,18 @@ public class RaoMetadata {
     }
 
     public static String getFirstInstant(Set<String> instantSet) {
+        if (instantSet == null || instantSet.isEmpty()) {
+            return EMPTY_STRING;
+        }
         TreeSet<String> ts = new TreeSet<>();
         ts.addAll(instantSet);
         return ts.first();
     }
 
     public static String getLastInstant(Set<String> instantSet) {
+        if (instantSet == null || instantSet.isEmpty()) {
+            return EMPTY_STRING;
+        }
         TreeSet<String> ts = new TreeSet<>();
         ts.addAll(instantSet);
         return ts.last();

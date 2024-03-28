@@ -7,11 +7,11 @@
     <parent>
         <groupId>com.farao-community.farao</groupId>
         <artifactId>farao-parent-ws</artifactId>
-        <version>1.4.0</version>
+        <version>1.7.0</version>
     </parent>
 
     <artifactId>gridcapa-core-cc-post-processing</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.3.3-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>GridCapa CORE CC post-processing</name>
@@ -52,15 +52,15 @@
 
 
     <properties>
-        <core-cc-runner.version>1.0.0</core-cc-runner.version>
-        <task-manager.version>1.20.0</task-manager.version>
-        <farao.dependencies.version>1.13.0</farao.dependencies.version>
-        <gridcapa.starter.minio.version>1.0.0</gridcapa.starter.minio.version>
+        <core-cc-runner.version>1.2.2</core-cc-runner.version>
+        <task-manager.version>1.23.0</task-manager.version>
+        <farao.dependencies.version>1.26.0</farao.dependencies.version>
+        <gridcapa.starter.minio.version>1.1.1</gridcapa.starter.minio.version>
         <jsonapi.converter.version>0.11</jsonapi.converter.version>
         <jaxb-api.version>2.4.0-b180830.0359</jaxb-api.version>
         <jaxb-runtime.version>2.4.0-b180830.0438</jaxb-runtime.version>
         <logstash.version>4.9</logstash.version>
-        <maven.jaxb2.version>0.14.0</maven.jaxb2.version>
+        <maven.jaxb2.version>0.15.3</maven.jaxb2.version>
         <threeten.version>1.5.0</threeten.version>
     </properties>
 
