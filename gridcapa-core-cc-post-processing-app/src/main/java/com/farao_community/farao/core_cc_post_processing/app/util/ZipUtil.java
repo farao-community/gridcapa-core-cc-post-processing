@@ -7,13 +7,10 @@
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.FileSystemUtils;
 
 import java.io.*;
-import java.nio.file.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -28,69 +25,6 @@ public final class ZipUtil {
 
     private ZipUtil() {
         throw new AssertionError("Utility class should not be instantiated");
-    }
-
-    public static void deletePath(Path path) {
-        try {
-            FileSystemUtils.deleteRecursively(path);
-        } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException("Exception occurred while trying to delete recursively from path: " + path.toString(), e);
-        }
-    }
-
-    public static byte[] zipDirectory(String inputDirectory) {
-        try (ByteArrayOutputStream os = new ByteArrayOutputStream();
-             ZipOutputStream zos = new ZipOutputStream(os)) {
-            recursiveZip(inputDirectory, zos, inputDirectory);
-            zos.close();
-            return os.toByteArray();
-        } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while compressing directory '%s'", inputDirectory), e);
-        }
-    }
-
-    private static void recursiveZip(String dir2zip, ZipOutputStream zos, String referencePath) {
-        //create a new File object based on the directory we have to zip
-        File zipDir = new File(dir2zip); //NOSONAR
-        Paths.get(dir2zip);
-        //get a listing of the directory content
-        String[] dirList = zipDir.list();
-        if (ArrayUtils.isEmpty(dirList)) {
-            return;
-        }
-        byte[] readBuffer = new byte[2156];
-        int bytesIn;
-        //loop through dirList, and zip the files
-        for (String fileOrDir : dirList) {
-            Path path = Path.of(zipDir.getPath(), fileOrDir).normalize();
-            if (!path.startsWith(zipDir.getPath())) {
-                continue;
-            }
-            File f = new File(zipDir, fileOrDir); //NOSONAR
-            if (f.isDirectory()) {
-                //if the File object is a directory, call this
-                //function again to add its content recursively
-                String filePath = f.getPath();
-                recursiveZip(filePath, zos, referencePath);
-                //loop again
-                continue;
-            }
-            //if we reached here, the File object f was not a directory
-            //create a FileInputStream on top of f
-            try (FileInputStream fis = new FileInputStream(f)) {
-                // create a new zip entry
-                String fileRelativePath = Paths.get(referencePath).relativize(Paths.get(f.getPath())).toString(); //NOSONAR
-                ZipEntry anEntry = new ZipEntry(fileRelativePath);
-                //place the zip entry in the ZipOutputStream object
-                zos.putNextEntry(anEntry);
-                //now write the content of the file to the ZipOutputStream
-                while ((bytesIn = fis.read(readBuffer)) != -1) {
-                    zos.write(readBuffer, 0, bytesIn);
-                }
-            } catch (IOException e) {
-                throw new CoreCCPostProcessingInternalException(e.getMessage(), e);
-            }
-        }
     }
 
     public static void collectAndZip(ZipOutputStream zos, byte[] bytes) {

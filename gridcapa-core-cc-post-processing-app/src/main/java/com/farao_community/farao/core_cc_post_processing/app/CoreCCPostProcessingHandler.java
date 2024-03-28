@@ -53,20 +53,18 @@ public class CoreCCPostProcessingHandler {
      */
     private void postProcessFinishedTasks(TaskDto taskDtoUpdated) {
         try {
+            LOGGER.debug("Task {} updated.", taskDtoUpdated);
             if (taskDtoUpdated.getStatus().isOver()) {
-                // propagate in logs MDC the task id as an extra field to be able to match microservices logs with calculation tasks.
-                // This should be done only once, as soon as the information to add in mdc is available.
+                LOGGER.info("Task {} is over.", taskDtoUpdated);
                 LocalDate localDate = taskDtoUpdated.getTimestamp().toLocalDate();
                 if (checkIfAllHourlyTasksAreFinished(localDate)) {
+                    LOGGER.info("All timestamp from business date {} are over, running post-processing", localDate);
                     Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
-                    // Only perform post processing if a task from local date was updated
-                    if (taskDtoForBusinessDate.stream().map(TaskDto::getId).anyMatch(uuid -> uuid.equals(taskDtoUpdated.getId()))) {
-                        postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
-                    }
+                    postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
                 }
             }
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            LOGGER.error("Error during analysis of an update event on task {}", taskDtoUpdated, e);
         }
     }
 
@@ -82,7 +80,7 @@ public class CoreCCPostProcessingHandler {
                 return responseEntity.getBody();
             }
         } catch (Exception e) {
-            LOGGER.error("Error while checking if all hourly tasks are finished.", e);
+            LOGGER.error("Error while checking if all hourly tasks are finished for date {}.", localDate, e);
         }
         return false;
     }
@@ -100,9 +98,9 @@ public class CoreCCPostProcessingHandler {
                 return new HashSet<>(Arrays.asList(responseEntity.getBody()));
             }
         } catch (Exception e) {
-            LOGGER.error("Error during automatic launch", e);
+            LOGGER.error("Exception during retrieval of the tasks status for date {}", localDate, e);
         }
-        LOGGER.warn("Response entity body was null or status was not OK.");
+        LOGGER.warn("Response entity body was null or status was not OK while retrieveing task status for date {}.", localDate);
         return Collections.emptySet();
     }
 
