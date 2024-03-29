@@ -9,16 +9,13 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 import com.farao_community.farao.core_cc_post_processing.app.Utils;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_DIR;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
@@ -57,30 +54,16 @@ class CoreCCMetadataGeneratorTest {
     }
 
     @Test
-    void exportSuccessMetadataFile() throws IOException {
+    void successfullyGeneratedMetadataCsv() throws IOException {
         setUpSuccessMacroMetadata();
-        CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(Utils.MINIO_FILE_WRITER);
-        coreCCMetadataGenerator.exportMetadataFile(TEMP_DIR, metadataList, successMacroMetadata);
-        Utils.assertFilesContentEqual("/services/metadataSuccess.csv", TEMP_DIR + "/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv");
-        FileUtils.deleteDirectory(new File(TEMP_DIR + "/outputs"));
+        final String result = CoreCCMetadataGenerator.generateMetadataCsv(metadataList, successMacroMetadata);
+        assertTrue(Utils.isFileContentEqualToString(result, "/services/metadataSuccess.csv"));
     }
 
     @Test
     void exportErrorMetadataFile() throws IOException {
         setUpErrorMacroMetadata();
-        CoreCCMetadataGenerator coreCCMetadataGenerator = new CoreCCMetadataGenerator(Utils.MINIO_FILE_WRITER);
-        coreCCMetadataGenerator.exportMetadataFile(TEMP_DIR, metadataList, errorMacroMetadata);
-        Utils.assertFilesContentEqual("/services/metadataError.csv", TEMP_DIR + "/outputs/CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv");
-        FileUtils.deleteDirectory(new File(TEMP_DIR + "/outputs"));
-    }
-
-    @Test
-    void generateMetadataFileName() {
-        assertEquals("CASTOR-RAO_22VCOR0CORE0PRDI_RTE-F341_20230804-F341-01.csv", CoreCCMetadataGenerator.generateMetadataFileName("2023-08-04T11:06:00Z", 1));
-    }
-
-    @Test
-    void generateOutputsDestinationPath() {
-        assertEquals("path/outputs/file.csv", CoreCCMetadataGenerator.generateOutputsDestinationPath("path", "file.csv"));
+        final String result = CoreCCMetadataGenerator.generateMetadataCsv(metadataList, errorMacroMetadata);
+        assertTrue(Utils.isFileContentEqualToString(result, "/services/metadataError.csv"));
     }
 }

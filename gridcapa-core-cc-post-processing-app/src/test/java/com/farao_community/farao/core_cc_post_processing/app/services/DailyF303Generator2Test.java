@@ -6,10 +6,6 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.ActionType;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.CriticalBranchType;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.FlowBasedConstraintDocument;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.IndependantComplexVariant;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
@@ -17,6 +13,10 @@ import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ActionType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.CriticalBranchType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.FlowBasedConstraintDocument;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.IndependantComplexVariant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -28,9 +28,19 @@ import javax.xml.bind.JAXBElement;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -52,6 +62,8 @@ class DailyF303Generator2Test {
     @MockBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
+    private final Map<TaskDto, ProcessFileDto> raoResult = new HashMap<>();
+    private final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
@@ -67,7 +79,7 @@ class DailyF303Generator2Test {
         String iDir = "inputs/";
         String oDir = "outputs/";
 
-        String inputCracXmlFileUrl = "inputCracXml.xml";
+        String inputCracXmlFileUrl = "/CORE/CC/inputCracXml.xml";
 
         DateTimeFormatter fileNameFormatter = DateTimeFormatter.ofPattern("yyyyMMdd'_'HH'30UTC'");
 
@@ -78,7 +90,7 @@ class DailyF303Generator2Test {
 
         // "store" crac xml in dataBase
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream(bDir + iDir + ts + "_F301-crac.xml");
-        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFile(inputCracXmlFileUrl);
+        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath(inputCracXmlFileUrl);
 
         // set results
         /*
@@ -115,14 +127,17 @@ class DailyF303Generator2Test {
 
             // "store" network in dataBase
             InputStream networkInputStream = getClass().getResourceAsStream(bDir + iDir + hFile + "_network.uct");
-            Mockito.doReturn(networkInputStream).when(minioAdapter).getFile("network" + hFile + ".uct");
+            Mockito.doReturn(networkInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network" + hFile + ".uct");
 
             // "store" raoResult in dataBase
             InputStream raoResultInputStream = getClass().getResourceAsStream(bDir + oDir + hFile + "_raoResult.json");
-            Mockito.doReturn(raoResultInputStream).when(minioAdapter).getFile("raoResult" + hFile + ".json");
+            Mockito.doReturn(raoResultInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult" + hFile + ".json");
 
             // add task
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of()));
+            final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of());
+            taskDtos.add(taskDto);
+            raoResult.put(taskDto, raoResultProcessFile);
+            cgms.put(taskDto, cgmProcessFile);
         }
 
         // add failed task between 15:00 and 16:00
@@ -139,7 +154,7 @@ class DailyF303Generator2Test {
     void testF303Generation() {
 
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(taskDtos);
+        FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(raoResult, cgms);
 
         /*
         byte[] dailyFbConstraint = JaxbUtil.writeInBytes(FlowBasedConstraintDocument.class, dailyFbConstDocument);
@@ -189,8 +204,8 @@ class DailyF303Generator2Test {
         assertEquals(2, cb002.size());
 
         // same definition as in the f301
-        CriticalBranchType pureMnec = getCriticalBranch(cb002, "002_FR-DE [N][OPP]", "2019-01-07T23:00Z/2019-01-08T13:00Z");
-        CriticalBranchType cnecAndMnec = getCriticalBranch(cb002, "002_FR-DE [N][OPP]", "2019-01-08T13:00Z/2019-01-08T23:00Z");
+        CriticalBranchType pureMnec = getCriticalBranch(cb002, "002_FR-DE [N][OPP]", "2019-01-08T11:00Z/2019-01-08T13:00Z");
+        CriticalBranchType cnecAndMnec = getCriticalBranch(cb002, "002_FR-DE [N][OPP]", "2019-01-08T13:00Z/2019-01-08T15:00Z");
         assertNotNull(pureMnec);
         assertNotNull(cnecAndMnec);
         assertFalse(pureMnec.isCNEC());
@@ -202,17 +217,15 @@ class DailyF303Generator2Test {
         // 02/02/2022 -> change in F303 export, invalid elements are now exported for all time-stamps
 
         assertEquals(1, criticalBranches.get("022_NEVER_VALID").size());
-        assertTrue(criticalBranches.get("022_NEVER_VALID").stream().anyMatch(cb -> cb.getTimeInterval().getV().equals("2019-01-07T23:00Z/2019-01-08T23:00Z")));
+        assertTrue(criticalBranches.get("022_NEVER_VALID").stream().anyMatch(cb -> cb.getTimeInterval().getV().equals("2019-01-08T11:00Z/2019-01-08T15:00Z")));
 
         // -----
         // check an always valid branch of CO1
         // -----
 
         Collection<CriticalBranchType> cb007 = criticalBranches.get("007_DE-NL [CO1][DIR]");
-        assertEquals(8, cb007.size());
+        assertEquals(6, cb007.size());
         // 1 per invalid / not requested / without CRA interval
-        assertNotNull(getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]", "2019-01-07T23:00Z/2019-01-08T11:00Z"));
-        assertNotNull(getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]", "2019-01-07T23:00Z/2019-01-08T11:00Z"));
         assertNotNull(getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]", "2019-01-08T13:00Z/2019-01-08T14:00Z"));
 
         // 1 TATL per interval with CRAs
@@ -234,7 +247,6 @@ class DailyF303Generator2Test {
 
         // on hours without CRA and invalid hours, only PATL is taken into account
         assertEquals(1., getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]", "2019-01-08T13:00Z/2019-01-08T14:00Z").getImaxFactor().doubleValue(), 1e-6);
-        assertEquals(1., getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]", "2019-01-07T23:00Z/2019-01-08T11:00Z").getImaxFactor().doubleValue(), 1e-6);
 
         // -----
         // check Imax for a branch which has Imax instead of ImaxFactor
@@ -242,7 +254,7 @@ class DailyF303Generator2Test {
         Collection<CriticalBranchType> cb003 = criticalBranches.get("003_FR-DE [CO1][DIR]");
         assertEquals(6000., getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]_TATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxA().doubleValue(), 1e-6);
         assertEquals(5000., getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]_PATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxA().doubleValue(), 1e-6);
-        assertEquals(5000., getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]", "2019-01-07T23:00Z/2019-01-08T11:00Z").getImaxA().doubleValue(), 1e-6);
+        assertEquals(5000., getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]", "2019-01-08T13:00Z/2019-01-08T14:00Z").getImaxA().doubleValue(), 1e-6);
         assertNull(getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]_TATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxFactor());
 
         // -----
@@ -296,11 +308,10 @@ class DailyF303Generator2Test {
         // - is invalid for some timestamps (13-14 and 14-15h)
         // -----
         Collection<CriticalBranchType> cb020 = criticalBranches.get("020_FR12-FR32 [CO2][OPP]");
-        assertEquals(7, cb020.size());
+        assertEquals(6, cb020.size());
 
         // 1 per not requested interval, merged with intervals without CRA
-        assertNotNull(getCriticalBranch(cb020, "020_FR12-FR32 [CO2][OPP]", "2019-01-07T23:00Z/2019-01-08T11:00Z"));
-        assertNotNull(getCriticalBranch(cb020, "020_FR12-FR32 [CO2][OPP]", "2019-01-08T14:00Z/2019-01-08T23:00Z"));
+        assertNotNull(getCriticalBranch(cb020, "020_FR12-FR32 [CO2][OPP]", "2019-01-08T14:00Z/2019-01-08T15:00Z"));
 
         // 1 TATL per interval with CRAs, with same characteristics (two CB cannot be merged as iMaxFactor is changing, see below)
         assertNotNull(getCriticalBranch(cb020, "020_FR12-FR32 [CO2][OPP]_TATL", "2019-01-08T11:00Z/2019-01-08T12:00Z"));
@@ -324,11 +335,10 @@ class DailyF303Generator2Test {
         // check a VNEC (not imported by RAO because not a MNEC and not a CNEC, but should be exported)
         // -----
         Collection<CriticalBranchType> cb021 = criticalBranches.get("021_NO_MNEC_NO_CNEC [CO2]");
-        assertEquals(6, cb021.size());
+        assertEquals(5, cb021.size());
 
         // 1 per not requested interval / interval without CRA
-        assertNotNull(getCriticalBranch(cb021, "021_NO_MNEC_NO_CNEC [CO2]", "2019-01-07T23:00Z/2019-01-08T11:00Z"));
-        assertNotNull(getCriticalBranch(cb021, "021_NO_MNEC_NO_CNEC [CO2]", "2019-01-08T14:00Z/2019-01-08T23:00Z"));
+        assertNotNull(getCriticalBranch(cb021, "021_NO_MNEC_NO_CNEC [CO2]", "2019-01-08T14:00Z/2019-01-08T15:00Z"));
 
         // 1 TATL per interval with CRAs
         assertNotNull(getCriticalBranch(cb021, "021_NO_MNEC_NO_CNEC [CO2]_TATL", "2019-01-08T11:00Z/2019-01-08T14:00Z"));
@@ -362,8 +372,7 @@ class DailyF303Generator2Test {
 
     private CriticalBranchType getCriticalBranch(Collection<CriticalBranchType> cbCollection, String id, String timeInterval) {
         return cbCollection.stream()
-                .filter(cb -> cb.getId().equals(id))
-                .filter(cb -> cb.getTimeInterval().getV().equals(timeInterval))
+                .filter(cb -> id.equals(cb.getId()) && timeInterval.equals(cb.getTimeInterval().getV()))
                 .findAny().orElse(null);
     }
 

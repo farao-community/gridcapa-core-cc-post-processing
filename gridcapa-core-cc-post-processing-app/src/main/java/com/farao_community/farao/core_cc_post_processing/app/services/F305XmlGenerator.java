@@ -77,7 +77,7 @@ public final class F305XmlGenerator {
         }
     }
 
-    private static void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
+    static void generateRaoResponseHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
         header.setNoun("OptimizedRemedialActions");
@@ -93,7 +93,7 @@ public final class F305XmlGenerator {
         responseMessage.setHeader(header);
     }
 
-    private static void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
+    static void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
         HeaderType header = new HeaderType();
         header.setVerb("created");
         header.setNoun("OptimizedCommonGridModel");
@@ -111,7 +111,7 @@ public final class F305XmlGenerator {
         responseMessage.setHeader(header);
     }
 
-    private static void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
+    static void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
         taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
@@ -163,7 +163,7 @@ public final class F305XmlGenerator {
         responseMessage.setPayload(payload);
     }
 
-    private static void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
+    static void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
 

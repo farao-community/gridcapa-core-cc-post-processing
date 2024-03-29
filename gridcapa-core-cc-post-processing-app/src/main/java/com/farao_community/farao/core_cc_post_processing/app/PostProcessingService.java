@@ -42,10 +42,9 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMeta
 @Service
 public class PostProcessingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostProcessingService.class);
-    public static final String CORE_CC = "CORE/CC/";
     public static final String OUTPUTS_DIR = "RAO_OUTPUTS_DIR/";
     private final MinioAdapter minioAdapter;
-    private RaoMetadata raoMetadata = new RaoMetadata();
+    private final RaoMetadata raoMetadata = new RaoMetadata();
 
     public PostProcessingService(MinioAdapter minioAdapter) {
         this.minioAdapter = minioAdapter;
@@ -68,10 +67,9 @@ public class PostProcessingService {
         try {
             // Only write metadata for timestamps with a RaoRequestInstant defined
             uploadF341ToMinio(outputsTargetMinioFolder,
-                CoreCCMetadataGenerator.generateMetadataCsv(metadataMap.entrySet().stream()
-                    .filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant()))
-                    .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue())).values()
-                    .stream().collect(Collectors.toList()), raoMetadata).getBytes());
+                CoreCCMetadataGenerator.generateMetadataCsv(new ArrayList<>(metadataMap.entrySet().stream()
+                        .filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).values()), raoMetadata).getBytes());
         } catch (Exception e) {
             String errorMessage = "Could not generate metadata file for core cc : " + e.getMessage();
             LOGGER.error(errorMessage);
@@ -123,7 +121,7 @@ public class PostProcessingService {
         );
     }
 
-    private Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(Map<TaskDto, ProcessFileDto> metadatas) {
+    Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(Map<TaskDto, ProcessFileDto> metadatas) {
         Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
         metadatas.entrySet().stream().filter(md -> md.getValue().getProcessFileStatus().equals(ProcessFileStatus.VALIDATED)).
             forEach(metadata -> {

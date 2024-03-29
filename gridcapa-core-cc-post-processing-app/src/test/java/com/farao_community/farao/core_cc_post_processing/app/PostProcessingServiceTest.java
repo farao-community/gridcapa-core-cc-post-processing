@@ -8,26 +8,39 @@ package com.farao_community.farao.core_cc_post_processing.app;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyF303Generator;
-import com.farao_community.farao.core_cc_post_processing.app.services.XmlGenerator;
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.FlowBasedConstraintDocument;
-import com.farao_community.farao.gridcapa.task_manager.api.*;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.FlowBasedConstraintDocument;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_DIR;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
@@ -52,11 +65,12 @@ class PostProcessingServiceTest {
     }
 
     private PostProcessingService initPostProcessingService(MinioAdapter adapter) {
-        XmlGenerator raoIXmlResponseGenerator = new XmlGenerator(adapter);
         DailyF303Generator dailyF303Generator = Mockito.mock(DailyF303Generator.class);
         FlowBasedConstraintDocument dailyFlowBasedConstraintDocument = Mockito.mock(FlowBasedConstraintDocument.class);
-        Mockito.doReturn(dailyFlowBasedConstraintDocument).when(dailyF303Generator).generate(Mockito.any());
-        return new PostProcessingService(adapter, raoIXmlResponseGenerator, dailyF303Generator);
+        Mockito.doReturn(dailyFlowBasedConstraintDocument)
+                .when(dailyF303Generator)
+                .generate(Mockito.anyMap(), Mockito.anyMap());
+        return new PostProcessingService(adapter);
     }
 
     @Test

@@ -6,12 +6,15 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
-import com.farao_community.farao.data.crac_creation.creator.fb_constraint.xsd.*;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ActionType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ActionsSetType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.CriticalBranchType;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.FlowBasedConstraintDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -21,13 +24,18 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.io.InputStream;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -49,21 +57,25 @@ class DailyF303Generator1Test {
     @MockBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
+    private final Map<TaskDto, ProcessFileDto> raoResult = new HashMap<>();
+    private final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
-        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFile("inputCracXml.xml");
+        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputCracXml.xml");
 
         InputStream network1InputStream = getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1230.xiidm");
-        Mockito.doReturn(network1InputStream).when(minioAdapter).getFile("network1.xiidm");
+        Mockito.doReturn(network1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network1.xiidm");
+
         InputStream raoResult1InputStream = getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1230/raoResult.json");
-        Mockito.doReturn(raoResult1InputStream).when(minioAdapter).getFile("raoResult1.json");
+        Mockito.doReturn(raoResult1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult1.json");
 
         InputStream network2InputStream = getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1330.xiidm");
-        Mockito.doReturn(network2InputStream).when(minioAdapter).getFile("network2.xiidm");
+        Mockito.doReturn(network2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network2.xiidm");
+
         InputStream raoResult2InputStream = getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1330/raoResult.json");
-        Mockito.doReturn(raoResult2InputStream).when(minioAdapter).getFile("raoResult2.json");
+        Mockito.doReturn(raoResult2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult2.json");
 
         String timeStampBegin = "2019-01-07T23:00Z";
 
@@ -83,13 +95,20 @@ class DailyF303Generator1Test {
         OffsetDateTime timestamp1230 = OffsetDateTime.parse("2019-01-08T12:30:00Z");
         ProcessFileDto cgm1ProcessFile = new ProcessFileDto("/CORE/CC/network1.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network1.xiidm", timestamp1230);
         ProcessFileDto raoResult1ProcessFile = new ProcessFileDto("/CORE/CC/raoResult1.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult1.json", timestamp1230);
-        taskDtos.add(new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of()));
+        final TaskDto successTaskOne = new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of());
+        taskDtos.add(successTaskOne);
 
         // SUCCESS task at 13:30
         OffsetDateTime timestamp1330 = OffsetDateTime.parse("2019-01-08T13:30:00Z");
         ProcessFileDto cgm2ProcessFile = new ProcessFileDto("/CORE/CC/network2.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network2.xiidm", timestamp1330);
         ProcessFileDto raoResult2ProcessFile = new ProcessFileDto("/CORE/CC/raoResult2.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult2.json", timestamp1330);
-        taskDtos.add(new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of()));
+        final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of());
+        taskDtos.add(successTaskTwo);
+
+        raoResult.put(successTaskOne, raoResult1ProcessFile);
+        raoResult.put(successTaskTwo, raoResult2ProcessFile);
+        cgms.put(successTaskOne, cgm1ProcessFile);
+        cgms.put(successTaskTwo, cgm2ProcessFile);
 
         // NOT_CREATED tasks from 2019-01-08 14:00 to 2019-01-08 23:00
         for (int h = 15; h <= 23; h++) {
@@ -102,7 +121,7 @@ class DailyF303Generator1Test {
     @Test
     void validateMergedFlowBasedCreation() {
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyF303Generator.generate(taskDtos);
+        FlowBasedConstraintDocument dailyFbConstDocument = dailyF303Generator.generate(raoResult, cgms);
         assertEquals("22XCORESO------S-20190108-F303v1", dailyFbConstDocument.getDocumentIdentification().getV());
         assertEquals(1, dailyFbConstDocument.getDocumentVersion().getV());
         assertEquals("B07", dailyFbConstDocument.getDocumentType().getV().value());
@@ -112,12 +131,13 @@ class DailyF303Generator1Test {
         assertEquals("A36", dailyFbConstDocument.getReceiverRole().getV().value());
         assertEquals("2019-01-07T23:00Z/2019-01-08T23:00Z", dailyFbConstDocument.getConstraintTimeInterval().getV());
         assertEquals("10YDOM-REGION-1V", dailyFbConstDocument.getDomain().getV());
-        assertEquals(23, dailyFbConstDocument.getCriticalBranches().getCriticalBranch().size());
+        //Verify critical branches
         List<CriticalBranchType> criticalBranchTypes = dailyFbConstDocument.getCriticalBranches().getCriticalBranch();
-        List<CriticalBranchType> fr1Fr4CO1 = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("fr1_fr4_CO1")).collect(Collectors.toList());
-        assertEquals("2019-01-07T23:00Z/2019-01-08T12:00Z", fr1Fr4CO1.get(0).getTimeInterval().getV());
-        assertEquals("2019-01-08T14:00Z/2019-01-08T23:00Z", fr1Fr4CO1.get(1).getTimeInterval().getV());
-        List<CriticalBranchType> fr1Fr4Co1Patl = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("fr1_fr4_CO1_PATL")).collect(Collectors.toList());
+        assertEquals(15, criticalBranchTypes.size());
+        List<CriticalBranchType> de2nl3N = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("de2_nl3_N")).toList();
+        assertEquals("2019-01-08T12:00Z/2019-01-08T14:00Z", de2nl3N.get(0).getTimeInterval().getV());
+
+        List<CriticalBranchType> fr1Fr4Co1Patl = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("fr1_fr4_CO1_PATL")).toList();
         assertEquals("2019-01-08T12:00Z/2019-01-08T13:00Z", fr1Fr4Co1Patl.get(0).getTimeInterval().getV());
         assertEquals("fr1_fr4_CO1", fr1Fr4Co1Patl.get(0).getOriginalId());
         assertEquals("2019-01-08T13:00Z/2019-01-08T14:00Z", fr1Fr4Co1Patl.get(1).getTimeInterval().getV());
@@ -126,13 +146,13 @@ class DailyF303Generator1Test {
         assertEquals("1", fr1Fr4Co1Patl.get(0).getImaxFactor().toString());
         assertNull(fr1Fr4Co1Patl.get(0).getImaxA());
 
-        List<CriticalBranchType> fr1Fr4Co1Tatl = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("fr1_fr4_CO1_TATL")).collect(Collectors.toList());
+        List<CriticalBranchType> fr1Fr4Co1Tatl = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("fr1_fr4_CO1_TATL")).toList();
         assertEquals("2019-01-08T12:00Z/2019-01-08T14:00Z", fr1Fr4Co1Tatl.get(0).getTimeInterval().getV());
         assertEquals("fr1_fr4_CO1", fr1Fr4Co1Tatl.get(0).getOriginalId());
         assertEquals("1000", fr1Fr4Co1Tatl.get(0).getImaxFactor().toString());
         assertNull(fr1Fr4Co1Tatl.get(0).getImaxA());
         assertNull(fr1Fr4Co1Tatl.get(0).getComplexVariantId());
-
+        //Verify complex variants
         assertEquals(2, dailyFbConstDocument.getComplexVariants().getComplexVariant().size());
         assertEquals("open_fr1_fr3;pst_be", dailyFbConstDocument.getComplexVariants().getComplexVariant().get(0).getName());
         assertEquals("2019-01-08T12:00Z/2019-01-08T13:00Z", dailyFbConstDocument.getComplexVariants().getComplexVariant().get(0).getTimeInterval().getV());

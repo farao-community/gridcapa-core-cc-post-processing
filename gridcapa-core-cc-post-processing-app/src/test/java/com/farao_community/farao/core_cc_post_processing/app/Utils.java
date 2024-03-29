@@ -74,6 +74,12 @@ public class Utils {
         assertEquals(expectedFileContents, actualFileContents);
     }
 
+    public static boolean isFileContentEqualToString(final String result,
+                                                      final String expectedResultPath) throws IOException {
+        String expectedFileContents = new String(Utils.class.getResourceAsStream(expectedResultPath).readAllBytes()).replace("\r", "");
+        return expectedFileContents.equals(result);
+    }
+
     public static void assertFilesContentEqual(String resource, String generatedFile) throws IOException {
         assertFilesContentEqual(resource, generatedFile, false);
     }
