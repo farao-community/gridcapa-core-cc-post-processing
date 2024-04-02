@@ -139,7 +139,6 @@ public class ZipAndUploadService {
         }
     }
 
-
     public void zipRaoResultsAndSendToOutputs(final String targetMinioFolder,
                                               final Map<TaskDto, ProcessFileDto> raoResults,
                                               final LocalDate localDate) {

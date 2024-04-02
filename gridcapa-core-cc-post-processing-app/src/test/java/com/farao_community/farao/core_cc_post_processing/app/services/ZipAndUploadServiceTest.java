@@ -54,8 +54,8 @@ class ZipAndUploadServiceTest {
 
     @InjectMocks
     private ZipAndUploadService zipAndUploadService;
-    private final LocalDate localDate = LocalDate.of(2023, 8, 4);
-    private static final String targetFolder = "targetFolder";
+    private static final LocalDate LOCAL_DATE = LocalDate.of(2023, 8, 4);
+    private static final String TARGET_FOLDER = "targetFolder";
 
     @Test
     void testZipAndUploadLogs() throws IOException {
@@ -87,9 +87,9 @@ class ZipAndUploadServiceTest {
         cgms.put(SUCCESS_TASK, CGM_FILE_DTO);
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/network.uct"))
                 .thenReturn(getClass().getResourceAsStream("/services/network.uct"));
-        zipAndUploadService.zipCgmsAndSendToOutputs(targetFolder,
+        zipAndUploadService.zipCgmsAndSendToOutputs(TARGET_FOLDER,
                 cgms,
-                localDate,
+                LOCAL_DATE,
                 "00000000-0000-0000-0000-000000000000",
                 "2019-01-07T23:00Z/2019-01-08T23:00Z");
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
@@ -102,9 +102,9 @@ class ZipAndUploadServiceTest {
         final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
         cgms.put(SUCCESS_TASK_NOT_PRESENT_STATUS, CGM_FILE_DTO_NOT_PRESENT);
 
-        zipAndUploadService.zipCgmsAndSendToOutputs(targetFolder,
+        zipAndUploadService.zipCgmsAndSendToOutputs(TARGET_FOLDER,
                 cgms,
-                localDate,
+                LOCAL_DATE,
                 "00000000-0000-0000-0000-000000000000",
                 "2019-01-07T23:00Z/2019-01-08T23:00Z");
         //In case of NOT ProcessFileStatus == VALIDATED, should not retrieve cgm from minio
@@ -120,9 +120,9 @@ class ZipAndUploadServiceTest {
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/cne.xml"))
                 .thenReturn(getClass().getResourceAsStream("/services/cne.xml"));
 
-        zipAndUploadService.zipCnesAndSendToOutputs(targetFolder,
+        zipAndUploadService.zipCnesAndSendToOutputs(TARGET_FOLDER,
                 cnes,
-                localDate);
+                LOCAL_DATE);
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
 
         assertFalse(new File("/tmp/cnes_out/2023-08-04").exists());
@@ -132,9 +132,9 @@ class ZipAndUploadServiceTest {
     void testZipCnesNotPresentAndSendToOutputs() {
         final Map<TaskDto, ProcessFileDto> cnes = new HashMap<>();
         cnes.put(SUCCESS_TASK_NOT_PRESENT_STATUS, CGM_FILE_DTO_NOT_PRESENT);
-        zipAndUploadService.zipCnesAndSendToOutputs(targetFolder,
+        zipAndUploadService.zipCnesAndSendToOutputs(TARGET_FOLDER,
                 cnes,
-                localDate);
+                LOCAL_DATE);
         //In case of NOT ProcessFileStatus == VALIDATED, should not retrieve cgm from minio
         verify(minioAdapterMock, never()).getFileFromFullPath(anyString());
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
@@ -148,9 +148,9 @@ class ZipAndUploadServiceTest {
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/raoResult.json"))
                 .thenReturn(getClass().getResourceAsStream("/services/raoResult.json"));
 
-        zipAndUploadService.zipRaoResultsAndSendToOutputs(targetFolder,
+        zipAndUploadService.zipRaoResultsAndSendToOutputs(TARGET_FOLDER,
                 raoResults,
-                localDate);
+                LOCAL_DATE);
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
 
         assertFalse(new File("/tmp/raoResults_out/2023-08-04").exists());
@@ -160,9 +160,9 @@ class ZipAndUploadServiceTest {
     void testZipRaoResultNotPresentAndSendToOutputs() {
         final Map<TaskDto, ProcessFileDto> cnes = new HashMap<>();
         cnes.put(SUCCESS_TASK_NOT_PRESENT_STATUS, RAO_RESULT_FILE_DTO_NOT_PRESENT);
-        zipAndUploadService.zipRaoResultsAndSendToOutputs(targetFolder,
+        zipAndUploadService.zipRaoResultsAndSendToOutputs(TARGET_FOLDER,
                 cnes,
-                localDate);
+                LOCAL_DATE);
         //In case of NOT ProcessFileStatus == VALIDATED, should not retrieve cgm from minio
         verify(minioAdapterMock, never()).getFileFromFullPath(anyString());
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
@@ -174,7 +174,7 @@ class ZipAndUploadServiceTest {
         final ArgumentCaptor<InputStream> inputStreamArgumentCaptor = ArgumentCaptor.forClass(InputStream.class);
         final ArgumentCaptor<String> destinationPathArgumentCaptor = ArgumentCaptor.forClass(String.class);
         final FlowBasedConstraintDocument document = new FlowBasedConstraintDocument();
-        zipAndUploadService.uploadF303ToMinio(document, targetFolder, localDate);
+        zipAndUploadService.uploadF303ToMinio(document, TARGET_FOLDER, LOCAL_DATE);
         verify(minioAdapterMock).uploadOutput(destinationPathArgumentCaptor.capture(), inputStreamArgumentCaptor.capture());
         final FlowBasedConstraintDocument parsedDocument = parseInputStreamToObject(inputStreamArgumentCaptor.getValue(), FlowBasedConstraintDocument.class);
         assertEquals("targetFolder/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A01-303_20230804-F303-01.xml", destinationPathArgumentCaptor.getValue());
@@ -186,7 +186,7 @@ class ZipAndUploadServiceTest {
         final ArgumentCaptor<InputStream> inputStreamArgumentCaptor = ArgumentCaptor.forClass(InputStream.class);
         final ArgumentCaptor<String> destinationPathArgumentCaptor = ArgumentCaptor.forClass(String.class);
         final ResponseMessageType responseMessage = new ResponseMessageType();
-        zipAndUploadService.uploadF305ToMinio(targetFolder, responseMessage, localDate);
+        zipAndUploadService.uploadF305ToMinio(TARGET_FOLDER, responseMessage, LOCAL_DATE);
         verify(minioAdapterMock).uploadOutput(destinationPathArgumentCaptor.capture(), inputStreamArgumentCaptor.capture());
         final ResponseMessageType parsedResponseMessage = parseInputStreamToObjectUsingJaxbElement(inputStreamArgumentCaptor.getValue(), ResponseMessageType.class);
         assertEquals("targetFolder/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-305_20230804-F305-01.xml", destinationPathArgumentCaptor.getValue());
@@ -204,7 +204,7 @@ class ZipAndUploadServiceTest {
         final String instantString = "2023-08-04T12:42:00Z";
         raoMetadata.setRaoRequestInstant(instantString);
         raoMetadata.setVersion(1);
-        zipAndUploadService.uploadF341ToMinio(targetFolder, byteArray, raoMetadata);
+        zipAndUploadService.uploadF341ToMinio(TARGET_FOLDER, byteArray, raoMetadata);
         verify(minioAdapterMock).uploadOutput(destinationPathArgumentCaptor.capture(), inputStreamArgumentCaptor.capture());
         final byte[] parsedResponseMessage = inputStreamToByteArray(inputStreamArgumentCaptor.getValue());
         assertEquals("targetFolder/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-341_20230804-F341-01.csv", destinationPathArgumentCaptor.getValue());
