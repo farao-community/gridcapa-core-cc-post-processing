@@ -26,16 +26,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class Utils {
 
-    private static final OffsetDateTime TIMESTAMP = OffsetDateTime.parse("2023-08-21T15:16:45Z");
-    private static final ProcessFileDto CRAC_PROCESS_FILE = new ProcessFileDto("/CORE/CC/crac.xml", "CBCORA", ProcessFileStatus.VALIDATED, "crac.xml", TIMESTAMP);
-    private static final ProcessFileDto CNE_FILE_DTO = new ProcessFileDto("/CORE/CC/cne.xml", "CNE", ProcessFileStatus.VALIDATED, "cne.xml", TIMESTAMP);
-    private static final ProcessFileDto CGM_FILE_DTO = new ProcessFileDto("/CORE/CC/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", TIMESTAMP);
-    private static final ProcessFileDto METADATA_FILE_DTO = new ProcessFileDto("/CORE/CC/metadata.json", "METADATA", ProcessFileStatus.VALIDATED, "metadata.json", TIMESTAMP);
-    private static final ProcessFileDto RAO_RESULT_FILE_DTO = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult.json", TIMESTAMP);
-    private static final List<ProcessFileDto> INPUTS = List.of(CRAC_PROCESS_FILE);
-    private static final List<ProcessFileDto> OUTPUTS = List.of(CNE_FILE_DTO, CGM_FILE_DTO, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO);
-    private static final List<ProcessEventDto> PROCESS_EVENTS = List.of();
+    public static final OffsetDateTime TIMESTAMP = OffsetDateTime.parse("2023-08-21T15:16:45Z");
+    public static final ProcessFileDto CRAC_PROCESS_FILE = new ProcessFileDto("/CORE/CC/crac.xml", "CBCORA", ProcessFileStatus.VALIDATED, "crac.xml", TIMESTAMP);
+    public static final ProcessFileDto CNE_FILE_DTO = new ProcessFileDto("/CORE/CC/cne.xml", "CNE", ProcessFileStatus.VALIDATED, "cne.xml", TIMESTAMP);
+    public static final ProcessFileDto CNE_FILE_DTO_NOT_PRESENT = new ProcessFileDto("/CORE/CC/cne.xml", "CNE", ProcessFileStatus.VALIDATED, "cne.xml", TIMESTAMP);
+    public static final ProcessFileDto CGM_FILE_DTO = new ProcessFileDto("/CORE/CC/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", TIMESTAMP);
+    public static final ProcessFileDto CGM_FILE_DTO_NOT_PRESENT = new ProcessFileDto("/CORE/CC/network.uct", "CGM_OUT", ProcessFileStatus.NOT_PRESENT, "network.uct", TIMESTAMP);
+    public static final ProcessFileDto METADATA_FILE_DTO = new ProcessFileDto("/CORE/CC/metadata.json", "METADATA", ProcessFileStatus.VALIDATED, "metadata.json", TIMESTAMP);
+    public static final ProcessFileDto RAO_RESULT_FILE_DTO = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult.json", TIMESTAMP);
+    public static final ProcessFileDto RAO_RESULT_FILE_DTO_NOT_PRESENT = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.NOT_PRESENT, "raoResult.json", TIMESTAMP);
+    public static final List<ProcessFileDto> INPUTS = List.of(CRAC_PROCESS_FILE);
+    public static final List<ProcessFileDto> OUTPUTS = List.of(CNE_FILE_DTO, CGM_FILE_DTO, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO);
+    public static final List<ProcessFileDto> OUTPUTS_NOT_PRESENT = List.of(CNE_FILE_DTO_NOT_PRESENT, CGM_FILE_DTO_NOT_PRESENT, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO_NOT_PRESENT);
+    public static final List<ProcessEventDto> PROCESS_EVENTS = List.of();
     public static final TaskDto SUCCESS_TASK = new TaskDto(UUID.fromString("4fb56583-bcec-4ed9-9839-0984b7324989"), OffsetDateTime.parse("2023-08-21T15:16:45Z"), TaskStatus.SUCCESS, INPUTS, OUTPUTS, PROCESS_EVENTS);
+    public static final TaskDto SUCCESS_TASK_NOT_PRESENT_STATUS = new TaskDto(UUID.fromString("4fb56583-bcec-4ed9-9839-0984b7324989"), OffsetDateTime.parse("2023-08-21T15:16:45Z"), TaskStatus.SUCCESS, INPUTS, OUTPUTS_NOT_PRESENT, PROCESS_EVENTS);
     public static final TaskDto ERROR_TASK = new TaskDto(UUID.fromString("6e3e0ef2-96e4-4649-82d4-374f103038d4"), OffsetDateTime.parse("2023-08-21T15:16:46Z"), TaskStatus.ERROR, INPUTS, OUTPUTS, PROCESS_EVENTS);
     public static final TaskDto RUNNING_TASK = new TaskDto(UUID.fromString("b4efda15-92c5-431b-a17f-9c5f6d8a6437"), OffsetDateTime.parse("2023-08-21T15:16:47Z"), TaskStatus.RUNNING, INPUTS, OUTPUTS, PROCESS_EVENTS);
     public static final CoreCCMetadata CORE_CC_METADATA_SUCCESS = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "SUCCESS", "0", "This is an error.", 1);
