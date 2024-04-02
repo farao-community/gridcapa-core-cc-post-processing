@@ -156,11 +156,6 @@ class DailyF303Generator2Test {
         assertEquals(24, taskDtos.size());
         FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(raoResult, cgms);
 
-        /*
-        byte[] dailyFbConstraint = JaxbUtil.writeInBytes(FlowBasedConstraintDocument.class, dailyFbConstDocument);
-        Files.write(Paths.get("/tmp/f303-out-" + ts + ".xml"), dailyFbConstraint);
-        */
-
         // -----
         // check headers
         // -----

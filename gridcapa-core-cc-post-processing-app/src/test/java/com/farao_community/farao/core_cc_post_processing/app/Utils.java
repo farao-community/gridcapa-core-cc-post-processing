@@ -6,13 +6,21 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app;
 
-import com.farao_community.farao.gridcapa.task_manager.api.*;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessEventDto;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
+import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapterProperties;
 import io.minio.MinioClient;
 import org.mockito.Mockito;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
@@ -83,9 +91,5 @@ public class Utils {
                                                       final String expectedResultPath) throws IOException {
         String expectedFileContents = new String(Utils.class.getResourceAsStream(expectedResultPath).readAllBytes()).replace("\r", "");
         return expectedFileContents.equals(result);
-    }
-
-    public static void assertFilesContentEqual(String resource, String generatedFile) throws IOException {
-        assertFilesContentEqual(resource, generatedFile, false);
     }
 }

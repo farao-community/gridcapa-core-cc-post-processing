@@ -40,7 +40,6 @@ import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_D
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
 
 /**
@@ -96,8 +95,18 @@ class XmlGeneratorTest {
     void generateRaoResponse() throws IOException {
         initTasksForRaoResponse();
         initMetadataMap();
-        final ResponseMessageType raoResponse = F305XmlGenerator.generateRaoResponse(taskDtos, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
-        assertTrue(Utils.isFileContentEqualToString(new ObjectMapper().writeValueAsString(raoResponse), "/services/raoResponse.xml"));
+        // mock instant
+        Instant mockedInstant = ZonedDateTime.parse("2023-08-04T12:42:42.000Z").toInstant();
+        try (MockedStatic<Instant> mockedStatic = mockStatic(Instant.class, Mockito.CALLS_REAL_METHODS)) {
+            mockedStatic.when(Instant::now).thenReturn(mockedInstant);
+            final ResponseMessageType raoResponse = F305XmlGenerator.generateRaoResponse(taskDtos, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+            // JSON => OBJECT => JSON to get rid of formatting
+            String expectedFileContents = new String(Utils.class.getResourceAsStream("/services/raoResponseMessageType.json").readAllBytes()).replace("\r", "");
+            final ObjectMapper mapper = new ObjectMapper();
+            final ResponseMessageType parsedFileContent = mapper.readValue(expectedFileContents, ResponseMessageType.class);
+            final String reformattedFileContent = mapper.writeValueAsString(parsedFileContent);
+            assertEquals(mapper.writeValueAsString(raoResponse), reformattedFileContent);
+        }
     }
 
     private void initTasksForRaoResponse() {
