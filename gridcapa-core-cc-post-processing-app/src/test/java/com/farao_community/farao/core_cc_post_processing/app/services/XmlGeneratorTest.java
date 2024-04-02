@@ -40,6 +40,7 @@ import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_D
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
 
 /**
@@ -96,7 +97,7 @@ class XmlGeneratorTest {
         initTasksForRaoResponse();
         initMetadataMap();
         final ResponseMessageType raoResponse = F305XmlGenerator.generateRaoResponse(taskDtos, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
-        Utils.isFileContentEqualToString(new ObjectMapper().writeValueAsString(raoResponse), "/services/raoResponse.xml");
+        assertTrue(Utils.isFileContentEqualToString(new ObjectMapper().writeValueAsString(raoResponse), "/services/raoResponse.xml"));
     }
 
     private void initTasksForRaoResponse() {

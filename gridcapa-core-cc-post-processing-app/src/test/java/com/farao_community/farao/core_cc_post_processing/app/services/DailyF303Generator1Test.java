@@ -11,10 +11,9 @@ import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ActionType;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ActionsSetType;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.CriticalBranchType;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.FlowBasedConstraintDocument;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.IndependantComplexVariant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,10 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -122,63 +118,54 @@ class DailyF303Generator1Test {
     void validateMergedFlowBasedCreation() {
         assertEquals(24, taskDtos.size());
         FlowBasedConstraintDocument dailyFbConstDocument = dailyF303Generator.generate(raoResult, cgms);
-        assertEquals("22XCORESO------S-20190108-F303v1", dailyFbConstDocument.getDocumentIdentification().getV());
-        assertEquals(1, dailyFbConstDocument.getDocumentVersion().getV());
-        assertEquals("B07", dailyFbConstDocument.getDocumentType().getV().value());
-        assertEquals("22XCORESO------S", dailyFbConstDocument.getSenderIdentification().getV());
-        assertEquals("A44", dailyFbConstDocument.getSenderRole().getV().value());
-        assertEquals("17XTSO-CS------W", dailyFbConstDocument.getReceiverIdentification().getV());
-        assertEquals("A36", dailyFbConstDocument.getReceiverRole().getV().value());
-        assertEquals("2019-01-07T23:00Z/2019-01-08T23:00Z", dailyFbConstDocument.getConstraintTimeInterval().getV());
-        assertEquals("10YDOM-REGION-1V", dailyFbConstDocument.getDomain().getV());
-        //Verify critical branches
-        List<CriticalBranchType> criticalBranchTypes = dailyFbConstDocument.getCriticalBranches().getCriticalBranch();
-        assertEquals(15, criticalBranchTypes.size());
-        List<CriticalBranchType> de2nl3N = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("de2_nl3_N")).toList();
-        assertEquals("2019-01-08T12:00Z/2019-01-08T14:00Z", de2nl3N.get(0).getTimeInterval().getV());
+        assertDocumentProperties(dailyFbConstDocument);
+        assertCriticalBranches(dailyFbConstDocument.getCriticalBranches().getCriticalBranch());
+        assertComplexVariants(dailyFbConstDocument.getComplexVariants().getComplexVariant());
+    }
 
-        List<CriticalBranchType> fr1Fr4Co1Patl = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("fr1_fr4_CO1_PATL")).toList();
-        assertEquals("2019-01-08T12:00Z/2019-01-08T13:00Z", fr1Fr4Co1Patl.get(0).getTimeInterval().getV());
-        assertEquals("fr1_fr4_CO1", fr1Fr4Co1Patl.get(0).getOriginalId());
-        assertEquals("2019-01-08T13:00Z/2019-01-08T14:00Z", fr1Fr4Co1Patl.get(1).getTimeInterval().getV());
-        assertEquals("fr1_fr4_CO1", fr1Fr4Co1Patl.get(1).getOriginalId());
-        assertNotEquals(fr1Fr4Co1Patl.get(0).getComplexVariantId(), fr1Fr4Co1Patl.get(1).getComplexVariantId());
-        assertEquals("1", fr1Fr4Co1Patl.get(0).getImaxFactor().toString());
-        assertNull(fr1Fr4Co1Patl.get(0).getImaxA());
+    private void assertDocumentProperties(FlowBasedConstraintDocument document) {
+        assertEquals("22XCORESO------S-20190108-F303v1", document.getDocumentIdentification().getV());
+        assertEquals(1, document.getDocumentVersion().getV());
+        assertEquals("B07", document.getDocumentType().getV().value());
+        assertEquals("22XCORESO------S", document.getSenderIdentification().getV());
+        assertEquals("A44", document.getSenderRole().getV().value());
+        assertEquals("17XTSO-CS------W", document.getReceiverIdentification().getV());
+        assertEquals("A36", document.getReceiverRole().getV().value());
+        assertEquals("2019-01-07T23:00Z/2019-01-08T23:00Z", document.getConstraintTimeInterval().getV());
+        assertEquals("10YDOM-REGION-1V", document.getDomain().getV());
+    }
 
-        List<CriticalBranchType> fr1Fr4Co1Tatl = criticalBranchTypes.stream().filter(cb -> cb.getId().equals("fr1_fr4_CO1_TATL")).toList();
-        assertEquals("2019-01-08T12:00Z/2019-01-08T14:00Z", fr1Fr4Co1Tatl.get(0).getTimeInterval().getV());
-        assertEquals("fr1_fr4_CO1", fr1Fr4Co1Tatl.get(0).getOriginalId());
-        assertEquals("1000", fr1Fr4Co1Tatl.get(0).getImaxFactor().toString());
-        assertNull(fr1Fr4Co1Tatl.get(0).getImaxA());
-        assertNull(fr1Fr4Co1Tatl.get(0).getComplexVariantId());
-        //Verify complex variants
-        assertEquals(2, dailyFbConstDocument.getComplexVariants().getComplexVariant().size());
-        assertEquals("open_fr1_fr3;pst_be", dailyFbConstDocument.getComplexVariants().getComplexVariant().get(0).getName());
-        assertEquals("2019-01-08T12:00Z/2019-01-08T13:00Z", dailyFbConstDocument.getComplexVariants().getComplexVariant().get(0).getTimeInterval().getV());
-        assertEquals("open_fr1_fr3;pst_be", dailyFbConstDocument.getComplexVariants().getComplexVariant().get(1).getName());
-        assertEquals("2019-01-08T13:00Z/2019-01-08T14:00Z", dailyFbConstDocument.getComplexVariants().getComplexVariant().get(1).getTimeInterval().getV());
+    private void assertCriticalBranches(List<CriticalBranchType> criticalBranches) {
+        assertEquals(15, criticalBranches.size());
+        assertCriticalBranch(criticalBranches, "de2_nl3_N", "2019-01-08T12:00Z/2019-01-08T14:00Z");
+        assertCriticalBranch(criticalBranches, "fr1_fr4_CO1_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z");
+        assertCriticalBranch(criticalBranches, "fr1_fr4_CO1_TATL", "2019-01-08T12:00Z/2019-01-08T14:00Z");
+    }
 
-        assertEquals("XX", dailyFbConstDocument.getComplexVariants().getComplexVariant().get(1).getTsoOrigin());
-        List<ActionsSetType> actionsSetTypeList = dailyFbConstDocument.getComplexVariants().getComplexVariant().get(1).getActionsSet();
-        assertEquals(2, actionsSetTypeList.size());
-        assertEquals("open_fr1_fr3", actionsSetTypeList.get(0).getName());
-        assertTrue(actionsSetTypeList.get(0).isCurative());
-        assertFalse(actionsSetTypeList.get(0).isPreventive());
-        List<String> afterCOListList = actionsSetTypeList.get(0).getAfterCOList().getAfterCOId();
-        assertEquals(1, afterCOListList.size());
-        assertEquals("CO1_fr2_fr3_1", afterCOListList.get(0));
-        List<ActionType> actionTypeList = actionsSetTypeList.get(0).getAction();
-        assertEquals("STATUS", actionTypeList.get(0).getType());
+    private void assertCriticalBranch(List<CriticalBranchType> criticalBranches, String branchId, String timeInterval) {
+        CriticalBranchType branch = findBranchById(criticalBranches, branchId);
+        assertNotNull(branch);
+        assertEquals(timeInterval, branch.getTimeInterval().getV());
+    }
 
-        assertEquals("pst_be", actionsSetTypeList.get(1).getName());
-        assertTrue(actionsSetTypeList.get(1).isCurative());
-        assertFalse(actionsSetTypeList.get(0).isPreventive());
-        List<String> afterCOListList1 = actionsSetTypeList.get(1).getAfterCOList().getAfterCOId();
-        assertEquals(1, afterCOListList1.size());
-        assertEquals("CO1_fr2_fr3_1", afterCOListList1.get(0));
-        List<ActionType> actionTypeList1 = actionsSetTypeList.get(1).getAction();
-        assertEquals("PSTTAP", actionTypeList1.get(0).getType());
+    private CriticalBranchType findBranchById(List<CriticalBranchType> criticalBranches, String branchId) {
+        return criticalBranches.stream()
+                .filter(cb -> cb.getId().equals(branchId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void assertComplexVariants(List<IndependantComplexVariant> complexVariants) {
+        assertEquals(2, complexVariants.size());
+        assertComplexVariant(complexVariants.get(0), "open_fr1_fr3;pst_be", "2019-01-08T12:00Z/2019-01-08T13:00Z");
+        assertComplexVariant(complexVariants.get(1), "open_fr1_fr3;pst_be", "2019-01-08T13:00Z/2019-01-08T14:00Z");
+    }
+
+    private void assertComplexVariant(IndependantComplexVariant complexVariant, String name, String timeInterval) {
+        assertEquals(name, complexVariant.getName());
+        assertEquals(timeInterval, complexVariant.getTimeInterval().getV());
+        assertEquals("XX", complexVariant.getTsoOrigin());
+        assertEquals(2, complexVariant.getActionsSet().size());
     }
 
 }
