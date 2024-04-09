@@ -22,8 +22,8 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -120,9 +120,9 @@ class XmlGeneratorTest {
     }
 
     @Test
-    void generateRaoResponseHeader() throws DatatypeConfigurationException {
+    void generateRaoResponseHeader() {
         ResponseMessageType responseMessage = new ResponseMessageType();
-        F305XmlGenerator.generateRaoResponseHeader(responseMessage, localDate, correlationId);
+        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateRaoResponseHeader", responseMessage, localDate, correlationId);
         HeaderType header = responseMessage.getHeader();
         assertEquals("created", header.getVerb());
         assertEquals("OptimizedRemedialActions", header.getNoun());
@@ -139,7 +139,7 @@ class XmlGeneratorTest {
         ResponseMessageType responseMessage = new ResponseMessageType();
         initTasksForRaoResponse();
         initMetadataMap();
-        F305XmlGenerator.generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateRaoResponsePayLoad", taskDtos, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
 
         assertEquals(3, payload.getResponseItems().getResponseItem().size());
@@ -162,9 +162,9 @@ class XmlGeneratorTest {
     }
 
     @Test
-    void generateCgmXmlHeaderFileHeader() throws DatatypeConfigurationException {
+    void generateCgmXmlHeaderFileHeader() {
         ResponseMessageType responseMessage = new ResponseMessageType();
-        F305XmlGenerator.generateCgmXmlHeaderFileHeader(responseMessage, localDate, correlationId);
+        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateCgmXmlHeaderFileHeader", responseMessage, localDate, correlationId);
         HeaderType header = responseMessage.getHeader();
         assertEquals("created", header.getVerb());
         assertEquals("OptimizedCommonGridModel", header.getNoun());
@@ -180,7 +180,7 @@ class XmlGeneratorTest {
     void generateCgmXmlHeaderFilePayLoad() {
         ResponseMessageType responseMessage = new ResponseMessageType();
         initTasksForCgmXmlHeader();
-        F305XmlGenerator.generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateCgmXmlHeaderFilePayLoad", taskDtos, responseMessage, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
         assertEquals(1, payload.getResponseItems().getResponseItem().size());
         ResponseItem responseItem = payload.getResponseItems().getResponseItem().get(0);
