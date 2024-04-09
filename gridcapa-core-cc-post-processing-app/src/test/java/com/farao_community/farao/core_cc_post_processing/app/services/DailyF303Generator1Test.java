@@ -84,21 +84,21 @@ class DailyF303Generator1Test {
         for (int h = 0; h <= 12; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of()));
         }
 
         // SUCCESS task at 12:30
         OffsetDateTime timestamp1230 = OffsetDateTime.parse("2019-01-08T12:30:00Z");
         ProcessFileDto cgm1ProcessFile = new ProcessFileDto("/CORE/CC/network1.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network1.xiidm", timestamp1230);
         ProcessFileDto raoResult1ProcessFile = new ProcessFileDto("/CORE/CC/raoResult1.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult1.json", timestamp1230);
-        final TaskDto successTaskOne = new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of());
+        final TaskDto successTaskOne = new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of(), List.of());
         taskDtos.add(successTaskOne);
 
         // SUCCESS task at 13:30
         OffsetDateTime timestamp1330 = OffsetDateTime.parse("2019-01-08T13:30:00Z");
         ProcessFileDto cgm2ProcessFile = new ProcessFileDto("/CORE/CC/network2.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network2.xiidm", timestamp1330);
         ProcessFileDto raoResult2ProcessFile = new ProcessFileDto("/CORE/CC/raoResult2.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult2.json", timestamp1330);
-        final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of());
+        final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of(), List.of());
         taskDtos.add(successTaskTwo);
 
         raoResult.put(successTaskOne, raoResult1ProcessFile);
@@ -110,7 +110,7 @@ class DailyF303Generator1Test {
         for (int h = 15; h <= 23; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of()));
         }
     }
 
