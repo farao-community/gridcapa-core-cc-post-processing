@@ -7,12 +7,10 @@
 package com.farao_community.farao.core_cc_post_processing.app.configuration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
 
 /**
  * @author Alexandre Montigny {@literal <alexandre.montigny at rte-france.com>}
  */
-@ConstructorBinding
 @ConfigurationProperties("core-cc-post-processing")
 public class CoreCCPostProcessingConfiguration {
     private final UrlProperties url;
