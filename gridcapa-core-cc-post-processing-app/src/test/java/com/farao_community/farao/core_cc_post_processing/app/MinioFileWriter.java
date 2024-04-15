@@ -28,10 +28,6 @@ public class MinioFileWriter extends MinioAdapter {
 
     @Override
     public void uploadOutput(String path, InputStream inputStream) {
-        File outputDir = new File(TEMP_DIR + "/outputs/");
-        if (!outputDir.exists()) {
-            boolean created = outputDir.mkdir();
-        }
         String outputPath = path.startsWith("RAO_OUTPUTS_DIR") ? TEMP_DIR + "/outputs/" + path : path;
         File targetFile = new File(outputPath);
         try {
