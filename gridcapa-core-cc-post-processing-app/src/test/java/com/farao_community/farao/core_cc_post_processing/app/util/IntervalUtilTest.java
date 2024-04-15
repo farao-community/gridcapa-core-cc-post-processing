@@ -24,9 +24,25 @@ class IntervalUtilTest {
         String intervalString = "2023-08-21T23:00:00Z/2023-08-22T23:00:00Z";
         Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(intervalString);
         assertEquals(24, positionMap.size());
-        assertEquals(positionMap.get(1), Interval.of(Instant.parse("2023-08-21T23:00:00Z"), Instant.parse("2023-08-22T00:00:00Z")));
-        assertEquals(positionMap.get(24), Interval.of(Instant.parse("2023-08-22T22:00:00Z"), Instant.parse("2023-08-22T23:00:00Z")));
+        assertEquals( Interval.of(Instant.parse("2023-08-21T23:00:00Z"), Instant.parse("2023-08-22T00:00:00Z")), positionMap.get(1));
+        assertEquals(Interval.of(Instant.parse("2023-08-22T22:00:00Z"), Instant.parse("2023-08-22T23:00:00Z")), positionMap.get(24));
     }
 
-    // TODO: 23 and 25 timestamps
+    @Test
+    void getPositionsMapAtTransitionFromWinterToSummerTime() {
+        String intervalString = "2023-03-26T23:00:00Z/2023-03-27T22:00:00Z";
+        Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(intervalString);
+        assertEquals(23, positionMap.size());
+        assertEquals(Interval.of(Instant.parse("2023-03-26T23:00:00Z"), Instant.parse("2023-03-27T00:00:00Z")), positionMap.get(1));
+        assertEquals(Interval.of(Instant.parse("2023-03-27T21:00:00Z"), Instant.parse("2023-03-27T22:00:00Z")), positionMap.get(23));
+    }
+
+    @Test
+    void getPositionsMapAtTransitionFromSummerToWinterTime() {
+        String intervalString = "2023-10-29T22:00:00Z/2023-10-30T23:00:00Z";
+        Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(intervalString);
+        assertEquals(25, positionMap.size());
+        assertEquals(Interval.of(Instant.parse("2023-10-29T22:00:00Z"), Instant.parse("2023-10-29T23:00:00Z")), positionMap.get(1));
+        assertEquals(Interval.of(Instant.parse("2023-10-30T22:00:00Z"), Instant.parse("2023-10-30T23:00:00Z")), positionMap.get(25));
+    }
 }
