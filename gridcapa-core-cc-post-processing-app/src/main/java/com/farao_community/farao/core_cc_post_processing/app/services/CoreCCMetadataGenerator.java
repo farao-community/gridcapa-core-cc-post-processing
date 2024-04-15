@@ -46,21 +46,22 @@ public final class CoreCCMetadataGenerator {
 
         // Compute updated overall status : only timestamps with a RaoRequestInstant defined are considered
         macroMetada.setStatus(RaoMetadata.generateOverallStatus(metadataList.stream().map(CoreCCMetadata::getStatus).collect(Collectors.toSet())));
-
-        data.put(RAO_REQUESTS_RECEIVED, macroMetada.getTimeInterval(), macroMetada.getRaoRequestFileName());
-        data.put(RAO_REQUEST_RECEPTION_TIME, macroMetada.getTimeInterval(), macroMetada.getRequestReceivedInstant());
-        data.put(RAO_OUTPUTS_SENT, macroMetada.getTimeInterval(), macroMetada.getStatus().equals("SUCCESS") ? "YES" : "NO");
-        data.put(RAO_OUTPUTS_SENDING_TIME, macroMetada.getTimeInterval(), macroMetada.getOutputsSendingInstant());
-        data.put(RAO_COMPUTATION_STATUS, macroMetada.getTimeInterval(), macroMetada.getStatus());
-        data.put(RAO_START_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationStartInstant());
-        data.put(RAO_END_TIME, macroMetada.getTimeInterval(), macroMetada.getComputationEndInstant());
-        data.put(RAO_COMPUTATION_TIME, macroMetada.getTimeInterval(), getComputationTime(macroMetada.getComputationStartInstant(), macroMetada.getComputationEndInstant()));
+        final String timeInterval = macroMetada.getTimeInterval();
+        data.put(RAO_REQUESTS_RECEIVED, timeInterval, macroMetada.getRaoRequestFileName());
+        data.put(RAO_REQUEST_RECEPTION_TIME, timeInterval, macroMetada.getRequestReceivedInstant());
+        data.put(RAO_OUTPUTS_SENT, timeInterval, "SUCCESS".equals(macroMetada.getStatus()) ? "YES" : "NO");
+        data.put(RAO_OUTPUTS_SENDING_TIME, timeInterval, macroMetada.getOutputsSendingInstant());
+        data.put(RAO_COMPUTATION_STATUS, timeInterval, macroMetada.getStatus());
+        data.put(RAO_START_TIME, timeInterval, macroMetada.getComputationStartInstant());
+        data.put(RAO_END_TIME, timeInterval, macroMetada.getComputationEndInstant());
+        data.put(RAO_COMPUTATION_TIME, timeInterval, getComputationTime(macroMetada.getComputationStartInstant(), macroMetada.getComputationEndInstant()));
         metadataList.forEach(individualMetadata -> {
-            data.put(RAO_START_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationStart());
-            data.put(RAO_END_TIME, individualMetadata.getRaoRequestInstant(), individualMetadata.getComputationEnd());
-            data.put(RAO_COMPUTATION_TIME, individualMetadata.getRaoRequestInstant(), getComputationTime(individualMetadata.getComputationStart(), individualMetadata.getComputationEnd()));
-            data.put(RAO_RESULTS_PROVIDED, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
-            data.put(RAO_COMPUTATION_STATUS, individualMetadata.getRaoRequestInstant(), individualMetadata.getStatus());
+            final String raoRequestInstant = individualMetadata.getRaoRequestInstant();
+            data.put(RAO_START_TIME, raoRequestInstant, individualMetadata.getComputationStart());
+            data.put(RAO_END_TIME, raoRequestInstant, individualMetadata.getComputationEnd());
+            data.put(RAO_COMPUTATION_TIME, raoRequestInstant, getComputationTime(individualMetadata.getComputationStart(), individualMetadata.getComputationEnd()));
+            data.put(RAO_RESULTS_PROVIDED, raoRequestInstant, individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
+            data.put(RAO_COMPUTATION_STATUS, raoRequestInstant, individualMetadata.getStatus());
         });
         return data;
     }
@@ -69,7 +70,7 @@ public final class CoreCCMetadataGenerator {
         // Get headers for columns & lines
         List<RaoMetadata.Indicator> indicators = Arrays.stream(values())
                 .sorted(Comparator.comparing(RaoMetadata.Indicator::getOrder))
-                .collect(Collectors.toList());
+                .toList();
         List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).sorted(String::compareTo).collect(Collectors.toList());
         timestamps.add(0, timeInterval);
 

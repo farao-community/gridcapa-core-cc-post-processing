@@ -1,0 +1,3 @@
+;RAO requests received;RAO request reception time;RAO outputs sent;RAO outputs sending time;RAO results provided;RAO computation status;RAO computation start;RAO computation end;RAO computation time (minutes)
+2023-08-03T23:00:00.000Z/2023-08-04T23:00:00.000Z;raoRequest.json;2023-08-04T12:30:00.000Z;YES;yyyy-MM-ddTHH:mm:ss.SSSSSSZ;;SUCCESS;2023-08-04T12:30:00.000Z;2023-08-04T12:31:00.000Z;1
+2023-08-04T12:30:00.000Z;;;;;YES;SUCCESS;2023-08-04T12:30:00.000Z;2023-08-04T12:31:00.000Z;1

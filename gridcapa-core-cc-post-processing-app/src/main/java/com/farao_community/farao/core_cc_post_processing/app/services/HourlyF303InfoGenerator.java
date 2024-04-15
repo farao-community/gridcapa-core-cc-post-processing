@@ -117,7 +117,7 @@ class HourlyF303InfoGenerator {
 
         TimeIntervalType ti = new TimeIntervalType();
         ti.setV(IntervalUtil.getCurrentTimeInterval(OffsetDateTime.ofInstant(interval.getStart(), ZoneOffset.UTC)));
-        List<String> contingencyWithCra = statesWithCrac.keySet().stream().map(s -> s.getContingency().orElseThrow().getId()).collect(Collectors.toList());
+        List<String> contingencyWithCra = statesWithCrac.keySet().stream().map(s -> s.getContingency().orElseThrow().getId()).toList();
         Map<String, CriticalBranchType> refCbs = getCriticalBranchesForInstant(cracCreationContext.getTimeStamp(), nativeCrac);
         List<CriticalBranchType> criticalBranches = new ArrayList<>();
 

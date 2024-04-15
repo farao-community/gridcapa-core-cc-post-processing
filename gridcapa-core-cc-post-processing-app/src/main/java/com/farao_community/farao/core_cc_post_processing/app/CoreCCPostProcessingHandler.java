@@ -51,7 +51,7 @@ public class CoreCCPostProcessingHandler {
     /**
      * Launch processTasks if all tasks associated to localDate are finished
      */
-    private void postProcessFinishedTasks(TaskDto taskDtoUpdated) {
+    void postProcessFinishedTasks(TaskDto taskDtoUpdated) {
         try {
             if (taskDtoUpdated.getStatus().isOver()) {
                 // propagate in logs MDC the task id as an extra field to be able to match microservices logs with calculation tasks.

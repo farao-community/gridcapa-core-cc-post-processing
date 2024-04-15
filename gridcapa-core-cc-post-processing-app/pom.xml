@@ -15,6 +15,10 @@
     <name>GridCapa Core CC post-processing application</name>
     <description>GridCapa Core CC post-processing application</description>
 
+    <properties>
+        <pitest.version>1.15.8</pitest.version>
+        <pitest.junit.plugin.version>1.2.1</pitest.junit.plugin.version>
+    </properties>
     <build>
         <plugins>
             <plugin>
@@ -81,6 +85,27 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Mutation testing -->
+            <plugin>
+                <groupId>org.pitest</groupId>
+                <artifactId>pitest-maven</artifactId>
+                <version>${pitest.version}</version>
+                <dependencies> <!-- -->
+                    <dependency>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-junit5-plugin</artifactId>
+                        <version>${pitest.junit.plugin.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <targetClasses>
+                        <param>com.farao_community.farao.*</param>
+                    </targetClasses>
+                    <targetTests>
+                        <param>com.farao_community.farao.*</param>
+                    </targetTests>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
@@ -88,7 +113,8 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <configuration>
-                        <excludePackageNames>com.farao_community.farao.core_cc_post_processing.app.xsd</excludePackageNames>
+                        <excludePackageNames>com.farao_community.farao.core_cc_post_processing.app.xsd
+                        </excludePackageNames>
                     </configuration>
                 </plugin>
             </plugins>

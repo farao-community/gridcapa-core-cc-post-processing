@@ -1,0 +1,77 @@
+{
+  "header": {
+    "verb": "created",
+    "noun": "OptimizedRemedialActions",
+    "revision": "1",
+    "replayDetection": null,
+    "context": "PRODUCTION",
+    "timestamp": 1691152962000,
+    "source": "22XCORESO------S",
+    "asyncReplyFlag": false,
+    "replyAddress": "17XTSO-CS------W",
+    "ackRequired": false,
+    "user": null,
+    "messageID": "22XCORESO------S-20230804-F305",
+    "correlationID": "6fe0a389-9315-417e-956d-b3fbaa479caz",
+    "comment": null,
+    "property": [],
+    "any": []
+  },
+  "reply": null,
+  "payload": {
+    "responseItems": {
+      "responseItem": [
+        {
+          "error": null,
+          "files": {
+            "file": [
+              {
+                "code": "OPTIMIZED_CGM",
+                "url": "documentIdentification://22XCORESO------S-20230804-F304v1"
+              },
+              {
+                "code": "OPTIMIZED_CB",
+                "url": "documentIdentification://22XCORESO------S-20230804-F303v1"
+              },
+              {
+                "code": "RAO_REPORT",
+                "url": "documentIdentification://22XCORESO------S-20230804-F299v1"
+              }
+            ]
+          },
+          "timeInterval": "2023-08-21T14:46Z/2023-08-21T15:46Z"
+        },
+        {
+          "error": {
+            "code": "1",
+            "level": "FATAL",
+            "reason": "This is an error."
+          },
+          "files": null,
+          "timeInterval": "2023-08-21T14:46Z/2023-08-21T15:46Z"
+        },
+        {
+          "error": null,
+          "files": {
+            "file": [
+              {
+                "code": "OPTIMIZED_CGM",
+                "url": "documentIdentification://22XCORESO------S-20230804-F304v1"
+              },
+              {
+                "code": "OPTIMIZED_CB",
+                "url": "documentIdentification://22XCORESO------S-20230804-F303v1"
+              },
+              {
+                "code": "RAO_REPORT",
+                "url": "documentIdentification://22XCORESO------S-20230804-F299v1"
+              }
+            ]
+          },
+          "timeInterval": "2023-08-21T14:46Z/2023-08-21T15:46Z"
+        }
+      ],
+      "timeInterval": "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z"
+    }
+  }
+}

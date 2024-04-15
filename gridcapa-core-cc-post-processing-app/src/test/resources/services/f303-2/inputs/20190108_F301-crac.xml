@@ -1,0 +1,501 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<FlowBasedConstraintDocument DtdRelease="4" DtdVersion="0" xmlns="flowbased" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="flowbasedconstraintdocument-17.xsd">
+  <DocumentIdentification v="17XTSO-CS------W-20190108-F301v1"/>
+  <DocumentVersion v="1"/>
+  <DocumentType v="B06"/>
+  <ProcessType v="A01"/>
+  <SenderIdentification codingScheme="A01" v="17XTSO-CS------W"/>
+  <SenderRole v="A36"/>
+  <ReceiverIdentification codingScheme="A01" v="22XCORESO------S"/>
+  <ReceiverRole v="A44"/>
+  <CreationDateTime v="2019-08-15T14:07:28Z"/>
+  <ConstraintTimeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+  <Domain codingScheme="A01" v="10YDOM-REGION-1V"/>
+  <criticalBranches>
+    <criticalBranch id="001_FR-DE [N][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XFRDE111" name="XFRDE111 DDE3AA11 TL DE3X" elementName="TL DE3X" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>20</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="002_FR-DE [N][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T13:00Z"/>
+      <branch eic="1234567890123450" from="XFRDE111" name="XFRDE111 DDE3AA11 TL DE3X" elementName="TL DE3X" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>20</minRAMfactor>
+      <CNEC>false</CNEC>
+      <MNEC>true</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="002_FR-DE [N][OPP]">
+      <timeInterval v="2019-01-08T13:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XFRDE111" name="XFRDE111 DDE3AA11 TL DE3X" elementName="TL DE3X" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>20</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>true</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="003_FR-DE [CO1][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XFRDE111" name="XFRDE111 DDE3AA11 TL DE3X" elementName="TL DE3X" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxA>5000</permanentImaxA>
+      <temporaryImaxA>6000</temporaryImaxA>
+      <frmMw>0</frmMw>
+      <minRAMfactor>20</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="004_FR-DE [CO1][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T13:00Z"/>
+      <branch eic="1234567890123450" from="XFRDE111" name="XFRDE111 DDE3AA11 TL DE3X" elementName="TL DE3X" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>20</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="004_FR-DE [CO1][OPP]">
+      <timeInterval v="2019-01-08T13:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XFRDE111" name="XFRDE111 DDE3AA11 TL DE3X" elementName="TL DE3X" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>20</minRAMfactor>
+      <CNEC>false</CNEC>
+      <MNEC>true</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="005_DE-NL [N][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XDENL111" name="NNL3AA11 XDENL111 TL NL3X" elementName="TL NL3X" to="NNL3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="006_DE-NL [N][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XDENL111" name="NNL3AA11 XDENL111 TL NL3X" elementName="TL NL3X" to="NNL3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="007_DE-NL [CO1][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XDENL111" name="NNL3AA11 XDENL111 TL NL3X" elementName="TL NL3X" to="NNL3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="008_DE-NL [CO1][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XDENL111" name="NNL3AA11 XDENL111 TL NL3X" elementName="TL NL3X" to="NNL3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="009_NL-BE [N][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XNLBE111" name="XNLBE111 BBE3AA12 1" order="1" to="BBE3AA12"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="010_NL-BE [N][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XNLBE111" name="XNLBE111 BBE3AA12 1" order="1" to="BBE3AA12"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="011_NL-BE [CO1][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XNLBE111" name="XNLBE111 BBE3AA12 1" order="1" to="BBE3AA12"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="012_NL-BE [CO1][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XNLBE111" name="XNLBE111 BBE3AA12 1" order="1" to="BBE3AA12"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="013_BE-FR [N][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XBEFR112" name="FFR3AA11 XBEFR112 1" order="1" to="FFR3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="014_BE-FR [N][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XBEFR112" name="FFR3AA11 XBEFR112 1" order="1" to="FFR3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="015_BE-FR [CO1][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XBEFR112" name="FFR3AA11 XBEFR112 1" order="1" to="FFR3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="016_BE-FR [CO1][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="XBEFR112" name="FFR3AA11 XBEFR112 1" order="1" to="FFR3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO1" location="FR-FR" name="co1_fr2_fr3">
+        <branch eic="1234567890123450" from="FFR2AA11" to="FFR3AA11" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="017_FR12-FR32 [CO2][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="FFR3AA21" name="FFR1AA24 FFR3AA21 1" order="1" to="FFR1AA24"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO2" location="BE-BE" name="co2_be12_be22">
+        <branch eic="1234567890123450" from="BBE1AA21" to="BBE2AA21" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="018_FR12-FR32 [CO2][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T13:00Z"/>
+      <branch eic="1234567890123450" from="FFR3AA21" name="FFR1AA24 FFR3AA21 1" order="1" to="FFR1AA24"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO2" location="BE-BE" name="co2_be12_be22">
+        <branch eic="1234567890123450" from="BBE1AA21" to="BBE2AA21" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="018_FR12-FR32 [CO2][OPP]">
+      <timeInterval v="2019-01-08T13:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="FFR3AA21" name="FFR1AA24 FFR3AA21 2" order="2" to="FFR1AA24"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO2" location="BE-BE" name="co2_be12_be22">
+        <branch eic="1234567890123450" from="BBE1AA21" to="BBE2AA21" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="019_FR11-FR31 [CO2][DIR]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="FFR1AA11" name="FFR1AA11 FFR3AA11 BR FR1FR3" elementName="BR FR1FR3" to="FFR3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO2" location="BE-BE" name="co2_be12_be22">
+        <branch eic="1234567890123450" from="BBE1AA21" to="BBE2AA21" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="020_FR12-FR32 [CO2][OPP]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T12:00Z"/>
+      <branch eic="1234567890123450" from="FFR1AA11" name="FFR1AA11 FFR3AA11 BR FR1FR3" elementName="BR FR1FR3" to="FFR3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO2" location="BE-BE" name="co2_be12_be22">
+        <branch eic="1234567890123450" from="BBE1AA21" to="BBE2AA21" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="020_FR12-FR32 [CO2][OPP]">
+      <timeInterval v="2019-01-08T12:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="FFR1AA11" name="FFR1AA11 FFR3AA11 BR FR1FR3" elementName="BR FR1FR3" to="FFR3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1.2</permanentImaxFactor>
+      <temporaryImaxFactor>1.30</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO2" location="BE-BE" name="co2_be12_be22">
+        <branch eic="1234567890123450" from="BBE1AA21" to="BBE2AA21" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="021_NO_MNEC_NO_CNEC [CO2]">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="DDE2AA11" name="DDE2AA11 DDE3AA11 1" order="1" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1.2</permanentImaxFactor>
+      <temporaryImaxFactor>1.30</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>false</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+      <outage id="CO2" location="BE-BE" name="co2_be12_be22">
+        <branch eic="1234567890123450" from="BBE1AA21" to="BBE2AA21" order="1"/>
+      </outage>
+    </criticalBranch>
+    <criticalBranch id="022_NEVER_VALID">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <branch eic="1234567890123450" from="UNKNOW11" name="UNKNOW11 UNKNOW12 1" order="1" to="UNKNOW12"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1.2</permanentImaxFactor>
+      <temporaryImaxFactor>1.30</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>80</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>OPPOSITE</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+    <criticalBranch id="023_NOT_FOR_ALL_TIMESTAMPS">
+      <timeInterval v="2019-01-08T12:00Z/2019-01-08T14:00Z"/>
+      <branch eic="1234567890123450" from="XFRDE111" name="XFRDE111 DDE3AA11 TL DE3X" elementName="TL DE3X" to="DDE3AA11"/>
+      <imaxType>SEASONAL</imaxType>
+      <permanentImaxFactor>1</permanentImaxFactor>
+      <temporaryImaxFactor>1.15</temporaryImaxFactor>
+      <frmMw>0</frmMw>
+      <minRAMfactor>20</minRAMfactor>
+      <CNEC>true</CNEC>
+      <MNEC>false</MNEC>
+      <direction>DIRECT</direction>
+      <tsoOrigin>FR</tsoOrigin>
+    </criticalBranch>
+  </criticalBranches>
+  <complexVariants>
+    <complexVariant id="CRA_PST_BE" name="CRA_PST_BE">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <tsoOrigin>BE</tsoOrigin>
+      <actionsSet name="CRA_PST_BE">
+        <preventive>false</preventive>
+        <curative>true</curative>
+        <enforced>false</enforced>
+        <afterCOList>
+          <afterCOId>CO1</afterCOId>
+          <afterCOId>CO2</afterCOId>
+        </afterCOList>
+        <action type="PSTTAP">
+          <branch order="1" from="BBE2AA11" to="BBE3AA12"/>
+          <range>
+            <min>-16</min>
+            <max>16</max>
+          </range>
+        </action>
+      </actionsSet>
+    </complexVariant>
+    <complexVariant id="PRA_OPEN_BE1-BE2" name="OPEN_BE1-BE2">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <tsoOrigin>BE</tsoOrigin>
+      <actionsSet name="OPEN_BE1-BE2">
+        <preventive>true</preventive>
+        <curative>false</curative>
+        <enforced>false</enforced>
+        <action type="STATUS">
+          <branch from="BBE1AA11" order="1" to="BBE2AA11"/>
+          <value>OPEN</value>
+        </action>
+      </actionsSet>
+    </complexVariant>
+    <complexVariant id="CRA_OPEN_NL1-NL3" name="OPEN_NL1-NL3">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <tsoOrigin>NL</tsoOrigin>
+      <actionsSet name="OPEN_NL1-NL3">
+        <preventive>false</preventive>
+        <curative>true</curative>
+        <enforced>false</enforced>
+        <afterCOList>
+          <afterCOId>CO1</afterCOId>
+          <afterCOId>CO2</afterCOId>
+        </afterCOList>
+        <action type="STATUS">
+          <branch from="NNL1AA11" order="1" to="NNL3AA11"/>
+          <value>OPEN</value>
+        </action>
+      </actionsSet>
+    </complexVariant>
+    <complexVariant id="CRA_OPEN_FR1-FR3-2" name="OPEN_FR1-FR3-2">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <tsoOrigin>FR</tsoOrigin>
+      <actionsSet name="OPEN_FR1-FR3-2">
+        <preventive>false</preventive>
+        <curative>true</curative>
+        <enforced>false</enforced>
+        <afterCOList>
+          <afterCOId>CO1</afterCOId>
+          <afterCOId>CO2</afterCOId>
+        </afterCOList>
+        <action type="STATUS">
+          <branch from="FFR1AA11" order="2" to="FFR3AA11"/>
+          <value>OPEN</value>
+        </action>
+      </actionsSet>
+    </complexVariant>
+    <complexVariant id="CRA_OPEN_TR-FR1" name="OPEN_TR-FR1">
+      <timeInterval v="2019-01-07T23:00Z/2019-01-08T23:00Z"/>
+      <tsoOrigin>FR</tsoOrigin>
+      <actionsSet name="OPEN_TR-FR1">
+        <preventive>false</preventive>
+        <curative>true</curative>
+        <enforced>false</enforced>
+        <afterCOList>
+          <afterCOId>CO1</afterCOId>
+          <afterCOId>CO2</afterCOId>
+        </afterCOList>
+        <action type="STATUS">
+          <branch from="FFR1AA24" order="5" to="FFR1AA11"/>
+          <value>OPEN</value>
+        </action>
+      </actionsSet>
+    </complexVariant>
+  </complexVariants>
+</FlowBasedConstraintDocument>

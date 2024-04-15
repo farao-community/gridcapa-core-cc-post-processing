@@ -1,0 +1,13 @@
+{
+  "raoRequestFileName": "raoRequest.json",
+  "requestReceivedInstant": "2019-01-08T12:30Z",
+  "raoRequestInstant": "2019-01-08T12:30Z",
+  "computationStart": "2019-01-08T12:30Z",
+  "computationEnd": "2019-01-08T12:31Z",
+  "timeInterval": "2019-01-07T23:00Z/2019-01-08T23:00Z",
+  "correlationId": "00000000-0000-0000-0000-000000000000",
+  "status": "RUNNING",
+  "errorCode": "0",
+  "errorMessage": "This is an error.",
+  "version": 1
+}
