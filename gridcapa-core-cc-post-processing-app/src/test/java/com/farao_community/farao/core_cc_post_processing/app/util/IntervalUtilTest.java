@@ -9,7 +9,7 @@ package com.farao_community.farao.core_cc_post_processing.app.util;
 import org.junit.jupiter.api.Test;
 import org.threeten.extra.Interval;
 
-import java.time.*;
+import java.time.Instant;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,7 +24,7 @@ class IntervalUtilTest {
         String intervalString = "2023-08-21T23:00:00Z/2023-08-22T23:00:00Z";
         Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(intervalString);
         assertEquals(24, positionMap.size());
-        assertEquals( Interval.of(Instant.parse("2023-08-21T23:00:00Z"), Instant.parse("2023-08-22T00:00:00Z")), positionMap.get(1));
+        assertEquals(Interval.of(Instant.parse("2023-08-21T23:00:00Z"), Instant.parse("2023-08-22T00:00:00Z")), positionMap.get(1));
         assertEquals(Interval.of(Instant.parse("2023-08-22T22:00:00Z"), Instant.parse("2023-08-22T23:00:00Z")), positionMap.get(24));
     }
 
