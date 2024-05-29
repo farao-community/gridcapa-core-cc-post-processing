@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  *  This Source Code Form is subject to the terms of the Mozilla Public
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -35,8 +35,7 @@ import static com.farao_community.farao.core_cc_post_processing.app.Utils.CNE_FI
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.RAO_RESULT_FILE_DTO;
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +57,7 @@ class PostProcessingServiceTest {
     private final InputStream inputMetadataInputStream = getClass().getResourceAsStream("/services/metadatas/coreCCMetadata.json");
     InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
     private final ProcessFileDto metadataProcessFile = new ProcessFileDto("/CORE/CC/coreCCMetadata.json", "METADATA", ProcessFileStatus.VALIDATED, "coreCCMetadata.json", OffsetDateTime.parse("2019-01-08T12:30Z"));
-    private final TaskDto task = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000001"), OffsetDateTime.parse("2019-01-08T12:30Z"), TaskStatus.SUCCESS, List.of(metadataProcessFile), List.of(), List.of(), List.of());
+    private final TaskDto task = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000001"), OffsetDateTime.parse("2019-01-08T12:30Z"), TaskStatus.SUCCESS, List.of(metadataProcessFile), List.of(), List.of(), List.of(), List.of(), List.of());
 
     @Test
     void testProcessTasks() {
@@ -82,22 +81,22 @@ class PostProcessingServiceTest {
 
         verify(zipAndUploadServiceMock)
                 .zipRaoResultsAndSendToOutputs(expectedTargetMinioFolder, expectedRaoResultPerTask, localDate);
-        verify(zipAndUploadServiceMock).uploadF341ToMinio(any(), any(), any());
+        verify(zipAndUploadServiceMock).uploadF341ToMinio(any(), any(), any(), anyInt());
         verify(zipAndUploadServiceMock)
                 .zipAndUploadLogs(logList, "RAO_OUTPUTS_DIR/2023-08-04/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-342_20190108-F342-01.zip");
         verify(zipAndUploadServiceMock)
-                .zipCgmsAndSendToOutputs(expectedTargetMinioFolder, expectedCgmsPerTask, localDate, "00000000-0000-0000-0000-000000000000", "2019-01-07T23:00Z/2019-01-08T23:00Z");
+                .zipCgmsAndSendToOutputs(expectedTargetMinioFolder, expectedCgmsPerTask, localDate, "00000000-0000-0000-0000-000000000000", "2019-01-07T23:00Z/2019-01-08T23:00Z", 1);
         verify(zipAndUploadServiceMock)
-                .zipCnesAndSendToOutputs(expectedTargetMinioFolder, expectedCnePerTask, localDate);
-        verify(zipAndUploadServiceMock).uploadF303ToMinio(any(), any(), any());
-        verify(zipAndUploadServiceMock).uploadF305ToMinio(any(), any(), any());
+                .zipCnesAndSendToOutputs(expectedTargetMinioFolder, expectedCnePerTask, localDate, 1);
+        verify(zipAndUploadServiceMock).uploadF303ToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).uploadF305ToMinio(any(), any(), any(), anyInt());
     }
 
     @Test
     void fetchMetadataFromMinio() {
         // Process file with NOT_CREATED floaf -> will be filtered out
         final ProcessFileDto runningMetadataProcessFile = new ProcessFileDto("/CORE/CC/coreCCMetadataRunning.json", "METADATA", ProcessFileStatus.NOT_PRESENT, "coreCCMetadataRunning.json", OffsetDateTime.parse("2019-01-08T12:30Z"));
-        final TaskDto taskRunning = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000002"), OffsetDateTime.parse("2019-01-08T13:30Z"), TaskStatus.RUNNING, List.of(runningMetadataProcessFile), List.of(), List.of(), List.of());
+        final TaskDto taskRunning = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000002"), OffsetDateTime.parse("2019-01-08T13:30Z"), TaskStatus.RUNNING, List.of(runningMetadataProcessFile), List.of(), List.of(), List.of(), List.of(), List.of());
         final Map<TaskDto, ProcessFileDto> metadatas = Map.of(task, metadataProcessFile, taskRunning, runningMetadataProcessFile);
         when(minioAdapterMock.getFileFromFullPath(anyString()))
                 .thenReturn(inputMetadataInputStream);
