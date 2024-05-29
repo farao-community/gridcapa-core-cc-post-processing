@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  *  This Source Code Form is subject to the terms of the Mozilla Public
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -114,7 +114,7 @@ class DailyF303Generator2Test {
         for (int h = 0; h <= 11; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
         }
 
         for (int h = 12; h <= 15; h++) {
@@ -134,19 +134,19 @@ class DailyF303Generator2Test {
             Mockito.doReturn(raoResultInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult" + hFile + ".json");
 
             // add task
-            final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of(), List.of());
+            final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of(), List.of(), List.of(), List.of());
             taskDtos.add(taskDto);
             raoResult.put(taskDto, raoResultProcessFile);
             cgms.put(taskDto, cgmProcessFile);
         }
 
         // add failed task between 15:00 and 16:00
-        taskDtos.add(new TaskDto(UUID.fromString(baseUuid + 16), OffsetDateTime.parse("2019-01-08T15:30:00Z"), TaskStatus.ERROR, List.of(cracProcessFile), List.of(), List.of(), List.of()));
+        taskDtos.add(new TaskDto(UUID.fromString(baseUuid + 16), OffsetDateTime.parse("2019-01-08T15:30:00Z"), TaskStatus.ERROR, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
 
         for (int h = 17; h <= 23; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
         }
     }
 

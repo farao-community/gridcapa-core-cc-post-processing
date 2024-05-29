@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, RTE (http://www.rte-france.com)
+ * Copyright (c) 2024, RTE (http://www.rte-france.com)
  *  This Source Code Form is subject to the terms of the Mozilla Public
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -35,8 +35,8 @@ public final class NamingRules {
 
     private static final DateTimeFormatter RAO_RESULT_ZIP_FORMATTER = DateTimeFormatter.ofPattern("'CASTOR-INTERNAL-RESULTS_'yyyyMMdd'.zip'");
 
-    public static String generateRF305FileName(LocalDate localDate) {
-        return formatVersion(F305_FILENAME_FORMATTER.format(localDate), 1);
+    public static String generateRF305FileName(LocalDate localDate, int version) {
+        return formatVersion(F305_FILENAME_FORMATTER.format(localDate), version);
     }
 
     public static String generateUctFileName(String instant, int version) {
@@ -46,20 +46,20 @@ public final class NamingRules {
         return com.farao_community.farao.gridcapa_core_cc.api.util.IntervalUtil.handle25TimestampCase(output, instant);
     }
 
-    public static String generateOptimizedCbFileName(LocalDate localDate) {
-        return formatVersion(OPTIMIZED_CB_FILENAME_FORMATTER.format(localDate), 1);
+    public static String generateOptimizedCbFileName(LocalDate localDate, int version) {
+        return formatVersion(OPTIMIZED_CB_FILENAME_FORMATTER.format(localDate), version);
     }
 
     public static String generateOutputsDestinationPath(String destinationPrefix, String fileName) {
         return String.format(OUTPUTS, destinationPrefix, fileName);
     }
 
-    public static String generateCgmZipName(LocalDate localDate) {
-        return formatVersion(UCT_OUTPUT_FORMATTER.format(localDate), 1);
+    public static String generateCgmZipName(LocalDate localDate, int version) {
+        return formatVersion(UCT_OUTPUT_FORMATTER.format(localDate), version);
     }
 
-    public static String generateCneZipName(LocalDate localDate) {
-        return formatVersion(CNE_OUTPUT_FORMATTER.format(localDate), 1);
+    public static String generateCneZipName(LocalDate localDate, int version) {
+        return formatVersion(CNE_OUTPUT_FORMATTER.format(localDate), version);
     }
 
     public static String generateZippedLogsName(String instant, String outputsTargetMinioFolder, int version) {
