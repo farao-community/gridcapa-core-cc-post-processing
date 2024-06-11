@@ -35,7 +35,9 @@ import static com.farao_community.farao.core_cc_post_processing.app.Utils.CNE_FI
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.RAO_RESULT_FILE_DTO;
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
