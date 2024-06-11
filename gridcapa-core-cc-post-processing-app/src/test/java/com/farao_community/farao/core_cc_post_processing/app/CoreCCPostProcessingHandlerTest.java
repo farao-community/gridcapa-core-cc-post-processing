@@ -148,8 +148,8 @@ class CoreCCPostProcessingHandlerTest {
         final OffsetDateTime firstTsOfDay = OffsetDateTime.of(2024, 6, 10, 22, 30, 0, 0, ZoneOffset.UTC);
         //23h30 locale
         final OffsetDateTime lastTsOfDay = OffsetDateTime.of(2024, 6, 11, 21, 30, 0, 0, ZoneOffset.UTC);
-        final TaskDto firstTaskOfDay = new TaskDto(null, firstTsOfDay, TaskStatus.SUCCESS, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
-        final TaskDto lastTaskOfDay = new TaskDto(null, lastTsOfDay, TaskStatus.SUCCESS, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        final TaskDto firstTaskOfDay = new TaskDto(null, firstTsOfDay, TaskStatus.SUCCESS, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        final TaskDto lastTaskOfDay = new TaskDto(null, lastTsOfDay, TaskStatus.SUCCESS, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
         final RestTemplate mockRestTemplate = Mockito.mock(RestTemplate.class);
         Mockito.when(restTemplateBuilder.build()).thenReturn(mockRestTemplate);
         initCoreCCPostProcessingHandler();
