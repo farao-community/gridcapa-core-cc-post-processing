@@ -18,7 +18,14 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -56,7 +63,7 @@ public class CoreCCPostProcessingHandler {
             if (taskDtoUpdated.getStatus().isOver()) {
                 // propagate in logs MDC the task id as an extra field to be able to match microservices logs with calculation tasks.
                 // This should be done only once, as soon as the information to add in mdc is available.
-                LocalDate localDate = taskDtoUpdated.getTimestamp().toLocalDate();
+                LocalDate localDate = taskDtoUpdated.getTimestamp().atZoneSameInstant(ZoneId.of("CET")).toLocalDate();
                 if (checkIfAllHourlyTasksAreFinished(localDate)) {
                     Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
                     // Only perform post processing if a task from local date was updated
