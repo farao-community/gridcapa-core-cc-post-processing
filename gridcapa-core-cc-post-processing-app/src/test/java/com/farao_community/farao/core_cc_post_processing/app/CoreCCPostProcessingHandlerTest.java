@@ -20,13 +20,18 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Ameni Walha {@literal <ameni.walha at rte-france.com>}
@@ -124,7 +129,7 @@ class CoreCCPostProcessingHandlerTest {
         LocalDate localDate = LocalDate.of(2023, 8, 21);
 
         ResponseEntity responseEntity = Mockito.mock(ResponseEntity.class);
-        TaskDto[] taskToRetrieve = new TaskDto[] {Utils.SUCCESS_TASK, Utils.ERROR_TASK};
+        TaskDto[] taskToRetrieve = new TaskDto[]{Utils.SUCCESS_TASK, Utils.ERROR_TASK};
         Mockito.when(responseEntity.getBody()).thenReturn(taskToRetrieve);
         Mockito.when(responseEntity.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
         RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
@@ -138,9 +143,26 @@ class CoreCCPostProcessingHandlerTest {
     }
 
     @Test
+    void testLocalDateOfFinishedTasks() {
+        //First timestamp of the 00h30 locale
+        final OffsetDateTime firstTsOfDay = OffsetDateTime.of(2024, 6, 10, 22, 30, 0, 0, ZoneOffset.UTC);
+        //23h30 locale
+        final OffsetDateTime lastTsOfDay = OffsetDateTime.of(2024, 6, 11, 21, 30, 0, 0, ZoneOffset.UTC);
+        final TaskDto firstTaskOfDay = new TaskDto(null, firstTsOfDay, TaskStatus.SUCCESS, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        final TaskDto lastTaskOfDay = new TaskDto(null, lastTsOfDay, TaskStatus.SUCCESS, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST, Collections.EMPTY_LIST);
+        final RestTemplate mockRestTemplate = Mockito.mock(RestTemplate.class);
+        Mockito.when(restTemplateBuilder.build()).thenReturn(mockRestTemplate);
+        initCoreCCPostProcessingHandler();
+        coreCCPostProcessingHandler.postProcessFinishedTasks(firstTaskOfDay);
+        coreCCPostProcessingHandler.postProcessFinishedTasks(lastTaskOfDay);
+        Mockito.verify(mockRestTemplate, Mockito.times(2))
+                .getForEntity("/2023-08-21/2024-06-11/allOver", Boolean.class);
+    }
+
+    @Test
     void postProcessFinishedTasks() {
         LocalDate localDate = LocalDate.of(2023, 8, 21);
-        TaskDto[] tasks = new TaskDto[] {Utils.SUCCESS_TASK, Utils.ERROR_TASK, Utils.RUNNING_TASK};
+        TaskDto[] tasks = new TaskDto[]{Utils.SUCCESS_TASK, Utils.ERROR_TASK, Utils.RUNNING_TASK};
         Set<TaskDto> tasksAsSet = new HashSet<>(Arrays.asList(tasks));
         initCoreCCPostProcessingHandler();
 
