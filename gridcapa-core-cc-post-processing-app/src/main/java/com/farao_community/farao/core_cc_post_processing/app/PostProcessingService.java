@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
  *  This Source Code Form is subject to the terms of the Mozilla Public
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -68,8 +68,7 @@ public class PostProcessingService {
         Map<TaskDto, ProcessFileDto> metadataPerTask = new HashMap<>();
         Map<TaskDto, ProcessFileDto> raoResultPerTask = new HashMap<>();
         fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask, raoResultPerTask);
-        //get version of outputs or default to 1
-        final int outputFileVersion = getOutputFileVersion(tasksToPostProcess);
+
         // Generate outputs
         //Rao Result files to one zip
         zipAndUploadService.zipRaoResultsAndSendToOutputs(outputsTargetMinioFolder, raoResultPerTask, localDate);
@@ -81,8 +80,7 @@ public class PostProcessingService {
                     CoreCCMetadataGenerator.generateMetadataCsv(new ArrayList<>(metadataMap.entrySet().stream()
                             .filter(entry -> Objects.nonNull(entry.getValue().getRaoRequestInstant()))
                             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).values()), raoMetadata).getBytes(),
-                    raoMetadata,
-                    outputFileVersion);
+                    raoMetadata);
         } catch (Exception e) {
             String errorMessage = "Could not generate metadata file for core cc : " + e.getMessage();
             LOGGER.error(errorMessage);
@@ -90,20 +88,16 @@ public class PostProcessingService {
         }
 
         // -- F342 : zipped logs
-        zipAndUploadService.zipAndUploadLogs(logList, NamingRules.generateZippedLogsName(raoMetadata.getRaoRequestInstant(), outputsTargetMinioFolder, outputFileVersion));
+        zipAndUploadService.zipAndUploadLogs(logList, NamingRules.generateZippedLogsName(raoMetadata.getRaoRequestInstant(), outputsTargetMinioFolder, raoMetadata.getVersion()));
         // -- F304 : cgms
-        zipAndUploadService.zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId(), raoMetadata.getTimeInterval(), outputFileVersion);
+        zipAndUploadService.zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId(), raoMetadata.getTimeInterval());
         // -- F299 : cnes
-        zipAndUploadService.zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate, outputFileVersion);
+        zipAndUploadService.zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate);
         // -- F303 : flowBasedConstraintDocument
-        zipAndUploadService.uploadF303ToMinio(new DailyF303Generator(minioAdapter).generate(raoResultPerTask, cgmPerTask), outputsTargetMinioFolder, localDate, outputFileVersion);
+        zipAndUploadService.uploadF303ToMinio(new DailyF303Generator(minioAdapter).generate(raoResultPerTask, cgmPerTask), outputsTargetMinioFolder, localDate);
         // -- F305 : RaoResponse
-        zipAndUploadService.uploadF305ToMinio(outputsTargetMinioFolder, F305XmlGenerator.generateRaoResponse(tasksToPostProcess, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()), localDate, outputFileVersion);
+        zipAndUploadService.uploadF305ToMinio(outputsTargetMinioFolder, F305XmlGenerator.generateRaoResponse(tasksToPostProcess, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()), localDate);
         LOGGER.info("All outputs were uploaded");
-    }
-
-    private static int getOutputFileVersion(final Set<TaskDto> tasksToPostProcess) {
-        return tasksToPostProcess.stream().mapToInt(task -> task.getRunHistory().size()).max().orElse(1);
     }
 
     private String generateTargetMinioFolder(final LocalDate localDate) {

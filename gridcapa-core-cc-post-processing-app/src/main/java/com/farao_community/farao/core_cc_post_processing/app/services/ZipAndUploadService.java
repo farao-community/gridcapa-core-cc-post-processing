@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, RTE (http://www.rte-france.com)
+ * Copyright (c) 2023, RTE (http://www.rte-france.com)
  *  This Source Code Form is subject to the terms of the Mozilla Public
  *  License, v. 2.0. If a copy of the MPL was not distributed with this
  *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -73,14 +73,12 @@ public class ZipAndUploadService {
      * @param localDate
      * @param correlationId
      * @param timeInterval
-     * @param version
      */
     public void zipCgmsAndSendToOutputs(final String targetMinioFolder,
                                         final Map<TaskDto, ProcessFileDto> cgms,
                                         final LocalDate localDate,
                                         final String correlationId,
-                                        final String timeInterval,
-                                        final int version) {
+                                        final String timeInterval) {
         final String cgmZipTmpDir = TMP + "cgms_out/" + localDate.toString() + "/";
         // add cgm xml header to tmp folder
         F305XmlGenerator.generateCgmXmlHeaderFile(cgms.keySet(), cgmZipTmpDir, localDate, correlationId, timeInterval);
@@ -101,7 +99,7 @@ public class ZipAndUploadService {
 
         // Zip tmp folder
         final byte[] cgmsZipResult = ZipUtil.zipDirectory(cgmZipTmpDir);
-        final String targetCgmsFolderName = NamingRules.generateCgmZipName(localDate, version);
+        final String targetCgmsFolderName = NamingRules.generateCgmZipName(localDate);
         final String targetCgmsFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetCgmsFolderName);
 
         try {
@@ -117,12 +115,10 @@ public class ZipAndUploadService {
      * @param targetMinioFolder
      * @param cnes
      * @param localDate
-     * @param version
      */
     public void zipCnesAndSendToOutputs(final String targetMinioFolder,
                                         final Map<TaskDto, ProcessFileDto> cnes,
-                                        final LocalDate localDate,
-                                        final int version) {
+                                        final LocalDate localDate) {
         final String cneZipTmpDir = TMP + "cnes_out/" + localDate.toString() + "/";
 
         // Add all cnes from minio to tmp folder
@@ -139,7 +135,7 @@ public class ZipAndUploadService {
                 });
 
         final byte[] cneZipResult = ZipUtil.zipDirectory(cneZipTmpDir);
-        final String targetCneFolderName = NamingRules.generateCneZipName(localDate, version);
+        final String targetCneFolderName = NamingRules.generateCneZipName(localDate);
         final String targetCneFolderPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, targetCneFolderName);
 
         try {
@@ -187,14 +183,12 @@ public class ZipAndUploadService {
      * @param dailyFbDocument
      * @param targetMinioFolder
      * @param localDate
-     * @param version
      */
     public void uploadF303ToMinio(final FlowBasedConstraintDocument dailyFbDocument,
                                   final String targetMinioFolder,
-                                  final LocalDate localDate,
-                                  final int version) {
+                                  final LocalDate localDate) {
         final byte[] dailyFbConstraint = JaxbUtil.writeInBytes(FlowBasedConstraintDocument.class, dailyFbDocument);
-        final String fbConstraintFileName = NamingRules.generateOptimizedCbFileName(localDate, version);
+        final String fbConstraintFileName = NamingRules.generateOptimizedCbFileName(localDate);
         final String fbConstraintDestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, fbConstraintFileName);
         uploadOrThrow(dailyFbConstraint, fbConstraintDestinationPath, String.format("Exception occurred while uploading F303 file of business day %s", localDate));
     }
@@ -205,23 +199,20 @@ public class ZipAndUploadService {
      * @param targetMinioFolder
      * @param responseMessage
      * @param localDate
-     * @param version
      */
     public void uploadF305ToMinio(final String targetMinioFolder,
                                   final ResponseMessageType responseMessage,
-                                  final LocalDate localDate,
-                                  final int version) {
+                                  final LocalDate localDate) {
         final byte[] responseMessageBytes = JaxbUtil.marshallMessageAndSetJaxbProperties(responseMessage);
-        final String f305FileName = NamingRules.generateRF305FileName(localDate, version);
+        final String f305FileName = NamingRules.generateRF305FileName(localDate);
         final String f305DestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, f305FileName);
         uploadOrThrow(responseMessageBytes, f305DestinationPath, String.format("Exception occurred while uploading F305 for business date %s", localDate));
     }
 
     public void uploadF341ToMinio(final String targetMinioFolder,
                                   final byte[] csv,
-                                  final RaoMetadata raoMetadata,
-                                  final int version) {
-        final String metadataFileName = NamingRules.generateMetadataFileName(raoMetadata.getRaoRequestInstant(), version);
+                                  final RaoMetadata raoMetadata) {
+        final String metadataFileName = NamingRules.generateMetadataFileName(raoMetadata.getRaoRequestInstant(), raoMetadata.getVersion());
         final String metadataDestinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, metadataFileName);
         try (final InputStream csvIs = new ByteArrayInputStream(csv)) {
             minioAdapter.uploadOutput(metadataDestinationPath, csvIs);
