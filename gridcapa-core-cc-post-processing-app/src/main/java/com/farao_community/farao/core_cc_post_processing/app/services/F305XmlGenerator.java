@@ -124,9 +124,11 @@ public final class F305XmlGenerator {
                 boolean includeResponseItem = true;
 
                 if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
-                    if (!metadataMap.containsKey(taskDto.getId()) || StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
+                    if (metadataMap.containsKey(taskDto.getId()) && StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
                         // Do not generate a responseItem : raoRequest was not defined for this timestamp
                         includeResponseItem = false;
+                    } else if (!metadataMap.containsKey(taskDto.getId())) {
+                        fillFailedHours(responseItem, "500-InternalException", "No output available");
                     } else {
                         fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
                     }

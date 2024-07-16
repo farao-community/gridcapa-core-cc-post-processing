@@ -110,13 +110,14 @@ class XmlGeneratorTest {
     }
 
     private void initTasksForRaoResponse() {
-        taskDtos = Set.of(Utils.ERROR_TASK, Utils.RUNNING_TASK, Utils.SUCCESS_TASK);
+        taskDtos = Set.of(Utils.ERROR_TASK, Utils.RUNNING_TASK, Utils.SUCCESS_TASK, Utils.ERROR_TASK_NO_METADATA, Utils.ERROR_TASK_NOT_IN_RAO);
     }
 
     private void initMetadataMap() {
         metadataMap.put(Utils.ERROR_TASK.getId(), Utils.CORE_CC_METADATA_ERROR);
         metadataMap.put(Utils.RUNNING_TASK.getId(), Utils.CORE_CC_METADATA_RUNNING);
         metadataMap.put(Utils.SUCCESS_TASK.getId(), Utils.CORE_CC_METADATA_SUCCESS);
+        metadataMap.put(Utils.ERROR_TASK_NOT_IN_RAO.getId(), Utils.CORE_CC_METADATA_ERROR_NOT_IN_RAO);
     }
 
     @Test
@@ -142,7 +143,7 @@ class XmlGeneratorTest {
         ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateRaoResponsePayLoad", taskDtos, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
 
-        assertEquals(3, payload.getResponseItems().getResponseItem().size());
+        assertEquals(4, payload.getResponseItems().getResponseItem().size());
 
         ResponseItem successResponseItem = payload.getResponseItems().getResponseItem().get(0);
         assertEquals("2023-08-21T14:46Z/2023-08-21T15:46Z", successResponseItem.getTimeInterval());
