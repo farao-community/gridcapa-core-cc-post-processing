@@ -51,6 +51,8 @@ public final class F305XmlGenerator {
     public static final String DOCUMENT_IDENTIFICATION = "documentIdentification://";
     public static final String SENDER_ID = "22XCORESO------S";
     public static final String RECEIVER_ID = "17XTSO-CS------W";
+    public static final String INTERNAL_EXCEPTION = "500-InternalException";
+    public static final String NO_OUTPUT_AVAILABLE = "No output available";
 
     private F305XmlGenerator() {
     }
@@ -124,12 +126,12 @@ public final class F305XmlGenerator {
                 boolean includeResponseItem = true;
 
                 if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
-                    if (metadataMap.containsKey(taskDto.getId()) && StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
+                    if (!metadataMap.containsKey(taskDto.getId())) {
+                        fillFailedHours(responseItem, INTERNAL_EXCEPTION, NO_OUTPUT_AVAILABLE);
+                    } else if (StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
                         // Do not generate a responseItem : raoRequest was not defined for this timestamp
                         includeResponseItem = false;
-                    } else if (!metadataMap.containsKey(taskDto.getId())) {
-                        fillFailedHours(responseItem, "500-InternalException", "No output available");
-                    } else {
+                    } else  {
                         fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
                     }
                 } else {
