@@ -53,9 +53,12 @@ public class DailyF303Generator {
             .stream().filter(processFileDto -> processFileDto.getFileType().equals("CBCORA"))
             .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException("task dto missing cbcora file"));
         CracCreationParameters cracCreationParameters = getCimCracCreationParameters();
-        try (InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFile.getFilePath())) {
-
-            FlowBasedConstraintDocument flowBasedConstraintDocument = importNativeCrac(cracXmlInputStream);
+        try (final InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFile.getFilePath())) {
+            final byte[] cracXmlBytes = getBytesFromInputStream(cracXmlInputStream);
+            final FlowBasedConstraintDocument flowBasedConstraintDocument;
+            try (final InputStream firstUseStream = new ByteArrayInputStream(cracXmlBytes)) {
+                flowBasedConstraintDocument = importNativeCrac(firstUseStream);
+            }
             // generate F303Info for each hour of the initial CRAC
             Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(flowBasedConstraintDocument.getConstraintTimeInterval().getV());
             List<HourlyF303Info> hourlyF303Infos = new ArrayList<>();
@@ -63,7 +66,12 @@ public class DailyF303Generator {
                 Optional<TaskDto> taskDtoOptional =  getTaskDtoOfInterval(interval, raoResults.keySet());
                 if (taskDtoOptional.isPresent()) {
                     TaskDto taskDto = taskDtoOptional.get();
-                    hourlyF303Infos.add(new HourlyF303InfoGenerator(flowBasedConstraintDocument, interval, taskDto, minioAdapter, cracCreationParameters).generate(raoResults.get(taskDto), cgms.get(taskDto), cracFile.getFilename(), cracXmlInputStream));
+                    try (final InputStream tempCracXmlInputStream = new ByteArrayInputStream(cracXmlBytes)) {
+                        hourlyF303Infos.add(new HourlyF303InfoGenerator(flowBasedConstraintDocument, interval, taskDto, minioAdapter, cracCreationParameters)
+                                .generate(raoResults.get(taskDto), cgms.get(taskDto), cracFile.getFilename(), tempCracXmlInputStream));
+                    } catch (final IOException e) {
+                        throw new CoreCCPostProcessingInternalException("Exception occurred during F303 file creation", e);
+                    }
                 } else {
                     LOGGER.warn(String.format("Cannot find taskDto for interval %s", interval));
                 }
