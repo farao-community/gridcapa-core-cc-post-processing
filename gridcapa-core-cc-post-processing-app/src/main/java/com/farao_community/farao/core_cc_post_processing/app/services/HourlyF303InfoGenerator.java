@@ -9,24 +9,18 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.powsybl.openrao.data.cracapi.Crac;
+import com.powsybl.openrao.data.cracapi.CracCreationContext;
 import com.powsybl.openrao.data.cracapi.RemedialAction;
 import com.powsybl.openrao.data.cracapi.State;
 import com.powsybl.openrao.data.cracapi.networkaction.NetworkAction;
+import com.powsybl.openrao.data.cracapi.parameters.CracCreationParameters;
 import com.powsybl.openrao.data.cracapi.rangeaction.PstRangeAction;
 import com.powsybl.openrao.data.cracapi.rangeaction.RangeAction;
-import com.powsybl.openrao.data.craccreation.creator.api.CracCreationContext;
 import com.powsybl.openrao.data.craccreation.creator.api.ImportStatus;
-import com.powsybl.openrao.data.craccreation.creator.api.parameters.CracCreationParameters;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraint;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.craccreator.FbConstraintCracCreator;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.craccreator.FbConstraintCreationContext;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ActionType;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.CriticalBranchType;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.IndependantComplexVariant;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.ObjectFactory;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraintCreationContext;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.*;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.etso.TimeIntervalType;
 import com.powsybl.openrao.data.raoresultapi.RaoResult;
-import com.powsybl.openrao.data.raoresultjson.RaoResultImporter;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
@@ -55,29 +49,32 @@ class HourlyF303InfoGenerator {
     private static final String TATL = "_TATL";
     private static final String PATL = "_PATL";
 
-    private final FbConstraint nativeCrac;
+    private final FlowBasedConstraintDocument flowBasedConstraintDocument;
     private final Interval interval;
     private final TaskDto taskDto;
     private final MinioAdapter minioAdapter;
     private final CracCreationParameters cracCreationParameters;
 
-    HourlyF303InfoGenerator(FbConstraint nativeCrac, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter, CracCreationParameters cracCreationParameters) {
-        this.nativeCrac = nativeCrac;
+    HourlyF303InfoGenerator(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter, CracCreationParameters cracCreationParameters) {
+        this.flowBasedConstraintDocument = flowBasedConstraintDocument;
         this.interval = interval;
         this.taskDto = taskDto;
         this.minioAdapter = minioAdapter;
         this.cracCreationParameters = cracCreationParameters;
     }
 
-    HourlyF303Info generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile) {
+    HourlyF303Info generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, String cracFilename, InputStream cracInputStream) {
         if (taskDto == null || !taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
             return getInfoForNonRequestedOrFailedInterval();
         }
         if (raoResultProcessFile == null) {
             throw new CoreCCInternalException(String.format("raoResult is null although task status is %s", taskDto.getStatus().toString()));
         }
-
-        return getInfoForSuccessfulInterval(raoResultProcessFile, cgmProcessFile);
+        try {
+            return getInfoForSuccessfulInterval(raoResultProcessFile, cgmProcessFile, cracFilename, cracInputStream);
+        } catch (IOException e) {
+            throw new CoreCCPostProcessingInternalException("Exception occurred during F303 file creation", e);
+        }
     }
 
     private HourlyF303Info getInfoForNonRequestedOrFailedInterval() {
@@ -86,7 +83,7 @@ class HourlyF303InfoGenerator {
         TimeIntervalType ti = new TimeIntervalType();
         ti.setV(IntervalUtil.getCurrentTimeInterval(startTime));
 
-        nativeCrac.getDocument().getCriticalBranches().getCriticalBranch().stream()
+        flowBasedConstraintDocument.getCriticalBranches().getCriticalBranch().stream()
                 .filter(cb -> IntervalUtil.isInTimeInterval(startTime, cb.getTimeInterval().getV()))
                 .forEach(refCb -> {
                     CriticalBranchType clonedCb = (CriticalBranchType) refCb.clone();
@@ -98,10 +95,10 @@ class HourlyF303InfoGenerator {
         return new HourlyF303Info(criticalBranches);
     }
 
-    private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile) {
+    private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, String cracFilename, InputStream cracInputStream) throws IOException {
 
         Network network = getNetworkOfTaskDto(cgmProcessFile);
-        FbConstraintCreationContext cracCreationContext = new FbConstraintCracCreator().createCrac(nativeCrac, network, taskDto.getTimestamp(), cracCreationParameters);
+        FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) Crac.readWithContext(cracFilename, cracInputStream, network, taskDto.getTimestamp(), cracCreationParameters);
         RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac(), raoResultProcessFile);
 
         Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());
@@ -118,7 +115,7 @@ class HourlyF303InfoGenerator {
         TimeIntervalType ti = new TimeIntervalType();
         ti.setV(IntervalUtil.getCurrentTimeInterval(OffsetDateTime.ofInstant(interval.getStart(), ZoneOffset.UTC)));
         List<String> contingencyWithCra = statesWithCrac.keySet().stream().map(s -> s.getContingency().orElseThrow().getId()).toList();
-        Map<String, CriticalBranchType> refCbs = getCriticalBranchesForInstant(cracCreationContext.getTimeStamp(), nativeCrac);
+        Map<String, CriticalBranchType> refCbs = getCriticalBranchesForInstant(cracCreationContext.getTimeStamp(), flowBasedConstraintDocument);
         List<CriticalBranchType> criticalBranches = new ArrayList<>();
 
         cracCreationContext.getBranchCnecCreationContexts().forEach(bccc -> {
@@ -166,7 +163,7 @@ class HourlyF303InfoGenerator {
         TimeIntervalType ti = new TimeIntervalType();
         ti.setV(IntervalUtil.getCurrentTimeInterval(OffsetDateTime.ofInstant(interval.getStart(), ZoneOffset.UTC)));
 
-        Map<String, IndependantComplexVariant> nativeVariants = getComplexVariantsForInstant(cracCreationContext.getTimeStamp(), nativeCrac);
+        Map<String, IndependantComplexVariant> nativeVariants = getComplexVariantsForInstant(cracCreationContext.getTimeStamp(), flowBasedConstraintDocument);
         statesWithCra.forEach((state, variantId) -> {
 
             Set<NetworkAction> activatedNa = raoResult.getActivatedNetworkActionsDuringState(state);
@@ -196,9 +193,8 @@ class HourlyF303InfoGenerator {
     }
 
     private RaoResult getRaoResultOfTaskDto(Crac crac, ProcessFileDto raoResultProcessFile) {
-        RaoResultImporter raoResultImporter = new RaoResultImporter();
         try (InputStream raoResultInputStream = minioAdapter.getFileFromFullPath(raoResultProcessFile.getFilePath())) {
-            return raoResultImporter.importRaoResult(raoResultInputStream, crac);
+            return RaoResult.read(raoResultInputStream, crac);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Cannot import RAO result of hourly RAO response of instant %s", taskDto.getTimestamp()), e);
         }
@@ -323,11 +319,11 @@ class HourlyF303InfoGenerator {
         return stateMap;
     }
 
-    private static Map<String, CriticalBranchType> getCriticalBranchesForInstant(OffsetDateTime offsetDateTime, FbConstraint nativeCrac) {
+    private static Map<String, CriticalBranchType> getCriticalBranchesForInstant(OffsetDateTime offsetDateTime, FlowBasedConstraintDocument flowBasedConstraintDocument) {
 
         Map<String, CriticalBranchType> nativeCbs = new HashMap<>();
 
-        for (CriticalBranchType cb : nativeCrac.getDocument().getCriticalBranches().getCriticalBranch()) {
+        for (CriticalBranchType cb : flowBasedConstraintDocument.getCriticalBranches().getCriticalBranch()) {
             if (!nativeCbs.containsKey(cb.getId()) || IntervalUtil.isInTimeInterval(offsetDateTime, cb.getTimeInterval().getV())) {
                 nativeCbs.put(cb.getId(), cb);
             }
@@ -335,11 +331,11 @@ class HourlyF303InfoGenerator {
         return nativeCbs;
     }
 
-    private static Map<String, IndependantComplexVariant> getComplexVariantsForInstant(OffsetDateTime offsetDateTime, FbConstraint nativeCrac) {
+    private static Map<String, IndependantComplexVariant> getComplexVariantsForInstant(OffsetDateTime offsetDateTime, FlowBasedConstraintDocument flowBasedConstraintDocument) {
 
         Map<String, IndependantComplexVariant> nativeVariants = new HashMap<>();
 
-        for (IndependantComplexVariant cv : nativeCrac.getDocument().getComplexVariants().getComplexVariant()) {
+        for (IndependantComplexVariant cv : flowBasedConstraintDocument.getComplexVariants().getComplexVariant()) {
             if (!nativeVariants.containsKey(cv.getId()) || IntervalUtil.isInTimeInterval(offsetDateTime, cv.getTimeInterval().getV())) {
                 nativeVariants.put(cv.getId(), cv);
             }
