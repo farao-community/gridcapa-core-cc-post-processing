@@ -56,7 +56,7 @@ class HourlyF303InfoGeneratorTest {
         Path cracPath = Paths.get(Objects.requireNonNull(getClass().getResource("/services/crac.xml")).getPath());
         File cracFile = new File(cracPath.toString());
         cracInputStream = new FileInputStream(cracFile);
-        nativeCrac = importNativeCrac(cracInputStream);
+        nativeCrac = importNativeCrac(new FileInputStream(cracFile));
     }
 
     private void importNetwork() throws FileNotFoundException {
