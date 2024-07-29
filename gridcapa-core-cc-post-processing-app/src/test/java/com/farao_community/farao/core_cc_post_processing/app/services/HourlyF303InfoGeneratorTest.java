@@ -7,7 +7,6 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.Utils;
-import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
@@ -20,9 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.threeten.extra.Interval;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +26,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
+import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -138,21 +135,4 @@ class HourlyF303InfoGeneratorTest {
         assertEquals("fr1_fr4_CO1", hourlyF303Info.getCriticalBranches().get(6).getId());
     }
 
-    FlowBasedConstraintDocument importNativeCrac(InputStream inputStream) {
-        try {
-            byte[] bytes = getBytesFromInputStream(inputStream);
-            JAXBContext jaxbContext = JAXBContext.newInstance(FlowBasedConstraintDocument.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            FlowBasedConstraintDocument document = (FlowBasedConstraintDocument) jaxbUnmarshaller.unmarshal(new ByteArrayInputStream(bytes));
-            return document;
-        } catch (JAXBException | IOException e) {
-            throw new CoreCCPostProcessingInternalException("Exception occurred during import of native crac", e);
-        }
-    }
-
-    private static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        org.apache.commons.io.IOUtils.copy(inputStream, baos);
-        return baos.toByteArray();
-    }
 }

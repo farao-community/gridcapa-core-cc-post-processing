@@ -19,14 +19,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
+import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.getBytesFromInputStream;
+import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -91,23 +90,5 @@ public class DailyF303Generator {
     private CracCreationParameters getCimCracCreationParameters() {
         LOGGER.info("Importing Crac Creation Parameters file: {}", CRAC_CREATION_PARAMETERS_JSON);
         return JsonCracCreationParameters.read(getClass().getResourceAsStream(CRAC_CREATION_PARAMETERS_JSON));
-    }
-
-    private FlowBasedConstraintDocument importNativeCrac(InputStream inputStream) {
-        try {
-            byte[] bytes = getBytesFromInputStream(inputStream);
-            JAXBContext jaxbContext = JAXBContext.newInstance(FlowBasedConstraintDocument.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            FlowBasedConstraintDocument document = (FlowBasedConstraintDocument) jaxbUnmarshaller.unmarshal(new ByteArrayInputStream(bytes));
-            return document;
-        } catch (JAXBException | IOException e) {
-            throw new CoreCCPostProcessingInternalException("Exception occurred during import of native crac", e);
-        }
-    }
-
-    private static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        org.apache.commons.io.IOUtils.copy(inputStream, baos);
-        return baos.toByteArray();
     }
 }
