@@ -81,7 +81,7 @@ class HourlyF303InfoGeneratorTest {
         final ProcessFileDto processFileDto = new ProcessFileDto("raoResult.json", "", ProcessFileStatus.VALIDATED, "raoResult.json", OffsetDateTime.now());
         final ProcessFileDto cgmProcessFile = new ProcessFileDto("network.uct", "", ProcessFileStatus.VALIDATED, "network.uct", OffsetDateTime.now());
         //
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(processFileDto, cgmProcessFile, "crac.xml", cracInputStream);
+        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(processFileDto, cgmProcessFile, cracInputStream);
         checkCriticalBranchesWithTatlPatl(hourlyF303Info);
         checkComplexVariants(hourlyF303Info);
     }
@@ -112,7 +112,7 @@ class HourlyF303InfoGeneratorTest {
     @Test
     void generateForNullTask() {
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, null, minioAdapter, new CracCreationParameters());
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, null, null);
+        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, null);
         checkCriticalBranches(hourlyF303Info);
     }
 
@@ -120,7 +120,7 @@ class HourlyF303InfoGeneratorTest {
     void generateForNotSuccessfulTask() {
         taskDto = Utils.ERROR_TASK;
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter, new CracCreationParameters());
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, "crac.xml", cracInputStream);
+        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, cracInputStream);
         checkCriticalBranches(hourlyF303Info);
     }
 

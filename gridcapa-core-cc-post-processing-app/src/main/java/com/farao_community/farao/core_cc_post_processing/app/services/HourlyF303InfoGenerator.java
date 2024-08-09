@@ -18,6 +18,7 @@ import com.powsybl.openrao.data.cracapi.rangeaction.PstRangeAction;
 import com.powsybl.openrao.data.cracapi.rangeaction.RangeAction;
 import com.powsybl.openrao.data.craccreation.creator.api.ImportStatus;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraintCreationContext;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraintImporter;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.*;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.etso.TimeIntervalType;
 import com.powsybl.openrao.data.raoresultapi.RaoResult;
@@ -63,7 +64,7 @@ class HourlyF303InfoGenerator {
         this.cracCreationParameters = cracCreationParameters;
     }
 
-    HourlyF303Info generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, String cracFilename, InputStream cracInputStream) {
+    HourlyF303Info generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
         if (taskDto == null || !taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
             return getInfoForNonRequestedOrFailedInterval();
         }
@@ -71,7 +72,7 @@ class HourlyF303InfoGenerator {
             throw new CoreCCInternalException(String.format("raoResult is null although task status is %s", taskDto.getStatus().toString()));
         }
         try {
-            return getInfoForSuccessfulInterval(raoResultProcessFile, cgmProcessFile, cracFilename, cracInputStream);
+            return getInfoForSuccessfulInterval(raoResultProcessFile, cgmProcessFile, cracInputStream);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException("Exception occurred during F303 file creation", e);
         }
@@ -95,10 +96,10 @@ class HourlyF303InfoGenerator {
         return new HourlyF303Info(criticalBranches);
     }
 
-    private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, String cracFilename, InputStream cracInputStream) throws IOException {
+    private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) throws IOException {
 
         Network network = getNetworkOfTaskDto(cgmProcessFile);
-        FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) Crac.readWithContext(cracFilename, cracInputStream, network, taskDto.getTimestamp(), cracCreationParameters);
+        FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) new FbConstraintImporter().importData(cracInputStream, cracCreationParameters, network, taskDto.getTimestamp());
         RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac(), raoResultProcessFile);
 
         Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());

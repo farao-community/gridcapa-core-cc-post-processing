@@ -67,7 +67,7 @@ public class DailyF303Generator {
                     TaskDto taskDto = taskDtoOptional.get();
                     try (final InputStream tempCracXmlInputStream = new ByteArrayInputStream(cracXmlBytes)) {
                         hourlyF303Infos.add(new HourlyF303InfoGenerator(flowBasedConstraintDocument, interval, taskDto, minioAdapter, cracCreationParameters)
-                                .generate(raoResults.get(taskDto), cgms.get(taskDto), cracFile.getFilename(), tempCracXmlInputStream));
+                                .generate(raoResults.get(taskDto), cgms.get(taskDto), tempCracXmlInputStream));
                     } catch (final IOException e) {
                         throw new CoreCCPostProcessingInternalException("Exception occurred during F303 file creation", e);
                     }
