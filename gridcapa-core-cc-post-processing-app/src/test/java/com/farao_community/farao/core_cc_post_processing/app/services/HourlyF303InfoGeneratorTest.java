@@ -11,25 +11,22 @@ import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
-import com.powsybl.openrao.data.craccreation.creator.api.parameters.CracCreationParameters;
-import com.powsybl.openrao.data.craccreation.creator.api.parameters.JsonCracCreationParameters;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraint;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.importer.FbConstraintImporter;
+import com.powsybl.openrao.data.cracapi.parameters.CracCreationParameters;
+import com.powsybl.openrao.data.cracapi.parameters.JsonCracCreationParameters;
+import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.FlowBasedConstraintDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.threeten.extra.Interval;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
+import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -37,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class HourlyF303InfoGeneratorTest {
 
-    private FbConstraint nativeCrac;
+    private FlowBasedConstraintDocument nativeCrac;
     private final Instant instantStart = Instant.parse("2023-08-21T15:16:00Z");
     private final Instant instantEnd = Instant.parse("2023-08-21T15:17:00Z");
     private final Interval interval = Interval.of(instantStart, instantEnd);
@@ -45,17 +42,18 @@ class HourlyF303InfoGeneratorTest {
     private final MinioAdapter minioAdapter = Mockito.mock(MinioAdapter.class);
     private InputStream networkIS;
     private InputStream raoResultIS;
+    private InputStream cracInputStream;
 
     @BeforeEach
-    void setUp() throws FileNotFoundException {
+    void setUp() throws IOException {
         importCrac();
     }
 
-    private void importCrac() throws FileNotFoundException {
+    private void importCrac() throws IOException {
         Path cracPath = Paths.get(Objects.requireNonNull(getClass().getResource("/services/crac.xml")).getPath());
         File cracFile = new File(cracPath.toString());
-        InputStream cracInputStream = new FileInputStream(cracFile);
-        nativeCrac = new FbConstraintImporter().importNativeCrac(cracInputStream);
+        cracInputStream = new FileInputStream(cracFile);
+        nativeCrac = importNativeCrac(new FileInputStream(cracFile));
     }
 
     private void importNetwork() throws FileNotFoundException {
@@ -83,7 +81,7 @@ class HourlyF303InfoGeneratorTest {
         final ProcessFileDto processFileDto = new ProcessFileDto("raoResult.json", "", ProcessFileStatus.VALIDATED, "raoResult.json", OffsetDateTime.now());
         final ProcessFileDto cgmProcessFile = new ProcessFileDto("network.uct", "", ProcessFileStatus.VALIDATED, "network.uct", OffsetDateTime.now());
         //
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(processFileDto, cgmProcessFile);
+        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(processFileDto, cgmProcessFile, cracInputStream);
         checkCriticalBranchesWithTatlPatl(hourlyF303Info);
         checkComplexVariants(hourlyF303Info);
     }
@@ -114,7 +112,7 @@ class HourlyF303InfoGeneratorTest {
     @Test
     void generateForNullTask() {
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, null, minioAdapter, new CracCreationParameters());
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null);
+        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, null);
         checkCriticalBranches(hourlyF303Info);
     }
 
@@ -122,7 +120,7 @@ class HourlyF303InfoGeneratorTest {
     void generateForNotSuccessfulTask() {
         taskDto = Utils.ERROR_TASK;
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter, new CracCreationParameters());
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null);
+        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, cracInputStream);
         checkCriticalBranches(hourlyF303Info);
     }
 
@@ -136,4 +134,5 @@ class HourlyF303InfoGeneratorTest {
         assertEquals("fr3_fr5_CO1 - OPP", hourlyF303Info.getCriticalBranches().get(5).getId());
         assertEquals("fr1_fr4_CO1", hourlyF303Info.getCriticalBranches().get(6).getId());
     }
+
 }

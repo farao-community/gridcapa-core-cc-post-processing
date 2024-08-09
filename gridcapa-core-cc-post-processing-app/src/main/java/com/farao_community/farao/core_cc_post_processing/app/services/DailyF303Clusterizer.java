@@ -7,7 +7,6 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.util.XmlOutputsUtil;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraint;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.*;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.etso.*;
 
@@ -24,7 +23,7 @@ import java.util.*;
 class DailyF303Clusterizer {
 
     private final List<HourlyF303Info> hourlyF303Infos;
-    private final FbConstraint nativeCrac;
+    private final FlowBasedConstraintDocument flowBasedConstraintDocument;
     private static final int DOCUMENT_VERSION = 1;
     private static final MessageTypeList DOCUMENT_TYPE = MessageTypeList.B_07;
 
@@ -38,9 +37,9 @@ class DailyF303Clusterizer {
                     .thenComparing((IndependantComplexVariant icv) -> getStartTime(icv.getTimeInterval()))
                     .thenComparing((IndependantComplexVariant icv) -> getEndTime(icv.getTimeInterval()));
 
-    DailyF303Clusterizer(List<HourlyF303Info> hourlyF303Infos, FbConstraint nativeCrac) {
+    DailyF303Clusterizer(List<HourlyF303Info> hourlyF303Infos, FlowBasedConstraintDocument flowBasedConstraintDocument) {
         this.hourlyF303Infos = hourlyF303Infos;
-        this.nativeCrac = nativeCrac;
+        this.flowBasedConstraintDocument = flowBasedConstraintDocument;
     }
 
     FlowBasedConstraintDocument generateClusterizedDocument() {
@@ -87,17 +86,17 @@ class DailyF303Clusterizer {
     }
 
     private FlowBasedConstraintDocument generateDailyFbDocument(List<CriticalBranchType> criticalBranches, List<IndependantComplexVariant> independentComplexVariants) {
-        FlowBasedConstraintDocument fbDoc = nativeCrac.getDocument();
-        updateHeader(fbDoc);
-        fbDoc.getCriticalBranches().getCriticalBranch().clear();
-        fbDoc.getComplexVariants().getComplexVariant().clear();
+
+        updateHeader(flowBasedConstraintDocument);
+        flowBasedConstraintDocument.getCriticalBranches().getCriticalBranch().clear();
+        flowBasedConstraintDocument.getComplexVariants().getComplexVariant().clear();
         CriticalBranchesType criticalBranchesType = new CriticalBranchesType();
         criticalBranchesType.getCriticalBranch().addAll(criticalBranches);
-        fbDoc.setCriticalBranches(criticalBranchesType);
+        flowBasedConstraintDocument.setCriticalBranches(criticalBranchesType);
         ComplexVariantsType complexVariantsType = new ComplexVariantsType();
         complexVariantsType.getComplexVariant().addAll(independentComplexVariants);
-        fbDoc.setComplexVariants(complexVariantsType);
-        return fbDoc;
+        flowBasedConstraintDocument.setComplexVariants(complexVariantsType);
+        return flowBasedConstraintDocument;
     }
 
     private static List<CriticalBranchType> mergeCriticalBranches(List<CriticalBranchType> cbs) {
