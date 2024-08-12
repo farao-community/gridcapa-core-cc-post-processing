@@ -46,13 +46,14 @@ public class DailyF303Generator {
     }
 
     public FlowBasedConstraintDocument generate(Map<TaskDto, ProcessFileDto> raoResults, Map<TaskDto, ProcessFileDto> cgms) {
-        ProcessFileDto cracFile = raoResults.keySet().stream()
+        String cracFilePath = raoResults.keySet().stream()
             .findFirst().orElseThrow()
             .getInputs()
             .stream().filter(processFileDto -> processFileDto.getFileType().equals("CBCORA"))
-            .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException("task dto missing cbcora file"));
+            .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException("task dto missing cbcora file"))
+            .getFilePath();
         CracCreationParameters cracCreationParameters = getCimCracCreationParameters();
-        try (final InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFile.getFilePath())) {
+        try (final InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFilePath)) {
             final byte[] cracXmlBytes = getBytesFromInputStream(cracXmlInputStream);
             final FlowBasedConstraintDocument flowBasedConstraintDocument;
             try (final InputStream firstUseStream = new ByteArrayInputStream(cracXmlBytes)) {
