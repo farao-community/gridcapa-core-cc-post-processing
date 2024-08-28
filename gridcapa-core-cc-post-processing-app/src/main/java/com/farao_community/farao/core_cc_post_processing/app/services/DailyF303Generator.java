@@ -8,11 +8,9 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
-import com.powsybl.openrao.data.craccreation.creator.api.parameters.CracCreationParameters;
-import com.powsybl.openrao.data.craccreation.creator.api.parameters.JsonCracCreationParameters;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraint;
+import com.powsybl.openrao.data.cracapi.parameters.CracCreationParameters;
+import com.powsybl.openrao.data.cracapi.parameters.JsonCracCreationParameters;
 import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.FlowBasedConstraintDocument;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.importer.FbConstraintImporter;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
@@ -21,8 +19,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+
+import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.getBytesFromInputStream;
+import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -50,25 +53,32 @@ public class DailyF303Generator {
             .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException("task dto missing cbcora file"))
             .getFilePath();
         CracCreationParameters cracCreationParameters = getCimCracCreationParameters();
-        try (InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFilePath)) {
-            // get native CRAC
-            FbConstraint nativeCrac = new FbConstraintImporter().importNativeCrac(cracXmlInputStream);
-
+        try (final InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFilePath)) {
+            final byte[] cracXmlBytes = getBytesFromInputStream(cracXmlInputStream);
+            final FlowBasedConstraintDocument flowBasedConstraintDocument;
+            try (final InputStream firstUseStream = new ByteArrayInputStream(cracXmlBytes)) {
+                flowBasedConstraintDocument = importNativeCrac(firstUseStream);
+            }
             // generate F303Info for each hour of the initial CRAC
-            Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(nativeCrac.getDocument().getConstraintTimeInterval().getV());
+            Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(flowBasedConstraintDocument.getConstraintTimeInterval().getV());
             List<HourlyF303Info> hourlyF303Infos = new ArrayList<>();
             positionMap.values().forEach(interval -> {
                 Optional<TaskDto> taskDtoOptional =  getTaskDtoOfInterval(interval, raoResults.keySet());
                 if (taskDtoOptional.isPresent()) {
                     TaskDto taskDto = taskDtoOptional.get();
-                    hourlyF303Infos.add(new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters).generate(raoResults.get(taskDto), cgms.get(taskDto)));
+                    try (final InputStream tempCracXmlInputStream = new ByteArrayInputStream(cracXmlBytes)) {
+                        hourlyF303Infos.add(new HourlyF303InfoGenerator(flowBasedConstraintDocument, interval, taskDto, minioAdapter, cracCreationParameters)
+                                .generate(raoResults.get(taskDto), cgms.get(taskDto), tempCracXmlInputStream));
+                    } catch (final IOException e) {
+                        throw new CoreCCPostProcessingInternalException("Exception occurred during F303 file creation", e);
+                    }
                 } else {
                     LOGGER.warn(String.format("Cannot find taskDto for interval %s", interval));
                 }
             });
 
             // gather hourly info in one common document, cluster the elements that can be clusterized
-            return new DailyF303Clusterizer(hourlyF303Infos, nativeCrac).generateClusterizedDocument();
+            return new DailyF303Clusterizer(hourlyF303Infos, flowBasedConstraintDocument).generateClusterizedDocument();
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Exception occurred during F303 file creation", e);
         }
