@@ -125,7 +125,7 @@
         <!-- Compile dependencies -->
         <dependency>
             <groupId>com.powsybl</groupId>
-            <artifactId>open-rao-crac-creator-fb-constraint</artifactId>
+            <artifactId>open-rao-crac-io-fb-constraint</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

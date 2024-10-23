@@ -16,11 +16,11 @@ import com.powsybl.openrao.data.cracapi.networkaction.NetworkAction;
 import com.powsybl.openrao.data.cracapi.parameters.CracCreationParameters;
 import com.powsybl.openrao.data.cracapi.rangeaction.PstRangeAction;
 import com.powsybl.openrao.data.cracapi.rangeaction.RangeAction;
-import com.powsybl.openrao.data.craccreation.creator.api.ImportStatus;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraintCreationContext;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.FbConstraintImporter;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.*;
-import com.powsybl.openrao.data.craccreation.creator.fbconstraint.xsd.etso.TimeIntervalType;
+import com.powsybl.openrao.data.cracio.commons.api.ImportStatus;
+import com.powsybl.openrao.data.cracio.fbconstraint.FbConstraintCreationContext;
+import com.powsybl.openrao.data.cracio.fbconstraint.FbConstraintImporter;
+import com.powsybl.openrao.data.cracio.fbconstraint.xsd.*;
+import com.powsybl.openrao.data.cracio.fbconstraint.xsd.etso.TimeIntervalType;
 import com.powsybl.openrao.data.raoresultapi.RaoResult;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
@@ -120,7 +120,7 @@ class HourlyF303InfoGenerator {
         List<CriticalBranchType> criticalBranches = new ArrayList<>();
 
         cracCreationContext.getBranchCnecCreationContexts().forEach(bccc -> {
-            CriticalBranchType refCb = refCbs.get(bccc.getNativeId());
+            CriticalBranchType refCb = refCbs.get(bccc.getNativeObjectId());
             if (bccc.getImportStatus() != ImportStatus.NOT_FOR_REQUESTED_TIMESTAMP) {
                 if (refCb.getOutage() == null || !contingencyWithCra.contains(refCb.getOutage().getId())) {
 
