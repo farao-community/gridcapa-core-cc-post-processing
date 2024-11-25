@@ -78,8 +78,8 @@ class HourlyF303InfoGeneratorTest {
         //crac creation parameters
         final CracCreationParameters cracCreationParameters = JsonCracCreationParameters.read(getClass().getResourceAsStream("/services/crac/cracCreationParameters.json"));
         HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters);
-        final ProcessFileDto processFileDto = new ProcessFileDto("raoResult.json", "", ProcessFileStatus.VALIDATED, "raoResult.json", OffsetDateTime.now());
-        final ProcessFileDto cgmProcessFile = new ProcessFileDto("network.uct", "", ProcessFileStatus.VALIDATED, "network.uct", OffsetDateTime.now());
+        final ProcessFileDto processFileDto = new ProcessFileDto("raoResult.json", "", ProcessFileStatus.VALIDATED, "raoResult.json", "docId", OffsetDateTime.now());
+        final ProcessFileDto cgmProcessFile = new ProcessFileDto("network.uct", "", ProcessFileStatus.VALIDATED, "network.uct", "docId", OffsetDateTime.now());
         //
         HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(processFileDto, cgmProcessFile, cracInputStream);
         checkCriticalBranchesWithTatlPatl(hourlyF303Info);
