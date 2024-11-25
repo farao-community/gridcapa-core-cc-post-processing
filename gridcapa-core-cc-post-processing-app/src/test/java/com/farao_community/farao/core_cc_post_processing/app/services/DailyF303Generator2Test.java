@@ -86,7 +86,7 @@ class DailyF303Generator2Test {
         // tasks data
         String baseUuid = "5bec38f9-80c6-4441-bbe7-b9dca13ca2";
         OffsetDateTime firstTimestamp = OffsetDateTime.parse(timeStampBegin);
-        ProcessFileDto cracProcessFile = new ProcessFileDto("/CORE/CC/inputCracXml.xml", "CBCORA", ProcessFileStatus.VALIDATED, "inputCracXml.xml", firstTimestamp);
+        ProcessFileDto cracProcessFile = new ProcessFileDto("/CORE/CC/inputCracXml.xml", "CBCORA", ProcessFileStatus.VALIDATED, "inputCracXml.xml", "docId", firstTimestamp);
 
         // "store" crac xml in dataBase
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream(bDir + iDir + ts + "_F301-crac.xml");
@@ -122,8 +122,8 @@ class DailyF303Generator2Test {
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
             String hFile = initialDT.plusHours(h).format(fileNameFormatter);
 
-            ProcessFileDto cgmProcessFile = new ProcessFileDto("/CORE/CC/network" + hFile + ".uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network" + hFile + ".uct", timestamp);
-            ProcessFileDto raoResultProcessFile = new ProcessFileDto("/CORE/CC/raoResult" + hFile + ".json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult" + hFile + ".json", timestamp);
+            ProcessFileDto cgmProcessFile = new ProcessFileDto("/CORE/CC/network" + hFile + ".uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network" + hFile + ".uct", "docId", timestamp);
+            ProcessFileDto raoResultProcessFile = new ProcessFileDto("/CORE/CC/raoResult" + hFile + ".json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult" + hFile + ".json", "docId", timestamp);
 
             // "store" network in dataBase
             InputStream networkInputStream = getClass().getResourceAsStream(bDir + iDir + hFile + "_network.uct");
@@ -168,7 +168,6 @@ class DailyF303Generator2Test {
         assertEquals("A44", dailyFbConstDocument.getSenderRole().getV().value());
         assertEquals("17XTSO-CS------W", dailyFbConstDocument.getReceiverIdentification().getV());
         assertEquals("A36", dailyFbConstDocument.getReceiverRole().getV().value());
-        // assertEquals("2019-01-08T11:00Z/2019-01-08T16:00Z", dailyFbConstDocument.getConstraintTimeInterval().getV());
         assertEquals("2019-01-07T23:00Z/2019-01-08T23:00Z", dailyFbConstDocument.getConstraintTimeInterval().getV());
         assertEquals("10YDOM-REGION-1V", dailyFbConstDocument.getDomain().getV());
 

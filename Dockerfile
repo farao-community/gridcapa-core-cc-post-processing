@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 ARG JAR_FILE=gridcapa-core-cc-post-processing-app/target/*.jar
 COPY ${JAR_FILE} app.jar
