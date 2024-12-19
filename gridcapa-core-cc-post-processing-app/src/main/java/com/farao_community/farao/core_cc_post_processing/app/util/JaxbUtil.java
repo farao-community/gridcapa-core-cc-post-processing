@@ -8,11 +8,14 @@ package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.XMLConstants;
-import javax.xml.bind.*;
 import javax.xml.namespace.QName;
 import java.io.ByteArrayOutputStream;
 import java.io.StringWriter;
