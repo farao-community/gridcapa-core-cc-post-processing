@@ -8,7 +8,7 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
@@ -18,7 +18,16 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.*;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_COMPUTATION_STATUS;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_COMPUTATION_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_END_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_OUTPUTS_SENDING_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_OUTPUTS_SENT;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_REQUESTS_RECEIVED;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_REQUEST_RECEPTION_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_RESULTS_PROVIDED;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.RAO_START_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.Indicator.values;
 
 /**
  * @author Peter Mitri {@literal <peter.mitri at rte-france.com>}

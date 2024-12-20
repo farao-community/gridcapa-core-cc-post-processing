@@ -7,12 +7,29 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.util.XmlOutputsUtil;
-import com.powsybl.openrao.data.cracio.fbconstraint.xsd.*;
-import com.powsybl.openrao.data.cracio.fbconstraint.xsd.etso.*;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.ComplexVariantsType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.CriticalBranchType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.CriticalBranchesType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.IndependantComplexVariant;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.IdentificationType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.MessageDateTimeType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.MessageType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.MessageTypeList;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.PartyType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.ProcessType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.RoleType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.TimeIntervalType;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.VersionType;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}

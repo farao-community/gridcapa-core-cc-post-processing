@@ -8,12 +8,12 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
-import com.powsybl.openrao.data.cracapi.parameters.CracCreationParameters;
-import com.powsybl.openrao.data.cracapi.parameters.JsonCracCreationParameters;
-import com.powsybl.openrao.data.cracio.fbconstraint.xsd.FlowBasedConstraintDocument;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
+import com.powsybl.openrao.data.crac.api.parameters.CracCreationParameters;
+import com.powsybl.openrao.data.crac.api.parameters.JsonCracCreationParameters;
+import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,11 @@ import org.threeten.extra.Interval;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.getBytesFromInputStream;
 import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
