@@ -7,12 +7,12 @@
 package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
+import com.powsybl.openrao.data.cracio.fbconstraint.xsd.FlowBasedConstraintDocument;
 import org.apache.commons.io.IOUtils;
 
-import jakarta.xml.bind.JAXBContext;
-import jakarta.xml.bind.JAXBException;
-import jakarta.xml.bind.Unmarshaller;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

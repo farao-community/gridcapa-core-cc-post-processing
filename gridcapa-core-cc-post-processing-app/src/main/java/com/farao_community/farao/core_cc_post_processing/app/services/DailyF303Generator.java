@@ -8,9 +8,9 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
-import com.powsybl.openrao.data.crac.api.parameters.CracCreationParameters;
-import com.powsybl.openrao.data.crac.api.parameters.JsonCracCreationParameters;
-import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
+import com.powsybl.openrao.data.cracapi.parameters.CracCreationParameters;
+import com.powsybl.openrao.data.cracapi.parameters.JsonCracCreationParameters;
+import com.powsybl.openrao.data.cracio.fbconstraint.xsd.FlowBasedConstraintDocument;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;

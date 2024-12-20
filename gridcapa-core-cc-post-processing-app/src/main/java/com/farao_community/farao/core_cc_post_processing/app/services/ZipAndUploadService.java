@@ -17,7 +17,7 @@ import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
-import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
+import com.powsybl.openrao.data.cracio.fbconstraint.xsd.FlowBasedConstraintDocument;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 
