@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jxb:bindings version="1.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb">
+<jxb:bindings version="3.0" xmlns:jxb="https://jakarta.ee/xml/ns/jaxb">
     <jxb:bindings schemaLocation="../../xsd/F302-RaoRequest/F302-RaoRequest.xsd">
         <jxb:schemaBindings>
             <jxb:package name="com.farao_community.farao.core_cc_post_processing.app.inputs.rao_response"/>
