@@ -42,16 +42,16 @@ public final class CoreCCMetadataGenerator {
     }
 
     public static String generateMetadataCsv(List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
-        MultiKeyMap data = structureDataFromTask(metadataList, macroMetadata);
+        MultiKeyMap<Object, String> data = structureDataFromTask(metadataList, macroMetadata);
         return writeCsvFromMap(data, metadataList, macroMetadata.getTimeInterval());
     }
 
-    private static MultiKeyMap structureDataFromTask(List<CoreCCMetadata> metadataList, RaoMetadata macroMetada) {
+    private static MultiKeyMap<Object, String> structureDataFromTask(List<CoreCCMetadata> metadataList, RaoMetadata macroMetada) {
         // Store data in a MultiKeyMap
         // First key is column (indicator)
         // Second key is timestamp (or whole business day)
         // Value is the value of the indicator for the given timestamp
-        MultiKeyMap data = new MultiKeyMap();
+        MultiKeyMap<Object, String> data = new MultiKeyMap<>();
 
         // Compute updated overall status : only timestamps with a RaoRequestInstant defined are considered
         macroMetada.setStatus(RaoMetadata.generateOverallStatus(metadataList.stream().map(CoreCCMetadata::getStatus).collect(Collectors.toSet())));
@@ -75,13 +75,13 @@ public final class CoreCCMetadataGenerator {
         return data;
     }
 
-    private static String writeCsvFromMap(MultiKeyMap data, List<CoreCCMetadata> metadataList, String timeInterval) {
+    private static String writeCsvFromMap(MultiKeyMap<Object, String> data, List<CoreCCMetadata> metadataList, String timeInterval) {
         // Get headers for columns & lines
         List<RaoMetadata.Indicator> indicators = Arrays.stream(values())
                 .sorted(Comparator.comparing(RaoMetadata.Indicator::getOrder))
                 .toList();
-        List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).sorted(String::compareTo).collect(Collectors.toList());
-        timestamps.add(0, timeInterval);
+        List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).sorted(String::compareTo).collect(Collectors.toList()); // NOSONAR because the resulting list should be modifiable
+        timestamps.addFirst(timeInterval);
 
         // Generate CSV string
         char delimiter = ';';
@@ -93,7 +93,7 @@ public final class CoreCCMetadataGenerator {
         for (String timestamp : timestamps) {
             csvBuilder.append(timestamp);
             for (RaoMetadata.Indicator indicator : indicators) {
-                String value = data.containsKey(indicator, timestamp) && data.get(indicator, timestamp) != null ? data.get(indicator, timestamp).toString() : "";
+                String value = data.get(indicator, timestamp) != null ? data.get(indicator, timestamp) : "";
                 csvBuilder.append(delimiter);
                 csvBuilder.append(value);
             }

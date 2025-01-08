@@ -80,11 +80,7 @@ class HourlyF303InfoGenerator {
         if (raoResultProcessFile == null) {
             throw new CoreCCInternalException(String.format("raoResult is null although task status is %s", taskDto.getStatus().toString()));
         }
-        try {
-            return getInfoForSuccessfulInterval(raoResultProcessFile, cgmProcessFile, cracInputStream);
-        } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException("Exception occurred during F303 file creation", e);
-        }
+        return getInfoForSuccessfulInterval(raoResultProcessFile, cgmProcessFile, cracInputStream);
     }
 
     private HourlyF303Info getInfoForNonRequestedOrFailedInterval() {
@@ -105,8 +101,7 @@ class HourlyF303InfoGenerator {
         return new HourlyF303Info(criticalBranches);
     }
 
-    private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) throws IOException {
-
+    private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
         Network network = getNetworkOfTaskDto(cgmProcessFile);
         FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) new FbConstraintImporter().importData(cracInputStream, cracCreationParameters, network, taskDto.getTimestamp());
         RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac(), raoResultProcessFile);
@@ -117,11 +112,9 @@ class HourlyF303InfoGenerator {
         List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval(cracCreationContext, raoResult, statesWithCra);
 
         return new HourlyF303Info(criticalBranches, complexVariants);
-
     }
 
     private List<CriticalBranchType> getCriticalBranchesOfSuccessfulInterval(FbConstraintCreationContext cracCreationContext, Map<State, String> statesWithCrac) {
-
         TimeIntervalType ti = new TimeIntervalType();
         ti.setV(IntervalUtil.getCurrentTimeInterval(OffsetDateTime.ofInstant(interval.getStart(), ZoneOffset.UTC)));
         List<String> contingencyWithCra = statesWithCrac.keySet().stream().map(s -> s.getContingency().orElseThrow().getId()).toList();

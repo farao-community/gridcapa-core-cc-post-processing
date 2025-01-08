@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -65,7 +64,7 @@ class CoreCCPostProcessingHandlerTest {
         initCoreCCPostProcessingHandler();
         List<byte[]> logList = coreCCPostProcessingHandler.getLogsForTask(Set.of(Utils.SUCCESS_TASK));
         assertEquals(1, logList.size());
-        assertEquals("Hello world!", new String(logList.get(0)));
+        assertEquals("Hello world!", new String(logList.getFirst()));
     }
 
     @Test
@@ -105,12 +104,12 @@ class CoreCCPostProcessingHandlerTest {
 
         assertEquals(2, tasks.size());
 
-        TaskDto taskSuccess = tasks.stream().filter(task -> task.getStatus() == TaskStatus.SUCCESS).collect(Collectors.toList()).get(0);
+        TaskDto taskSuccess = tasks.stream().filter(task -> task.getStatus() == TaskStatus.SUCCESS).toList().getFirst();
         assertEquals(TaskStatus.SUCCESS, taskSuccess.getStatus());
         assertEquals("4fb56583-bcec-4ed9-9839-0984b7324989", taskSuccess.getId().toString());
         assertEquals("2023-08-21T15:16:45Z", taskSuccess.getTimestamp().toString());
 
-        TaskDto taskError = tasks.stream().filter(task -> task.getStatus() == TaskStatus.ERROR).collect(Collectors.toList()).get(0);
+        TaskDto taskError = tasks.stream().filter(task -> task.getStatus() == TaskStatus.ERROR).toList().getFirst();
         assertEquals(TaskStatus.ERROR, taskError.getStatus());
         assertEquals("6e3e0ef2-96e4-4649-82d4-374f103038d4", taskError.getId().toString());
         assertEquals("2023-08-21T15:16:46Z", taskError.getTimestamp().toString());

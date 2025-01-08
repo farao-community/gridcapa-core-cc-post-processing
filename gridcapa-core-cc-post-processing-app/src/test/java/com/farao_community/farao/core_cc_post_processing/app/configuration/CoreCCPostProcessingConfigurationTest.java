@@ -24,8 +24,8 @@ class CoreCCPostProcessingConfigurationTest {
 
     @Test
     void autowiredCoreCCPostProcessingConfiguration() {
-        assertNull(coreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl());
-        assertEquals("http://localhost:8080/tasks/businessdate/", coreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl());
+        assertNull(coreCCPostProcessingConfiguration.getUrl().taskManagerTimestampUrl());
+        assertEquals("http://localhost:8080/tasks/businessdate/", coreCCPostProcessingConfiguration.getUrl().taskManagerBusinessDateUrl());
         assertNull(coreCCPostProcessingConfiguration.getProcess());
     }
 
@@ -34,9 +34,9 @@ class CoreCCPostProcessingConfigurationTest {
         CoreCCPostProcessingConfiguration.ProcessProperties processProperties = new CoreCCPostProcessingConfiguration.ProcessProperties("test", "Europe/Brussels");
         CoreCCPostProcessingConfiguration.UrlProperties urlProperties = new CoreCCPostProcessingConfiguration.UrlProperties("task_manager_2023-08-04T14:30:00Z", "task_manager_20230804");
         CoreCCPostProcessingConfiguration customCoreCCPostProcessingConfiguration = new CoreCCPostProcessingConfiguration(urlProperties, processProperties);
-        assertEquals("task_manager_2023-08-04T14:30:00Z", customCoreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl());
-        assertEquals("task_manager_20230804", customCoreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl());
-        assertEquals("test", customCoreCCPostProcessingConfiguration.getProcess().getTag());
-        assertEquals("Europe/Brussels", customCoreCCPostProcessingConfiguration.getProcess().getTimezone());
+        assertEquals("task_manager_2023-08-04T14:30:00Z", customCoreCCPostProcessingConfiguration.getUrl().taskManagerTimestampUrl());
+        assertEquals("task_manager_20230804", customCoreCCPostProcessingConfiguration.getUrl().taskManagerBusinessDateUrl());
+        assertEquals("test", customCoreCCPostProcessingConfiguration.getProcess().tag());
+        assertEquals("Europe/Brussels", customCoreCCPostProcessingConfiguration.getProcess().timezone());
     }
 }

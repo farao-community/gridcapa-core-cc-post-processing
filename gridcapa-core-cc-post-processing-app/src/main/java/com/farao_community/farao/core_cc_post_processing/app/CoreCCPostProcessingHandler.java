@@ -82,11 +82,12 @@ public class CoreCCPostProcessingHandler {
      * A task is finished when TaskStats::isOver is true
      */
     private boolean checkIfAllHourlyTasksAreFinished(LocalDate localDate) {
-        String requestUrl = getUrlToCheckAllTasksOfTheDayAreOver(localDate);
+        final String requestUrl = getUrlToCheckAllTasksOfTheDayAreOver(localDate);
         try {
-            ResponseEntity<Boolean> responseEntity = restTemplateBuilder.build().getForEntity(requestUrl, Boolean.class);
-            if (responseEntity.getBody() != null && responseEntity.getStatusCode() == HttpStatus.OK) {
-                return responseEntity.getBody();
+            final ResponseEntity<Boolean> responseEntity = restTemplateBuilder.build().getForEntity(requestUrl, Boolean.class);
+            final Boolean body = responseEntity.getBody();
+            if (body != null && responseEntity.getStatusCode() == HttpStatus.OK) {
+                return body;
             }
         } catch (Exception e) {
             LOGGER.error("Error while checking if all hourly tasks are finished.", e);
@@ -114,11 +115,11 @@ public class CoreCCPostProcessingHandler {
     }
 
     private String getUrlToCheckAllTasksOfTheDayAreOver(LocalDate localDate) {
-        return coreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl() + localDate + "/allOver";
+        return coreCCPostProcessingConfiguration.getUrl().taskManagerBusinessDateUrl() + localDate + "/allOver";
     }
 
     private String getUrlToGetAllTasksOfTheDay(LocalDate localDate) {
-        return coreCCPostProcessingConfiguration.getUrl().getTaskManagerBusinessDateUrl() + localDate;
+        return coreCCPostProcessingConfiguration.getUrl().taskManagerBusinessDateUrl() + localDate;
     }
 
     /**
@@ -142,6 +143,6 @@ public class CoreCCPostProcessingHandler {
     }
 
     private String getUrlToExportTaskLog(String offsetDateTime) {
-        return coreCCPostProcessingConfiguration.getUrl().getTaskManagerTimestampUrl() + offsetDateTime + "/log";
+        return coreCCPostProcessingConfiguration.getUrl().taskManagerTimestampUrl() + offsetDateTime + "/log";
     }
 }

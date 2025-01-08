@@ -57,7 +57,7 @@ public class ZipAndUploadService {
             for (final byte[] bytes : logList) {
                 ZipUtil.collectAndZip(zos, bytes);
             }
-            zos.close();
+            zos.close(); // NOSONAR because the `zos` ZipOutputStream must be closed before calling `toByteArray()` method on `baos`
             // upload zipped result
             uploadOrThrow(baos.toByteArray(), logFileName, "Error while unzipping logs");
         } catch (final IOException e) {

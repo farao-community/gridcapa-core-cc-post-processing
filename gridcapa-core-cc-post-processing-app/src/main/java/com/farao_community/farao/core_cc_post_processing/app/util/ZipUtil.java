@@ -42,7 +42,7 @@ public final class ZipUtil {
         try (ByteArrayOutputStream os = new ByteArrayOutputStream();
              ZipOutputStream zos = new ZipOutputStream(os)) {
             recursiveZip(inputDirectory, zos, inputDirectory);
-            zos.close();
+            zos.close(); // NOSONAR because the `zos` ZipOutputStream must be closed before calling `toByteArray()` method on `os`
             return os.toByteArray();
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException(String.format("Exception occurred while compressing directory '%s'", inputDirectory), e);
@@ -59,37 +59,39 @@ public final class ZipUtil {
             return;
         }
         byte[] readBuffer = new byte[2156];
-        int bytesIn;
         //loop through dirList, and zip the files
         for (String fileOrDir : dirList) {
             Path path = Path.of(zipDir.getPath(), fileOrDir).normalize();
-            if (!path.startsWith(zipDir.getPath())) {
-                continue;
-            }
-            File f = new File(zipDir, fileOrDir); //NOSONAR
-            if (f.isDirectory()) {
-                //if the File object is a directory, call this
-                //function again to add its content recursively
-                String filePath = f.getPath();
-                recursiveZip(filePath, zos, referencePath);
-                //loop again
-                continue;
-            }
-            //if we reached here, the File object f was not a directory
-            //create a FileInputStream on top of f
-            try (FileInputStream fis = new FileInputStream(f)) {
-                // create a new zip entry
-                String fileRelativePath = Paths.get(referencePath).relativize(Paths.get(f.getPath())).toString(); //NOSONAR
-                ZipEntry anEntry = new ZipEntry(fileRelativePath);
-                //place the zip entry in the ZipOutputStream object
-                zos.putNextEntry(anEntry);
-                //now write the content of the file to the ZipOutputStream
-                while ((bytesIn = fis.read(readBuffer)) != -1) {
-                    zos.write(readBuffer, 0, bytesIn);
+            if (path.startsWith(zipDir.getPath())) {
+                File f = new File(zipDir, fileOrDir); //NOSONAR
+                if (f.isDirectory()) {
+                    //if the File object is a directory, call this
+                    //function again to add its content recursively
+                    String filePath = f.getPath();
+                    recursiveZip(filePath, zos, referencePath);
+                } else {
+                    //if we reached here, the File object f was not a directory
+                    addFileToZip(zos, referencePath, f, readBuffer);
                 }
-            } catch (IOException e) {
-                throw new CoreCCPostProcessingInternalException(e.getMessage(), e);
             }
+        }
+    }
+
+    private static void addFileToZip(final ZipOutputStream zos, final String referencePath, final File file, final byte[] readBuffer) {
+        int bytesIn;
+        //create a FileInputStream on top of file
+        try (FileInputStream fis = new FileInputStream(file)) {
+            // create a new zip entry
+            String fileRelativePath = Paths.get(referencePath).relativize(Paths.get(file.getPath())).toString(); //NOSONAR
+            ZipEntry anEntry = new ZipEntry(fileRelativePath);
+            //place the zip entry in the ZipOutputStream object
+            zos.putNextEntry(anEntry);
+            //now write the content of the file to the ZipOutputStream
+            while ((bytesIn = fis.read(readBuffer)) != -1) {
+                zos.write(readBuffer, 0, bytesIn);
+            }
+        } catch (IOException e) {
+            throw new CoreCCPostProcessingInternalException(e.getMessage(), e);
         }
     }
 

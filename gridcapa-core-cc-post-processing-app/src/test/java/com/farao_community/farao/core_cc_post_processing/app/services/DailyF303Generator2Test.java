@@ -152,14 +152,62 @@ class DailyF303Generator2Test {
 
     @Test
     void testF303Generation() {
-
         assertEquals(24, taskDtos.size());
         FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(raoResult, cgms);
 
-        // -----
-        // check headers
-        // -----
+        checkHeaders(dailyFbConstDocument);
 
+        Multimap<String, CriticalBranchType> criticalBranches = buildCriticalBranchesMapPerOriginalId(dailyFbConstDocument);
+        Collection<CriticalBranchType> cb007 = criticalBranches.get("007_DE-NL [CO1][DIR]");
+        String varId1213Co2 = getCriticalBranch(criticalBranches.values(), "017_FR12-FR32 [CO2][DIR]_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z").getComplexVariantId();
+
+        // the initial f301 file contains 22 critical branches, so is the f303 file
+        assertEquals(23, criticalBranches.keySet().size());
+
+        // check that critical branches on N state, with a fixed definition, are the same for the 24hours
+        checkCriticalBranchOnNState(criticalBranches);
+
+        // check that critical branches with a variable definition depending on the hour, keep their variation
+        checkCriticalBranchWithVariableDefinition(criticalBranches);
+
+        // check that the invalid critical branches has been removed of the optimized hours
+
+        // 02/02/2022 -> change in F303 export, invalid elements are now exported for all time-stamps
+        assertEquals(1, criticalBranches.get("022_NEVER_VALID").size());
+        assertTrue(criticalBranches.get("022_NEVER_VALID").stream().anyMatch(cb -> cb.getTimeInterval().getV().equals("2019-01-08T11:00Z/2019-01-08T15:00Z")));
+
+        // check an always valid branch of CO1
+        checkAlwaysValidBranch(cb007);
+
+        // check Imax factor of the valid branch after CO1
+        checkImaxFactorForValidBranch(cb007);
+
+        // check Imax for a branch which has Imax instead of ImaxFactor
+        checkImaxFactorForInvalidBranch(criticalBranches);
+
+        // check the associated RA for CO1 on a given time interval
+        checkRAForCO1(cb007, dailyFbConstDocument);
+
+        // check the associated RA for CO2 on the same timestamp, they are different than the ones of CO1
+        checkRAForCO2(dailyFbConstDocument, varId1213Co2);
+
+        // check a critical branch which:
+        // - is duplicated in the nativeCrac (two versions depending on the timeStamp)
+        // - is invalid for some timestamps (13-14 and 14-15h)
+        checkCriticalBranchDuplicatedOrInvalid(criticalBranches);
+
+        // check a VNEC (not imported by RAO because not a MNEC and not a CNEC, but should be exported)
+        checkVNEC(criticalBranches, varId1213Co2);
+
+        // check the total number of complex variants and CriticalBranches
+        // 6 combinations of hours/CO with CRAs
+        assertEquals(6, dailyFbConstDocument.getComplexVariants().getComplexVariant().size());
+
+        // Check that criticalBranch 023 is exported only for the valid timestamps
+        checkCriticalBranchExport(criticalBranches);
+    }
+
+    private static void checkHeaders(final FlowBasedConstraintDocument dailyFbConstDocument) {
         assertNotNull(dailyFbConstDocument);
         assertEquals("22XCORESO------S-20190108-F303v1", dailyFbConstDocument.getDocumentIdentification().getV());
         assertEquals(1, dailyFbConstDocument.getDocumentVersion().getV());
@@ -170,19 +218,9 @@ class DailyF303Generator2Test {
         assertEquals("A36", dailyFbConstDocument.getReceiverRole().getV().value());
         assertEquals("2019-01-07T23:00Z/2019-01-08T23:00Z", dailyFbConstDocument.getConstraintTimeInterval().getV());
         assertEquals("10YDOM-REGION-1V", dailyFbConstDocument.getDomain().getV());
+    }
 
-        Multimap<String, CriticalBranchType> criticalBranches = buildCriticalBranchesMapPerOriginalId(dailyFbConstDocument);
-
-        // -----
-        // the initial f301 file contains 22 critical branches, so is the f303 file
-        // -----
-
-        assertEquals(23, criticalBranches.keySet().size());
-
-        // -----
-        // check that critical branches on N state, with a fixed definition, are the same for the 24hours
-        // -----
-
+    private static void checkCriticalBranchOnNState(final Multimap<String, CriticalBranchType> criticalBranches) {
         assertEquals(1, criticalBranches.get("001_FR-DE [N][DIR]").size());
         assertEquals(1, criticalBranches.get("009_NL-BE [N][DIR]").size());
         assertEquals(1, criticalBranches.get("010_NL-BE [N][OPP]").size());
@@ -190,10 +228,9 @@ class DailyF303Generator2Test {
         // imax factor is equal to permanent factor for critical branches on N state
         assertEquals(1, criticalBranches.get("010_NL-BE [N][OPP]").stream().findAny().orElseThrow().getImaxFactor().doubleValue(), 1e-6);
         assertNull(criticalBranches.get("010_NL-BE [N][OPP]").stream().findAny().orElseThrow().getImaxA());
+    }
 
-        // -----
-        // check that critical branches with a variable definition depending on the hour, keep their variation
-        // -----
+    private void checkCriticalBranchWithVariableDefinition(final Multimap<String, CriticalBranchType> criticalBranches) {
         Collection<CriticalBranchType> cb002 = criticalBranches.get("002_FR-DE [N][OPP]");
         assertEquals(2, cb002.size());
 
@@ -204,21 +241,11 @@ class DailyF303Generator2Test {
         assertNotNull(cnecAndMnec);
         assertFalse(pureMnec.isCNEC());
         assertTrue(cnecAndMnec.isCNEC());
+    }
 
-        // -----
-        // check that the invalid critical branches has been removed of the optimized hours
-        // -----
-        // 02/02/2022 -> change in F303 export, invalid elements are now exported for all time-stamps
-
-        assertEquals(1, criticalBranches.get("022_NEVER_VALID").size());
-        assertTrue(criticalBranches.get("022_NEVER_VALID").stream().anyMatch(cb -> cb.getTimeInterval().getV().equals("2019-01-08T11:00Z/2019-01-08T15:00Z")));
-
-        // -----
-        // check an always valid branch of CO1
-        // -----
-
-        Collection<CriticalBranchType> cb007 = criticalBranches.get("007_DE-NL [CO1][DIR]");
+    private void checkAlwaysValidBranch(final Collection<CriticalBranchType> cb007) {
         assertEquals(6, cb007.size());
+
         // 1 per invalid / not requested / without CRA interval
         assertNotNull(getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]", "2019-01-08T13:00Z/2019-01-08T14:00Z"));
 
@@ -230,31 +257,26 @@ class DailyF303Generator2Test {
         assertNotNull(getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]_PATL", "2019-01-08T11:00Z/2019-01-08T12:00Z"));
         assertNotNull(getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z"));
         assertNotNull(getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]_PATL", "2019-01-08T14:00Z/2019-01-08T15:00Z"));
+    }
 
-        // -----
-        // check Imax factor of the valid branch after CO1
-        // -----
-
+    private void checkImaxFactorForValidBranch(final Collection<CriticalBranchType> cb007) {
         // on hours with CRA, Imax are different for TATL and PATL
         assertEquals(1.15, getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]_TATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxFactor().doubleValue(), 1e-6);
         assertEquals(1., getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]_PATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxFactor().doubleValue(), 1e-6);
 
         // on hours without CRA and invalid hours, only PATL is taken into account
         assertEquals(1., getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]", "2019-01-08T13:00Z/2019-01-08T14:00Z").getImaxFactor().doubleValue(), 1e-6);
+    }
 
-        // -----
-        // check Imax for a branch which has Imax instead of ImaxFactor
-        // -----
+    private void checkImaxFactorForInvalidBranch(final Multimap<String, CriticalBranchType> criticalBranches) {
         Collection<CriticalBranchType> cb003 = criticalBranches.get("003_FR-DE [CO1][DIR]");
         assertEquals(6000., getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]_TATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxA().doubleValue(), 1e-6);
         assertEquals(5000., getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]_PATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxA().doubleValue(), 1e-6);
         assertEquals(5000., getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]", "2019-01-08T13:00Z/2019-01-08T14:00Z").getImaxA().doubleValue(), 1e-6);
         assertNull(getCriticalBranch(cb003, "003_FR-DE [CO1][DIR]_TATL", "2019-01-08T14:00Z/2019-01-08T15:00Z").getImaxFactor());
+    }
 
-        // -----
-        // check the associated RA for CO1 on a given time interval
-        // -----
-
+    private void checkRAForCO1(final Collection<CriticalBranchType> cb007, final FlowBasedConstraintDocument dailyFbConstDocument) {
         String varId1213Co1 = getCriticalBranch(cb007, "007_DE-NL [CO1][DIR]_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z").getComplexVariantId();
 
         // variant exists, with correct time interval
@@ -275,12 +297,9 @@ class DailyF303Generator2Test {
         assertNotNull(pst1213Co1);
         assertEquals("PSTTAP", pst1213Co1.getType());
         assertEquals("16", ((JAXBElement<?>) pst1213Co1.getContent().get(3)).getValue());
+    }
 
-        // -----
-        // check the associated RA for CO2 on the same timestamp, they are different than the ones of CO1
-        // -----
-        String varId1213Co2 = getCriticalBranch(criticalBranches.values(), "017_FR12-FR32 [CO2][DIR]_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z").getComplexVariantId();
-
+    private void checkRAForCO2(final FlowBasedConstraintDocument dailyFbConstDocument, final String varId1213Co2) {
         // variant exists, with correct time interval
         IndependantComplexVariant variant1213Co2 = getComplexVariant(dailyFbConstDocument, varId1213Co2);
         assertEquals("2019-01-08T12:00Z/2019-01-08T13:00Z", variant1213Co2.getTimeInterval().getV());
@@ -295,12 +314,9 @@ class DailyF303Generator2Test {
         assertNotNull(pst1213Co2);
         assertEquals("PSTTAP", pst1213Co2.getType());
         assertEquals("-16", ((JAXBElement<?>) pst1213Co2.getContent().get(3)).getValue());
+    }
 
-        // -----
-        // check a critical branch which:
-        // - is duplicated in the nativeCrac (two versions depending on the timeStamp)
-        // - is invalid for some timestamps (13-14 and 14-15h)
-        // -----
+    private void checkCriticalBranchDuplicatedOrInvalid(final Multimap<String, CriticalBranchType> criticalBranches) {
         Collection<CriticalBranchType> cb020 = criticalBranches.get("020_FR12-FR32 [CO2][OPP]");
         assertEquals(6, cb020.size());
 
@@ -324,10 +340,9 @@ class DailyF303Generator2Test {
         // PATL: 1 before 12:00, 1.2 after
         assertEquals(1, getCriticalBranch(cb020, "020_FR12-FR32 [CO2][OPP]_PATL", "2019-01-08T11:00Z/2019-01-08T12:00Z").getImaxFactor().doubleValue(), 1e-6);
         assertEquals(1.2, getCriticalBranch(cb020, "020_FR12-FR32 [CO2][OPP]_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z").getImaxFactor().doubleValue(), 1e-6);
+    }
 
-        // -----
-        // check a VNEC (not imported by RAO because not a MNEC and not a CNEC, but should be exported)
-        // -----
+    private void checkVNEC(final Multimap<String, CriticalBranchType> criticalBranches, final String varId1213Co2) {
         Collection<CriticalBranchType> cb021 = criticalBranches.get("021_NO_MNEC_NO_CNEC [CO2]");
         assertEquals(5, cb021.size());
 
@@ -344,14 +359,9 @@ class DailyF303Generator2Test {
 
         // VNECs have associated CRAs, even if they are not in the RAO -> the CRAs of their corresponding state
         assertEquals(varId1213Co2, getCriticalBranch(cb021, "021_NO_MNEC_NO_CNEC [CO2]_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z").getComplexVariantId());
+    }
 
-        // -----
-        // check the total number of complex variants and CriticalBranches
-        // -----
-        // 6 combinations of hours/CO with CRAs
-        assertEquals(6, dailyFbConstDocument.getComplexVariants().getComplexVariant().size());
-
-        // Check that criticalBranch 023 is exported only for the valid timestamps
+    private void checkCriticalBranchExport(final Multimap<String, CriticalBranchType> criticalBranches) {
         Collection<CriticalBranchType> cb023 = criticalBranches.get("023_NOT_FOR_ALL_TIMESTAMPS");
         assertEquals(1, cb023.size());
         assertNull(getCriticalBranch(cb023, "023_NOT_FOR_ALL_TIMESTAMPS", "2019-01-08T11:00Z/2019-01-08T15:00Z"));
