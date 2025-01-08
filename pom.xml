@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.farao-community.farao</groupId>
         <artifactId>farao-parent-ws</artifactId>
-        <version>1.10.1</version>
+        <version>1.11.0</version>
     </parent>
 
     <artifactId>gridcapa-core-cc-post-processing</artifactId>
@@ -59,7 +59,6 @@
         <jsonapi.converter.version>0.11</jsonapi.converter.version>
         <jakarta.xml.bind.version>4.0.2</jakarta.xml.bind.version>
         <jaxb-runtime.version>4.0.5</jaxb-runtime.version>
-        <logstash.version>4.9</logstash.version>
         <maven.jaxb.version>4.0.8</maven.jaxb.version>
         <threeten.version>1.5.0</threeten.version>
     </properties>
@@ -102,11 +101,6 @@
                 <groupId>com.github.jasminb</groupId>
                 <artifactId>jsonapi-converter</artifactId>
                 <version>${jsonapi.converter.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.logstash.logback</groupId>
-                <artifactId>logstash-logback-encoder</artifactId>
-                <version>${logstash.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.threeten</groupId>
