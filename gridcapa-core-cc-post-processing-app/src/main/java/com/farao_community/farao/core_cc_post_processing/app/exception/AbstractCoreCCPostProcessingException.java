@@ -6,8 +6,6 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.exception;
 
-import org.springframework.core.NestedExceptionUtils;
-
 /**
  * Custom abstract exception to be extended by all application exceptions.
  * Any subclass may be automatically wrapped to a JSON API error message if needed
@@ -33,6 +31,15 @@ public abstract class AbstractCoreCCPostProcessingException extends RuntimeExcep
     }
 
     public final String getDetails() {
-        return NestedExceptionUtils.buildMessage(getMessage(), getCause());
+        final String message = getMessage();
+        final Throwable cause = getCause();
+
+        if (cause == null) {
+            return message;
+        } else if (message == null) {
+            return "Nested exception is " + cause;
+        } else {
+            return String.join("; nested exception is ", message, cause.toString());
+        }
     }
 }

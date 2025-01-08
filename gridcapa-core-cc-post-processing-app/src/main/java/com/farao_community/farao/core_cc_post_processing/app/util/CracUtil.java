@@ -31,8 +31,7 @@ public final class CracUtil {
             byte[] bytes = getBytesFromInputStream(inputStream);
             JAXBContext jaxbContext = JAXBContext.newInstance(FlowBasedConstraintDocument.class);
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            FlowBasedConstraintDocument document = (FlowBasedConstraintDocument) jaxbUnmarshaller.unmarshal(new ByteArrayInputStream(bytes));
-            return document;
+            return (FlowBasedConstraintDocument) jaxbUnmarshaller.unmarshal(new ByteArrayInputStream(bytes));
         } catch (JAXBException | IOException e) {
             throw new CoreCCPostProcessingInternalException("Exception occurred during import of native crac", e);
         }

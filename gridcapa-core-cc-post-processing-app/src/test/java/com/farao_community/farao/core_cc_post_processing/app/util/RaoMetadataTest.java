@@ -24,10 +24,12 @@ class RaoMetadataTest {
     void generateOverallStatus() {
         assertEquals("FAILURE", RaoMetadata.generateOverallStatus(Set.of("PENDING", "RUNNING", "FAILURE", "SUCCESS")));
         assertEquals("PENDING", RaoMetadata.generateOverallStatus(Set.of("RUNNING", "PENDING", "SUCCESS")));
-        assertThrows(CoreCCInternalException.class, () -> RaoMetadata.generateOverallStatus(Set.of("RUNNING", "SUCCESS")));
+        final Set<String> runningSuccess = Set.of("RUNNING", "SUCCESS");
+        assertThrows(CoreCCInternalException.class, () -> RaoMetadata.generateOverallStatus(runningSuccess));
         assertEquals("SUCCESS", RaoMetadata.generateOverallStatus(Set.of("SUCCESS")));
         assertEquals("SUCCESS", RaoMetadata.generateOverallStatus(Set.of()));
-        CoreCCPostProcessingInternalException exception = assertThrows(CoreCCPostProcessingInternalException.class, () -> RaoMetadata.generateOverallStatus(Set.of("SUCCESS", "ERROR")));
+        final Set<String> successError = Set.of("SUCCESS", "ERROR");
+        CoreCCPostProcessingInternalException exception = assertThrows(CoreCCPostProcessingInternalException.class, () -> RaoMetadata.generateOverallStatus(successError));
         assertEquals("Invalid overall status", exception.getMessage());
     }
 }
