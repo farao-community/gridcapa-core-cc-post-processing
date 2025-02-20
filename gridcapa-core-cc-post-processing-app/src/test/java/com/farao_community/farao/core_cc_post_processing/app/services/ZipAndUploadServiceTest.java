@@ -36,19 +36,15 @@ import java.util.List;
 import java.util.Map;
 
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.CGM_FILE_DTO;
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.CGM_FILE_DTO_NOT_PRESENT;
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.CNE_FILE_DTO;
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.RAO_RESULT_FILE_DTO;
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.RAO_RESULT_FILE_DTO_NOT_PRESENT;
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK;
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK_NOT_PRESENT_STATUS;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -104,22 +100,6 @@ class ZipAndUploadServiceTest {
         assertFalse(new File("/tmp/cgms_out/2023-08-04").exists());
     }
 
-    @Test
-    void testZipCgmsNotPresentAndSendToOutputs() {
-        final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
-        cgms.put(SUCCESS_TASK_NOT_PRESENT_STATUS, CGM_FILE_DTO_NOT_PRESENT);
-
-        zipAndUploadService.zipCgmsAndSendToOutputs(TARGET_FOLDER,
-                cgms,
-                LOCAL_DATE,
-                "00000000-0000-0000-0000-000000000000",
-                "2019-01-07T23:00Z/2019-01-08T23:00Z",
-                1);
-        //In case of NOT ProcessFileStatus == VALIDATED, should not retrieve cgm from minio
-        verify(minioAdapterMock, never()).getFileFromFullPath(anyString());
-        verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
-    }
-
     // ------------ CNES ------------
     @Test
     void testZipCnesAndSendToOutputs() {
@@ -135,19 +115,6 @@ class ZipAndUploadServiceTest {
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
 
         assertFalse(new File("/tmp/cnes_out/2023-08-04").exists());
-    }
-
-    @Test
-    void testZipCnesNotPresentAndSendToOutputs() {
-        final Map<TaskDto, ProcessFileDto> cnes = new HashMap<>();
-        cnes.put(SUCCESS_TASK_NOT_PRESENT_STATUS, CGM_FILE_DTO_NOT_PRESENT);
-        zipAndUploadService.zipCnesAndSendToOutputs(TARGET_FOLDER,
-                cnes,
-                LOCAL_DATE,
-                1);
-        //In case of NOT ProcessFileStatus == VALIDATED, should not retrieve cgm from minio
-        verify(minioAdapterMock, never()).getFileFromFullPath(anyString());
-        verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
     }
 
     // ------------ RAO_RESULT ------------
@@ -166,17 +133,6 @@ class ZipAndUploadServiceTest {
         assertFalse(new File("/tmp/raoResults_out/2023-08-04").exists());
     }
 
-    @Test
-    void testZipRaoResultNotPresentAndSendToOutputs() {
-        final Map<TaskDto, ProcessFileDto> cnes = new HashMap<>();
-        cnes.put(SUCCESS_TASK_NOT_PRESENT_STATUS, RAO_RESULT_FILE_DTO_NOT_PRESENT);
-        zipAndUploadService.zipRaoResultsAndSendToOutputs(TARGET_FOLDER,
-                cnes,
-                LOCAL_DATE);
-        //In case of NOT ProcessFileStatus == VALIDATED, should not retrieve cgm from minio
-        verify(minioAdapterMock, never()).getFileFromFullPath(anyString());
-        verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
-    }
     // ------------ UPLOAD ------------
 
     @Test

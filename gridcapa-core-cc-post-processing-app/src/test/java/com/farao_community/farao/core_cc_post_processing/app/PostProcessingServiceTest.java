@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import static com.farao_community.farao.core_cc_post_processing.app.Utils.CGM_FI
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.CNE_FILE_DTO;
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.RAO_RESULT_FILE_DTO;
 import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK;
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK_CGM_NOT_PRESENT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -95,11 +97,40 @@ class PostProcessingServiceTest {
     }
 
     @Test
+    void testProcessTasksMissingOutputs() {
+        //Given
+        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString()))
+                .thenReturn(inputMetadataInputStream);
+        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml"))
+                .thenReturn(inputCracXmlInputStream);
+
+        //When
+        postProcessingService.processTasks(localDate, Set.of(SUCCESS_TASK_CGM_NOT_PRESENT), logList);
+
+        //Then
+        final String expectedTargetMinioFolder = "RAO_OUTPUTS_DIR/2023-08-04";
+        final Map<TaskDto, ProcessFileDto> expectedRaoResultPerTask = new HashMap<>();
+        expectedRaoResultPerTask.put(SUCCESS_TASK_CGM_NOT_PRESENT, RAO_RESULT_FILE_DTO);
+        final Map<TaskDto, ProcessFileDto> expectedCnePerTask = new HashMap<>();
+        expectedCnePerTask.put(SUCCESS_TASK_CGM_NOT_PRESENT, CNE_FILE_DTO);
+
+        verify(zipAndUploadServiceMock)
+                .zipRaoResultsAndSendToOutputs(expectedTargetMinioFolder, expectedRaoResultPerTask, localDate);
+        verify(zipAndUploadServiceMock).uploadF341ToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock)
+                .zipAndUploadLogs(logList, "RAO_OUTPUTS_DIR/2023-08-04/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-342_20190108-F342-01.zip");
+        //No cgm persisted
+        verify(zipAndUploadServiceMock)
+                .zipCgmsAndSendToOutputs(expectedTargetMinioFolder, Collections.emptyMap(), localDate, "00000000-0000-0000-0000-000000000000", "2019-01-07T23:00Z/2019-01-08T23:00Z", 1);
+        verify(zipAndUploadServiceMock)
+                .zipCnesAndSendToOutputs(expectedTargetMinioFolder, expectedCnePerTask, localDate, 1);
+        verify(zipAndUploadServiceMock).uploadF303ToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).uploadF305ToMinio(any(), any(), any(), anyInt());
+    }
+
+    @Test
     void fetchMetadataFromMinio() {
-        // Process file with NOT_CREATED floaf -> will be filtered out
-        final ProcessFileDto runningMetadataProcessFile = new ProcessFileDto("/CORE/CC/coreCCMetadataRunning.json", "METADATA", ProcessFileStatus.NOT_PRESENT, "coreCCMetadataRunning.json", "docId", OffsetDateTime.parse("2019-01-08T12:30Z"));
-        final TaskDto taskRunning = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000002"), OffsetDateTime.parse("2019-01-08T13:30Z"), TaskStatus.RUNNING, List.of(runningMetadataProcessFile), List.of(), List.of(), List.of(), List.of(), List.of());
-        final Map<TaskDto, ProcessFileDto> metadatas = Map.of(task, metadataProcessFile, taskRunning, runningMetadataProcessFile);
+        final Map<TaskDto, ProcessFileDto> metadatas = Map.of(task, metadataProcessFile);
         when(minioAdapterMock.getFileFromFullPath(anyString()))
                 .thenReturn(inputMetadataInputStream);
         final Map<UUID, CoreCCMetadata> metadataMap = postProcessingService.fetchMetadataFromMinio(metadatas);

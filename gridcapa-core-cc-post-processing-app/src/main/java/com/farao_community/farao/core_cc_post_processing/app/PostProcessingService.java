@@ -98,7 +98,7 @@ public class PostProcessingService {
         // -- F303 : flowBasedConstraintDocument
         zipAndUploadService.uploadF303ToMinio(new DailyF303Generator(minioAdapter).generate(raoResultPerTask, cgmPerTask), outputsTargetMinioFolder, localDate, outputFileVersion);
         // -- F305 : RaoResponse
-        zipAndUploadService.uploadF305ToMinio(outputsTargetMinioFolder, F305XmlGenerator.generateRaoResponse(tasksToPostProcess, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()), localDate, outputFileVersion);
+        zipAndUploadService.uploadF305ToMinio(outputsTargetMinioFolder, F305XmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()), localDate, outputFileVersion);
         LOGGER.info("All outputs were uploaded");
     }
 
@@ -116,38 +116,38 @@ public class PostProcessingService {
                                    Map<TaskDto, ProcessFileDto> metadatas,
                                    Map<TaskDto, ProcessFileDto> raoResults) {
         tasksToProcess.forEach(taskDto ->
-                taskDto.getOutputs().forEach(processFileDto -> {
-                    switch (processFileDto.getFileType()) {
-                        case "CNE":
-                            cnes.put(taskDto, processFileDto);
-                            break;
-                        case "CGM_OUT":
-                            cgms.put(taskDto, processFileDto);
-                            break;
-                        case "METADATA":
-                            metadatas.put(taskDto, processFileDto);
-                            break;
-                        case "RAO_RESULT":
-                            raoResults.put(taskDto, processFileDto);
-                            break;
-                        default:
-                            // do nothing, other outputs are available but we won't be collecting them
-                    }
-                })
+                taskDto.getOutputs()
+                        .stream()
+                        .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
+                        .forEach(processFileDto -> {
+                            switch (processFileDto.getFileType()) {
+                                case "CNE":
+                                    cnes.put(taskDto, processFileDto);
+                                    break;
+                                case "CGM_OUT":
+                                    cgms.put(taskDto, processFileDto);
+                                    break;
+                                case "METADATA":
+                                    metadatas.put(taskDto, processFileDto);
+                                    break;
+                                case "RAO_RESULT":
+                                    raoResults.put(taskDto, processFileDto);
+                                    break;
+                                default:
+                                    // do nothing, other outputs are available but we won't be collecting them
+                            }
+                        })
         );
     }
 
     Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(Map<TaskDto, ProcessFileDto> metadatas) {
         Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
         metadatas
-                .entrySet()
-                .stream()
-                .filter(md -> md.getValue().getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
-                .forEach(metadata -> {
-                    InputStream inputStream = minioAdapter.getFileFromFullPath(metadata.getValue().getFilePath());
+                .forEach((key, value) -> {
+                    InputStream inputStream = minioAdapter.getFileFromFullPath(value.getFilePath());
                     try {
                         CoreCCMetadata coreCCMetadata = new ObjectMapper().readValue(IOUtils.toString(inputStream, StandardCharsets.UTF_8), CoreCCMetadata.class);
-                        metadataMap.put(metadata.getKey().getId(), coreCCMetadata);
+                        metadataMap.put(key.getId(), coreCCMetadata);
                     } catch (IOException e) {
                         throw new CoreCCPostProcessingInternalException("error while fetching individual metadata", e);
                     }
