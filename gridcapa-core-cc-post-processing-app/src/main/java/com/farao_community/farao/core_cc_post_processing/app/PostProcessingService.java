@@ -121,20 +121,13 @@ public class PostProcessingService {
                         .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
                         .forEach(processFileDto -> {
                             switch (processFileDto.getFileType()) {
-                                case "CNE":
-                                    cnes.put(taskDto, processFileDto);
-                                    break;
-                                case "CGM_OUT":
-                                    cgms.put(taskDto, processFileDto);
-                                    break;
-                                case "METADATA":
-                                    metadatas.put(taskDto, processFileDto);
-                                    break;
-                                case "RAO_RESULT":
-                                    raoResults.put(taskDto, processFileDto);
-                                    break;
-                                default:
+                                case "CNE"-> cnes.put(taskDto, processFileDto);
+                                case "CGM_OUT" -> cgms.put(taskDto, processFileDto);
+                                case "METADATA" -> metadatas.put(taskDto, processFileDto);
+                                case "RAO_RESULT" -> raoResults.put(taskDto, processFileDto);
+                                default -> {
                                     // do nothing, other outputs are available but we won't be collecting them
+                                }
                             }
                         })
         );
