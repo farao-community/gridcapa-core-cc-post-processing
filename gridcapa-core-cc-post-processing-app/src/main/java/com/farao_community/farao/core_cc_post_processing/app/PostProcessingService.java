@@ -121,7 +121,7 @@ public class PostProcessingService {
                         .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
                         .forEach(processFileDto -> {
                             switch (processFileDto.getFileType()) {
-                                case "CNE"-> cnes.put(taskDto, processFileDto);
+                                case "CNE" -> cnes.put(taskDto, processFileDto);
                                 case "CGM_OUT" -> cgms.put(taskDto, processFileDto);
                                 case "METADATA" -> metadatas.put(taskDto, processFileDto);
                                 case "RAO_RESULT" -> raoResults.put(taskDto, processFileDto);
