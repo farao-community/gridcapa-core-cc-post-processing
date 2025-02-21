@@ -11,6 +11,7 @@ import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_respons
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.PayloadType;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseItem;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
@@ -55,6 +56,7 @@ class XmlGeneratorTest {
     private final OffsetDateTime endInstant = OffsetDateTime.parse(endInstantString);
     private final String correlationId = "6fe0a389-9315-417e-956d-b3fbaa479caz";
     private Set<TaskDto> taskDtos;
+    private Map<TaskDto, ProcessFileDto> cgmPerTask;
     private final Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
 
     @Autowired
@@ -91,15 +93,21 @@ class XmlGeneratorTest {
         taskDtos = Set.of(taskDtoStart, taskDtoEnd);
     }
 
+    private void initCgmPerTaskMap() {
+        cgmPerTask = new HashMap<>();
+        taskDtos.forEach(dto -> cgmPerTask.put(dto, null));
+    }
+
     @Test
     void generateRaoResponse() throws IOException {
         initTasksForRaoResponse();
         initMetadataMap();
+        initCgmPerTaskMap();
         // mock instant
         Instant mockedInstant = ZonedDateTime.parse("2023-08-04T12:42:42.000Z").toInstant();
         try (MockedStatic<Instant> mockedStatic = mockStatic(Instant.class, Mockito.CALLS_REAL_METHODS)) {
             mockedStatic.when(Instant::now).thenReturn(mockedInstant);
-            final ResponseMessageType raoResponse = F305XmlGenerator.generateRaoResponse(taskDtos, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+            final ResponseMessageType raoResponse = F305XmlGenerator.generateRaoResponse(taskDtos, cgmPerTask, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
             // JSON => OBJECT => JSON to get rid of formatting
             String expectedFileContents = new String(Utils.class.getResourceAsStream("/services/raoResponseMessageType.json").readAllBytes()).replace("\r", "");
             final ObjectMapper mapper = new ObjectMapper();
@@ -140,7 +148,8 @@ class XmlGeneratorTest {
         ResponseMessageType responseMessage = new ResponseMessageType();
         initTasksForRaoResponse();
         initMetadataMap();
-        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateRaoResponsePayLoad", taskDtos, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+        initCgmPerTaskMap();
+        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateRaoResponsePayLoad", taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
 
         assertEquals(4, payload.getResponseItems().getResponseItem().size());

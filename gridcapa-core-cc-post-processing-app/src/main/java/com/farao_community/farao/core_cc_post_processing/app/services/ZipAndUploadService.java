@@ -13,7 +13,6 @@ import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.core_cc_post_processing.app.util.ZipUtil;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
-import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
@@ -87,8 +86,6 @@ public class ZipAndUploadService {
 
         // Add all cgms from minio to tmp folder
         cgms.values()
-                .stream()
-                .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
                 .forEach(cgm -> {
                     final InputStream inputStream = minioAdapter.getFileFromFullPath(cgm.getFilePath());
                     final File cgmFile = new File(cgmZipTmpDir + cgm.getFilename());
@@ -126,8 +123,7 @@ public class ZipAndUploadService {
         final String cneZipTmpDir = TMP + "cnes_out/" + localDate.toString() + "/";
 
         // Add all cnes from minio to tmp folder
-        cnes.values().stream()
-                .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
+        cnes.values()
                 .forEach(cne -> {
                     final InputStream inputStream = minioAdapter.getFileFromFullPath(cne.getFilePath());
                     final File cneFile = new File(cneZipTmpDir + cne.getFilename());
@@ -156,8 +152,6 @@ public class ZipAndUploadService {
 
         // Add all raoResult json files from minio to tmp folder
         raoResults.values()
-                .stream()
-                .filter(processFileDto -> processFileDto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED))
                 .forEach(raoResult -> {
                     try (final InputStream inputStream = minioAdapter.getFileFromFullPath(raoResult.getFilePath())) {
                         final File raoResultFile = new File(raoResultZipTmpDir + raoResult.getFilename());

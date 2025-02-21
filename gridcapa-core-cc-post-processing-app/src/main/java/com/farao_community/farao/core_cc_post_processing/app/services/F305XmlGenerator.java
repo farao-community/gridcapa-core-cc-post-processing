@@ -7,10 +7,16 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.*;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ErrorType;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.HeaderType;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.PayloadType;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseItem;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseItems;
+import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
+import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
@@ -19,8 +25,10 @@ import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import java.io.*;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
@@ -39,7 +47,6 @@ import java.util.UUID;
  */
 @Service
 public final class F305XmlGenerator {
-
     public static final String F299_PATH = "%s-%s-F299v%s";
     public static final String F303_PATH = "%s-%s-F303v%s";
     public static final String F304_PATH = "%s-%s-F304v%s";
@@ -57,11 +64,11 @@ public final class F305XmlGenerator {
     private F305XmlGenerator() {
     }
 
-    public static ResponseMessageType generateRaoResponse(Set<TaskDto> taskDtos, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
+    public static ResponseMessageType generateRaoResponse(Set<TaskDto> taskDtos, Map<TaskDto, ProcessFileDto> cgmPerTask, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         try {
             ResponseMessageType responseMessage = new ResponseMessageType();
             generateRaoResponseHeader(responseMessage, localDate, correlationId);
-            generateRaoResponsePayLoad(taskDtos, responseMessage, localDate, metadataMap, timeInterval);
+            generateRaoResponsePayLoad(taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, timeInterval);
             return responseMessage;
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Error occurred during F305 file creation", e);
@@ -113,61 +120,63 @@ public final class F305XmlGenerator {
         responseMessage.setHeader(header);
     }
 
-    private static void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
+    private static void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, Map<TaskDto, ProcessFileDto> cgmPerTask, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
         taskDtos.stream().sorted(Comparator.comparing(TaskDto::getTimestamp))
-            .forEach(taskDto -> {
-                ResponseItem responseItem = new ResponseItem();
-                //set time interval to [taskDto - 30 minutes, taskDto + 30 minutes] (taskDto has a timestamp of x:30 but we want x:00 - y:00)
-                Instant instant = taskDto.getTimestamp().toInstant().minus(30, ChronoUnit.MINUTES);
-                Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
-                responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(interval));
-                boolean includeResponseItem = true;
+                .forEach(taskDto -> {
+                    ResponseItem responseItem = new ResponseItem();
+                    //set time interval to [taskDto - 30 minutes, taskDto + 30 minutes] (taskDto has a timestamp of x:30 but we want x:00 - y:00)
+                    Instant instant = taskDto.getTimestamp().toInstant().minus(30, ChronoUnit.MINUTES);
+                    Interval interval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
+                    responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(interval));
+                    boolean includeResponseItem = true;
 
-                if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
-                    if (!metadataMap.containsKey(taskDto.getId())) {
-                        fillFailedHours(responseItem, INTERNAL_EXCEPTION, NO_OUTPUT_AVAILABLE);
-                    } else if (StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
-                        // Do not generate a responseItem : raoRequest was not defined for this timestamp
-                        includeResponseItem = false;
-                    } else  {
-                        fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage());
+                    if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
+                        if (!metadataMap.containsKey(taskDto.getId())) {
+                            fillFailedHours(responseItem, INTERNAL_EXCEPTION, NO_OUTPUT_AVAILABLE, true);
+                        } else if (StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
+                            // Do not generate a responseItem : raoRequest was not defined for this timestamp
+                            includeResponseItem = false;
+                        } else if (!cgmPerTask.containsKey(taskDto)) {
+                            fillFailedHours(responseItem, "CGM", "", false);
+                        } else {
+                            fillFailedHours(responseItem, metadataMap.get(taskDto.getId()).getErrorCode(), metadataMap.get(taskDto.getId()).getErrorMessage(), true);
+                        }
+                    } else {
+                        //set file
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
+
+                        file.setCode(OPTIMIZED_CGM);
+                        String outputCgmXmlHeaderMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        file.setUrl(DOCUMENT_IDENTIFICATION + outputCgmXmlHeaderMessageId); //MessageID of the CGM F304 zip (from header file)
+                        files.getFile().add(file);
+
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
+                        file1.setCode(OPTIMIZED_CB);
+                        String outputFlowBasedConstraintDocumentMessageId = String.format(F303_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        file1.setUrl(DOCUMENT_IDENTIFICATION + outputFlowBasedConstraintDocumentMessageId); //MessageID of the f303
+                        files.getFile().add(file1);
+
+                        com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
+                        file2.setCode(RAO_REPORT);
+                        String outputLogsDocumentMessageId = String.format(F299_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
+                        file2.setUrl(DOCUMENT_IDENTIFICATION + outputLogsDocumentMessageId); //MessageID of the f299
+                        files.getFile().add(file2);
+
+                        responseItem.setFiles(files);
                     }
-                } else {
-                    //set file
-                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
-                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
-
-                    file.setCode(OPTIMIZED_CGM);
-                    String outputCgmXmlHeaderMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
-                    file.setUrl(DOCUMENT_IDENTIFICATION + outputCgmXmlHeaderMessageId); //MessageID of the CGM F304 zip (from header file)
-                    files.getFile().add(file);
-
-                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file1 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
-                    file1.setCode(OPTIMIZED_CB);
-                    String outputFlowBasedConstraintDocumentMessageId = String.format(F303_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
-                    file1.setUrl(DOCUMENT_IDENTIFICATION + outputFlowBasedConstraintDocumentMessageId); //MessageID of the f303
-                    files.getFile().add(file1);
-
-                    com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file2 = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
-                    file2.setCode(RAO_REPORT);
-                    String outputLogsDocumentMessageId = String.format(F299_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
-                    file2.setUrl(DOCUMENT_IDENTIFICATION + outputLogsDocumentMessageId); //MessageID of the f299
-                    files.getFile().add(file2);
-
-                    responseItem.setFiles(files);
-                }
-                if (includeResponseItem) {
-                    responseItems.getResponseItem().add(responseItem);
-                }
-            });
+                    if (includeResponseItem) {
+                        responseItems.getResponseItem().add(responseItem);
+                    }
+                });
         PayloadType payload = new PayloadType();
         payload.setResponseItems(responseItems);
         responseMessage.setPayload(payload);
     }
 
-    private static void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
+    static void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
 
@@ -177,14 +186,16 @@ public final class F305XmlGenerator {
 
         for (Instant instant = start; instant.isBefore(end); instant = instant.plus(1, ChronoUnit.HOURS)) {
             Interval hourInterval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
-            TaskDto taskDto = taskDtos.stream().filter(task -> hourInterval.contains(task.getTimestamp().toInstant())).findAny().orElse(null);
+            TaskDto taskDto = taskDtos.stream()
+                    .filter(task -> hourInterval.contains(task.getTimestamp().toInstant()))
+                    .findAny()
+                    .orElse(null);
             ResponseItem responseItem = new ResponseItem();
             //set time interval
             responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(hourInterval));
 
             if (taskDto == null) {
-                // If there's no result object then there was no request object
-                fillMissingCgmInput(responseItem);
+                fillMissingCgmOutput(responseItem);
             } else if (taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
                 //set file
                 com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
@@ -206,17 +217,18 @@ public final class F305XmlGenerator {
         return Instant.parse(instant.replace(":00Z", ":00:00Z"));
     }
 
-    private static void fillMissingCgmInput(ResponseItem responseItem) {
-        ErrorType error = new ErrorType();
-        error.setCode("NOT_AVAILABLE");
-        error.setReason("UCT file is not available for this time interval");
+    private static void fillMissingCgmOutput(final ResponseItem responseItem) {
+        final ErrorType error = new ErrorType();
+        error.setCode("CGM");
         responseItem.setError(error);
     }
 
-    private static void fillFailedHours(ResponseItem responseItem, String errorCode, String errorMessage) {
+    private static void fillFailedHours(ResponseItem responseItem, String errorCode, String errorMessage, boolean withFatalLevel) {
         ErrorType error = new ErrorType();
         error.setCode(errorCode);
-        error.setLevel("FATAL");
+        if (withFatalLevel) {
+            error.setLevel("FATAL");
+        }
         error.setReason(errorMessage);
         responseItem.setError(error);
     }
