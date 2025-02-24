@@ -46,11 +46,13 @@ public class Utils {
     public static final ProcessFileDto RAO_RESULT_FILE_DTO_NOT_PRESENT = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.NOT_PRESENT, "raoResult.json", "docId", TIMESTAMP);
     public static final List<ProcessFileDto> INPUTS = List.of(CRAC_PROCESS_FILE);
     public static final List<ProcessFileDto> OUTPUTS = List.of(CNE_FILE_DTO, CGM_FILE_DTO, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO);
+    public static final List<ProcessFileDto> OUTPUTS_CGM_NOT_PRESENT = List.of(CNE_FILE_DTO, CGM_FILE_DTO_NOT_PRESENT, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO);
     public static final List<ProcessFileDto> OUTPUTS_NOT_PRESENT = List.of(CNE_FILE_DTO_NOT_PRESENT, CGM_FILE_DTO_NOT_PRESENT, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO_NOT_PRESENT);
     public static final List<ProcessEventDto> PROCESS_EVENTS = List.of();
     public static final List<ProcessRunDto> PROCESS_RUN_DTOS_ONE = List.of(new ProcessRunDto(UUID.randomUUID(), OffsetDateTime.parse("2023-08-21T15:16:45Z"), INPUTS));
     public static final List<ProcessRunDto> PROCESS_RUN_DTOS_TWO = List.of(new ProcessRunDto(UUID.randomUUID(), OffsetDateTime.parse("2023-08-21T15:16:45Z"), INPUTS), new ProcessRunDto(UUID.randomUUID(), OffsetDateTime.parse("2023-08-22T15:16:45Z"), INPUTS));
     public static final TaskDto SUCCESS_TASK = new TaskDto(UUID.fromString("4fb56583-bcec-4ed9-9839-0984b7324989"), OffsetDateTime.parse("2023-08-21T15:16:45Z"), TaskStatus.SUCCESS, INPUTS, INPUTS, OUTPUTS, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
+    public static final TaskDto SUCCESS_TASK_CGM_NOT_PRESENT = new TaskDto(UUID.fromString("4fb56583-bcec-4ed9-9839-0984b7324989"), OffsetDateTime.parse("2023-08-21T15:16:45Z"), TaskStatus.SUCCESS, INPUTS, INPUTS, OUTPUTS_CGM_NOT_PRESENT, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
     public static final TaskDto SUCCESS_TASK_NOT_PRESENT_STATUS = new TaskDto(UUID.fromString("4fb56583-bcec-4ed9-9839-0984b7324989"), OffsetDateTime.parse("2023-08-21T15:16:45Z"), TaskStatus.SUCCESS, INPUTS, INPUTS, OUTPUTS_NOT_PRESENT, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
     public static final TaskDto ERROR_TASK = new TaskDto(UUID.fromString("6e3e0ef2-96e4-4649-82d4-374f103038d4"), OffsetDateTime.parse("2023-08-21T15:16:46Z"), TaskStatus.ERROR, INPUTS, INPUTS, OUTPUTS, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
     public static final TaskDto ERROR_TASK_NO_METADATA = new TaskDto(UUID.fromString("6e3e0ef2-96e4-4649-82d4-374f103038d9"), OffsetDateTime.parse("2023-08-21T15:16:48Z"), TaskStatus.ERROR, INPUTS, INPUTS, OUTPUTS, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
