@@ -103,7 +103,7 @@ public class TaskDtoBasedDailyF303InputsProvider implements DailyF303GeneratorIn
     }
 
     private FbConstraintCreationContext getCracOfTaskDto(Network network, TaskDto taskDto, MinioAdapter minioAdapter) {
-        Optional<ProcessFileDto> processFileDto = taskDto.getOutputs()
+        Optional<ProcessFileDto> processFileDto = taskDto.getInputs()
                 .stream()
                 .filter(dto -> dto.getProcessFileStatus().equals(ProcessFileStatus.VALIDATED) &&
                         dto.getFileType().equals("CBCORA"))
