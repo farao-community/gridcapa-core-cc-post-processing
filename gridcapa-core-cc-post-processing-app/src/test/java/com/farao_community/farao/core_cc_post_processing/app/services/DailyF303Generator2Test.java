@@ -21,6 +21,7 @@ import jakarta.xml.bind.JAXBElement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -89,8 +90,7 @@ class DailyF303Generator2Test {
         ProcessFileDto cracProcessFile = new ProcessFileDto("/CORE/CC/inputCracXml.xml", "CBCORA", ProcessFileStatus.VALIDATED, "inputCracXml.xml", "docId", firstTimestamp);
 
         // "store" crac xml in dataBase
-        InputStream inputCracXmlInputStream = getClass().getResourceAsStream(bDir + iDir + ts + "_F301-crac.xml");
-        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath(inputCracXmlFileUrl);
+        Mockito.doAnswer((Answer<InputStream>) invocation -> getClass().getResourceAsStream(bDir + iDir + ts + "_F301-crac.xml")).when(minioAdapter).getFileFromFullPath(inputCracXmlFileUrl);
 
         // set results
         /*
@@ -114,7 +114,7 @@ class DailyF303Generator2Test {
         for (int h = 0; h <= 11; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of()));
         }
 
         for (int h = 12; h <= 15; h++) {
@@ -134,26 +134,26 @@ class DailyF303Generator2Test {
             Mockito.doReturn(raoResultInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult" + hFile + ".json");
 
             // add task
-            final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of(), List.of(), List.of(), List.of());
+            final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of(), List.of(), List.of());
             taskDtos.add(taskDto);
             raoResult.put(taskDto, raoResultProcessFile);
             cgms.put(taskDto, cgmProcessFile);
         }
 
         // add failed task between 15:00 and 16:00
-        taskDtos.add(new TaskDto(UUID.fromString(baseUuid + 16), OffsetDateTime.parse("2019-01-08T15:30:00Z"), TaskStatus.ERROR, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
+        taskDtos.add(new TaskDto(UUID.fromString(baseUuid + 16), OffsetDateTime.parse("2019-01-08T15:30:00Z"), TaskStatus.ERROR, List.of(cracProcessFile), List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of()));
 
         for (int h = 17; h <= 23; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of()));
         }
     }
 
     @Test
     void testF303Generation() {
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(raoResult, cgms);
+        FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(taskDtos);
 
         checkHeaders(dailyFbConstDocument);
 

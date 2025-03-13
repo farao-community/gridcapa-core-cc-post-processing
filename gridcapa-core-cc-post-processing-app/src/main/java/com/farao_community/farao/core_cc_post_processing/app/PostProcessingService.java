@@ -96,7 +96,7 @@ public class PostProcessingService {
         // -- F299 : cnes
         zipAndUploadService.zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate, outputFileVersion);
         // -- F303 : flowBasedConstraintDocument
-        zipAndUploadService.uploadF303ToMinio(new DailyF303Generator(minioAdapter).generate(raoResultPerTask, cgmPerTask), outputsTargetMinioFolder, localDate, outputFileVersion);
+        zipAndUploadService.uploadF303ToMinio(new DailyF303Generator(minioAdapter).generate(tasksToPostProcess), outputsTargetMinioFolder, localDate, outputFileVersion);
         // -- F305 : RaoResponse
         zipAndUploadService.uploadF305ToMinio(outputsTargetMinioFolder, F305XmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()), localDate, outputFileVersion);
         LOGGER.info("All outputs were uploaded");
