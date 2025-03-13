@@ -9,4 +9,7 @@ public interface DailyF303GeneratorInputsProvider {
     FlowBasedConstraintDocument referenceConstraintDocument();
 
     Optional<HourlyF303InfoGenerator.Inputs> hourlyF303InputsForInterval(Interval interval);
+
+    boolean shouldBeReported(Interval interval);
+
 }

@@ -27,17 +27,18 @@ public class DailyF303Generator {
     private DailyF303Generator() {
         throw new AssertionError("Static class. Should not be constructed");}
 
-
     public static FlowBasedConstraintDocument generate(DailyF303GeneratorInputsProvider inputsProvider) {
         FlowBasedConstraintDocument flowBasedConstraintDocument = inputsProvider.referenceConstraintDocument();
         Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(flowBasedConstraintDocument.getConstraintTimeInterval().getV());
         List<HourlyF303Info> hourlyF303Infos = new ArrayList<>();
         positionMap.values().forEach(interval -> {
-            Optional<HourlyF303InfoGenerator.Inputs> optionalInputs = inputsProvider.hourlyF303InputsForInterval(interval);
-            if (optionalInputs.isPresent()) {
-                hourlyF303Infos.add(HourlyF303InfoGenerator.getInfoForSuccessfulInterval(flowBasedConstraintDocument, interval, optionalInputs.get()));
-            } else {
-                hourlyF303Infos.add(HourlyF303InfoGenerator.getInfoForNonRequestedOrFailedInterval(flowBasedConstraintDocument, interval));
+            if (inputsProvider.shouldBeReported(interval)) {
+                Optional<HourlyF303InfoGenerator.Inputs> optionalInputs = inputsProvider.hourlyF303InputsForInterval(interval);
+                if (optionalInputs.isPresent()) {
+                    hourlyF303Infos.add(HourlyF303InfoGenerator.getInfoForSuccessfulInterval(flowBasedConstraintDocument, interval, optionalInputs.get()));
+                } else {
+                    hourlyF303Infos.add(HourlyF303InfoGenerator.getInfoForNonRequestedOrFailedInterval(flowBasedConstraintDocument, interval));
+                }
             }
         });
 

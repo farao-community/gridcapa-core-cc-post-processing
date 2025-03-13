@@ -29,10 +29,8 @@ import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -59,8 +57,6 @@ class DailyF303Generator2Test {
     @MockBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
-    private final Map<TaskDto, ProcessFileDto> raoResult = new HashMap<>();
-    private final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
@@ -132,8 +128,6 @@ class DailyF303Generator2Test {
             // add task
             final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of(), List.of(), List.of());
             taskDtos.add(taskDto);
-            raoResult.put(taskDto, raoResultProcessFile);
-            cgms.put(taskDto, cgmProcessFile);
         }
 
         // add failed task between 15:00 and 16:00

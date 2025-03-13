@@ -45,8 +45,6 @@ class DailyF303Generator1Test {
     @MockBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
-    private final Map<TaskDto, ProcessFileDto> raoResult = new HashMap<>();
-    private final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
@@ -83,11 +81,6 @@ class DailyF303Generator1Test {
         ProcessFileDto raoResult2ProcessFile = new ProcessFileDto("/CORE/CC/raoResult2.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult2.json", "docId", timestamp1330);
         final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of(), List.of(), List.of());
         taskDtos.add(successTaskTwo);
-
-        raoResult.put(successTaskOne, raoResult1ProcessFile);
-        raoResult.put(successTaskTwo, raoResult2ProcessFile);
-        cgms.put(successTaskOne, cgm1ProcessFile);
-        cgms.put(successTaskTwo, cgm2ProcessFile);
 
         // NOT_CREATED tasks from 2019-01-08 14:00 to 2019-01-08 23:00
         for (int h = 15; h <= 23; h++) {

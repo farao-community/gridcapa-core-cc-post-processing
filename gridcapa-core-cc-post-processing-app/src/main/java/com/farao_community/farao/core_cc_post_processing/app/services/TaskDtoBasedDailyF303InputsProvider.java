@@ -67,6 +67,12 @@ public class TaskDtoBasedDailyF303InputsProvider implements DailyF303GeneratorIn
         }
     }
 
+    @Override
+    public boolean shouldBeReported(Interval interval) {
+        Optional<TaskDto> taskDtoOptional = getTaskDtoOfInterval(interval, tasks);
+        return taskDtoOptional.isPresent() && taskDtoOptional.get().getStatus().equals(TaskStatus.SUCCESS);
+    }
+
     private Optional<TaskDto> getTaskDtoOfInterval(Interval interval, Set<TaskDto> taskDtos) {
         return taskDtos.stream().filter(taskDto -> interval.contains(taskDto.getTimestamp().toInstant())).findFirst();
     }
