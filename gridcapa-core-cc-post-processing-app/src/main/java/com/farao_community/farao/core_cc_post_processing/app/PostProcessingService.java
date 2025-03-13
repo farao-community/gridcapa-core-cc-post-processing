@@ -7,10 +7,7 @@
 package com.farao_community.farao.core_cc_post_processing.app;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
-import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMetadataGenerator;
-import com.farao_community.farao.core_cc_post_processing.app.services.DailyF303Generator;
-import com.farao_community.farao.core_cc_post_processing.app.services.F305XmlGenerator;
-import com.farao_community.farao.core_cc_post_processing.app.services.ZipAndUploadService;
+import com.farao_community.farao.core_cc_post_processing.app.services.*;
 import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
@@ -96,7 +93,7 @@ public class PostProcessingService {
         // -- F299 : cnes
         zipAndUploadService.zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate, outputFileVersion);
         // -- F303 : flowBasedConstraintDocument
-        zipAndUploadService.uploadF303ToMinio(new DailyF303Generator(minioAdapter).generate(tasksToPostProcess), outputsTargetMinioFolder, localDate, outputFileVersion);
+        zipAndUploadService.uploadF303ToMinio(DailyF303Generator.generate(new TaskDtoBasedDailyF303InputsProvider(tasksToPostProcess, minioAdapter)), outputsTargetMinioFolder, localDate, outputFileVersion);
         // -- F305 : RaoResponse
         zipAndUploadService.uploadF305ToMinio(outputsTargetMinioFolder, F305XmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval()), localDate, outputFileVersion);
         LOGGER.info("All outputs were uploaded");

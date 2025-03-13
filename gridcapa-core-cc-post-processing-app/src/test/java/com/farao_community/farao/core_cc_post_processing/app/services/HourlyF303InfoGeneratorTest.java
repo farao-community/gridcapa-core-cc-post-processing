@@ -67,7 +67,8 @@ class HourlyF303InfoGeneratorTest {
         Network network = networkFromResources("/services/network.uct");
         FbConstraintCreationContext crac = cracFromResources(network, timestamp, "/services/crac.xml");
         RaoResult raoResult = taoResultFromResource(crac, "/services/raoResult.json");
-        HourlyF303Info hourlyF303Info = HourlyF303InfoGenerator.getInfoForSuccessfulInterval(nativeCrac, interval, timestamp, crac, raoResult);
+        HourlyF303InfoGenerator.Inputs inputs = new HourlyF303InfoGenerator.Inputs(crac, raoResult, timestamp);
+        HourlyF303Info hourlyF303Info = HourlyF303InfoGenerator.getInfoForSuccessfulInterval(nativeCrac, interval, inputs);
         checkCriticalBranchesWithTatlPatl(hourlyF303Info);
         checkComplexVariants(hourlyF303Info);
     }

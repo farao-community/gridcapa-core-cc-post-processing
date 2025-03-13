@@ -42,9 +42,10 @@ final class HourlyF303InfoGenerator {
     private static final String TATL = "_TATL";
     private static final String PATL = "_PATL";
 
-    HourlyF303InfoGenerator() {
+    private HourlyF303InfoGenerator() {
         throw new AssertionError("Static class. Should not be constructed");
     }
+    public record Inputs(FbConstraintCreationContext crac, RaoResult raoResult, OffsetDateTime timestamp) {}
 
     static HourlyF303Info getInfoForNonRequestedOrFailedInterval(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval) {
         OffsetDateTime startTime = OffsetDateTime.ofInstant(interval.getStart(), ZoneOffset.UTC);
@@ -64,11 +65,11 @@ final class HourlyF303InfoGenerator {
         return new HourlyF303Info(criticalBranches);
     }
 
-    static HourlyF303Info getInfoForSuccessfulInterval(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval, OffsetDateTime offsetDateTime, FbConstraintCreationContext crac, RaoResult raoResult) {
-        Map<State, String> statesWithCra = getUIDOfStatesWithCra(crac, raoResult, offsetDateTime.toString());
+    static HourlyF303Info getInfoForSuccessfulInterval(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval, Inputs inputs) {
+        Map<State, String> statesWithCra = getUIDOfStatesWithCra(inputs.crac(), inputs.raoResult(), inputs.timestamp().toString());
 
-        List<CriticalBranchType> criticalBranches = getCriticalBranchesOfSuccessfulInterval(flowBasedConstraintDocument, crac, statesWithCra, interval);
-        List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval(flowBasedConstraintDocument, crac, raoResult, statesWithCra, interval);
+        List<CriticalBranchType> criticalBranches = getCriticalBranchesOfSuccessfulInterval(flowBasedConstraintDocument, inputs.crac(), statesWithCra, interval);
+        List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval(flowBasedConstraintDocument, inputs.crac(), inputs.raoResult(), statesWithCra, interval);
 
         return new HourlyF303Info(criticalBranches, complexVariants);
     }

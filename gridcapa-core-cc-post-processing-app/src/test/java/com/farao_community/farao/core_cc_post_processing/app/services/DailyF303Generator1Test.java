@@ -16,10 +16,8 @@ import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocu
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.IndependantComplexVariant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -43,14 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 class DailyF303Generator1Test {
-
-    /*
-     * test-case initially designed to test the F303 export, with two hours of data, one contingency
-     * and some elements which are not CNEC and not MNEC
-     */
-
-    @Autowired
-    private DailyF303Generator dailyF303Generator;
 
     @MockBean
     private MinioAdapter minioAdapter;
@@ -110,7 +100,8 @@ class DailyF303Generator1Test {
     @Test
     void validateMergedFlowBasedCreation() {
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyF303Generator.generate(taskDtos);
+        var inputs = new TaskDtoBasedDailyF303InputsProvider(taskDtos, minioAdapter);
+        FlowBasedConstraintDocument dailyFbConstDocument = DailyF303Generator.generate(inputs);
         assertDocumentProperties(dailyFbConstDocument);
         assertCriticalBranches(dailyFbConstDocument.getCriticalBranches().getCriticalBranch());
         assertComplexVariants(dailyFbConstDocument.getComplexVariants().getComplexVariant());

@@ -22,7 +22,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -57,9 +56,6 @@ class DailyF303Generator2Test {
      * critical branches with varying parameters other time in the F301, and some invalid
      * elements in the F301 which are not imported
      */
-
-    @Autowired
-    private DailyF303Generator dailyFbConstraintDocumentGenerator;
     @MockBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
@@ -153,7 +149,8 @@ class DailyF303Generator2Test {
     @Test
     void testF303Generation() {
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(taskDtos);
+        var inputs = new TaskDtoBasedDailyF303InputsProvider(taskDtos, minioAdapter);
+        FlowBasedConstraintDocument dailyFbConstDocument = DailyF303Generator.generate(inputs);
 
         checkHeaders(dailyFbConstDocument);
 
