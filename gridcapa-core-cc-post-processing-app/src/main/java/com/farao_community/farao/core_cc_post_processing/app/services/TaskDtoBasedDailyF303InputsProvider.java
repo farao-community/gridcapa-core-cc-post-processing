@@ -69,6 +69,7 @@ public class TaskDtoBasedDailyF303InputsProvider implements DailyF303GeneratorIn
                 RaoResult raoResult = getRaoResultOfTaskDto(crac, taskDto, minioAdapter);
                 return Optional.of(new HourlyF303InfoGenerator.Inputs(crac, raoResult, taskDto.getTimestamp()));
             } catch (Exception e) {
+                LOGGER.error(e.getMessage(), e);
                 return Optional.empty();
             }
         } else {
