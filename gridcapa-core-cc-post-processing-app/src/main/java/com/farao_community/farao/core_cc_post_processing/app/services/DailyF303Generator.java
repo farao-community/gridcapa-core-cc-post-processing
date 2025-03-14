@@ -22,10 +22,11 @@ import java.util.Optional;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-public class DailyF303Generator {
+public final class DailyF303Generator {
 
     private DailyF303Generator() {
-        throw new AssertionError("Static class. Should not be constructed");}
+        throw new AssertionError("Static class. Should not be constructed");
+    }
 
     public static FlowBasedConstraintDocument generate(DailyF303GeneratorInputsProvider inputsProvider) {
         FlowBasedConstraintDocument flowBasedConstraintDocument = inputsProvider.referenceConstraintDocument();

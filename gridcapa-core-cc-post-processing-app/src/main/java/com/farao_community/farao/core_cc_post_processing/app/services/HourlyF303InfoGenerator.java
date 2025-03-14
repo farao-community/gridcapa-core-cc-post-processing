@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-final class HourlyF303InfoGenerator {
+public final class HourlyF303InfoGenerator {
 
     private static final String TATL = "_TATL";
     private static final String PATL = "_PATL";
@@ -45,7 +45,8 @@ final class HourlyF303InfoGenerator {
     private HourlyF303InfoGenerator() {
         throw new AssertionError("Static class. Should not be constructed");
     }
-    public record Inputs(FbConstraintCreationContext crac, RaoResult raoResult, OffsetDateTime timestamp) {}
+
+    public record Inputs(FbConstraintCreationContext crac, RaoResult raoResult, OffsetDateTime timestamp) { }
 
     static HourlyF303Info getInfoForNonRequestedOrFailedInterval(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval) {
         OffsetDateTime startTime = OffsetDateTime.ofInstant(interval.getStart(), ZoneOffset.UTC);

@@ -257,7 +257,7 @@ class DailyF303Clusterizer {
     }
 
     private static boolean areMnecEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
-        return cb1.isMNEC() && cb2.isMNEC() || !cb1.isMNEC() && !cb2.isMNEC();
+        return cb1.isMNEC() == null && cb2.isMNEC() == null || cb1.isMNEC() && cb2.isMNEC() || !cb1.isMNEC() && !cb2.isMNEC();
     }
 
     private static boolean areOriginEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
