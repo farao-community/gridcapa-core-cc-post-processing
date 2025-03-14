@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025, RTE (http://www.rte-france.com)
+ *  This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this
+ *  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
@@ -24,6 +30,9 @@ import java.util.Set;
 
 import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
 
+/**
+ * @author Sebastien Murgey {@literal <sebastien.murgey at rte-france.com>}
+ */
 public class TaskDtoBasedDailyF303InputsProvider implements DailyF303GeneratorInputsProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(TaskDtoBasedDailyF303InputsProvider.class);
     public static final String CRAC_CREATION_PARAMETERS_JSON = "/crac/cracCreationParameters.json";
@@ -99,7 +108,7 @@ public class TaskDtoBasedDailyF303InputsProvider implements DailyF303GeneratorIn
                         dto.getFileType().equals("CGM_OUT"))
                 .findAny();
         if (processFileDto.isEmpty()) {
-            throw new RuntimeException("Missing file");
+            throw new CoreCCPostProcessingInternalException(String.format("Cannot find network of task %s", taskDto.getTimestamp()));
         }
         try (InputStream networkInputStream = minioAdapter.getFileFromFullPath(processFileDto.get().getFilePath())) {
             return Network.read(processFileDto.get().getFilename(), networkInputStream);
@@ -115,13 +124,13 @@ public class TaskDtoBasedDailyF303InputsProvider implements DailyF303GeneratorIn
                         dto.getFileType().equals("CBCORA"))
                 .findAny();
         if (processFileDto.isEmpty()) {
-            throw new RuntimeException("Missing file");
+            throw new CoreCCPostProcessingInternalException(String.format("Cannot find crac of task %s", taskDto.getTimestamp()));
         }
         CracCreationParameters cracCreationParameters = getCimCracCreationParameters();
         try (InputStream cracInputStream = minioAdapter.getFileFromFullPath(processFileDto.get().getFilePath())) {
             return (FbConstraintCreationContext) new FbConstraintImporter().importData(cracInputStream, cracCreationParameters, network, taskDto.getTimestamp());
         } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException(String.format("Cannot import network of task %s", taskDto.getTimestamp()), e);
+            throw new CoreCCPostProcessingInternalException(String.format("Cannot import crac of task %s", taskDto.getTimestamp()), e);
         }
     }
 
@@ -132,7 +141,7 @@ public class TaskDtoBasedDailyF303InputsProvider implements DailyF303GeneratorIn
                         dto.getFileType().equals("RAO_RESULT"))
                 .findAny();
         if (processFileDto.isEmpty()) {
-            throw new RuntimeException("Missing file");
+            throw new CoreCCPostProcessingInternalException(String.format("Cannot import RAO result of task %s", taskDto.getTimestamp()));
         }
         try (InputStream raoResultInputStream = minioAdapter.getFileFromFullPath(processFileDto.get().getFilePath())) {
             return RaoResult.read(raoResultInputStream, crac.getCrac());
