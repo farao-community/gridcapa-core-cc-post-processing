@@ -253,23 +253,23 @@ class DailyF303Clusterizer {
     }
 
     private static boolean areCnecEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
-        return cb1.isCNEC() && cb2.isCNEC() || !cb1.isCNEC() && !cb2.isCNEC();
+        return Objects.equals(cb1.isCNEC(), cb2.isCNEC());
     }
 
     private static boolean areMnecEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
-        return cb1.isMNEC() && cb2.isMNEC() || !cb1.isMNEC() && !cb2.isMNEC();
+        return Objects.equals(cb1.isMNEC(), cb2.isMNEC());
     }
 
     private static boolean areOriginEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
-        return cb1.getTsoOrigin() == null && cb2.getTsoOrigin() == null || cb1.getTsoOrigin() != null && cb2.getTsoOrigin() != null && cb1.getTsoOrigin().equals(cb2.getTsoOrigin());
+        return Objects.equals(cb1.getTsoOrigin(), cb2.getTsoOrigin());
     }
 
     private static boolean areDirectionEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
-        return cb1.getDirection() == null && cb2.getDirection() == null || cb1.getDirection() != null && cb2.getDirection() != null && cb1.getDirection().equals(cb2.getDirection());
+        return Objects.equals(cb1.getDirection(), cb2.getDirection());
     }
 
     private static boolean areOutageEqual(CriticalBranchType cb1, CriticalBranchType cb2) {
-        return cb1.getOutage() == null && cb2.getOutage() == null || cb1.getOutage() != null && cb2.getOutage() != null && cb1.getOutage().equals(cb2.getOutage());
+        return Objects.equals(cb1.getOutage(), cb2.getOutage());
     }
 
     private static boolean areMinRamFactorEqual(CriticalBranchType cb1, CriticalBranchType cb2) {

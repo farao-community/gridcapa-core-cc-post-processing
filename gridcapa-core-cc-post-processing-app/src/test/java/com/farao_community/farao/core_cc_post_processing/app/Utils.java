@@ -67,6 +67,10 @@ public class Utils {
     public static final MinioFileWriter MINIO_FILE_WRITER = new MinioFileWriter(PROPERTIES, MINIO_CLIENT);
     public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
+    public static TaskDto successTaskWithInputsAndOutputs(List<ProcessFileDto> inputs, List<ProcessFileDto> outputs) {
+        return new TaskDto(UUID.fromString("4fb56583-bcec-4ed9-9839-0984b7324989"), OffsetDateTime.parse("2023-08-21T15:16:45Z"), TaskStatus.SUCCESS, inputs, inputs, outputs, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
+    }
+
     public static void neutralizeCreationDate(File file, boolean isXml) throws IOException {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String regex = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z";

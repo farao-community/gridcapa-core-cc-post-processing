@@ -17,16 +17,14 @@ import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.IndependantComplexVaria
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.stubbing.Answer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.io.InputStream;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,36 +40,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SpringBootTest
 class DailyF303Generator1Test {
 
-    /*
-     * test-case initially designed to test the F303 export, with two hours of data, one contingency
-     * and some elements which are not CNEC and not MNEC
-     */
-
-    @Autowired
-    private DailyF303Generator dailyF303Generator;
-
     @MockBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
-    private final Map<TaskDto, ProcessFileDto> raoResult = new HashMap<>();
-    private final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
 
     @BeforeEach
     public void setUp() {
-        InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
-        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputCracXml.xml");
-
-        InputStream network1InputStream = getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1230.xiidm");
-        Mockito.doReturn(network1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network1.xiidm");
-
-        InputStream raoResult1InputStream = getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1230/raoResult.json");
-        Mockito.doReturn(raoResult1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult1.json");
-
-        InputStream network2InputStream = getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1330.xiidm");
-        Mockito.doReturn(network2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network2.xiidm");
-
-        InputStream raoResult2InputStream = getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1330/raoResult.json");
-        Mockito.doReturn(raoResult2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult2.json");
+        Mockito.doAnswer((Answer<InputStream>) invocation -> getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml")).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputCracXml.xml");
+        Mockito.doAnswer((Answer<InputStream>) invocation -> getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1230.xiidm")).when(minioAdapter).getFileFromFullPath("/CORE/CC/network1.xiidm");
+        Mockito.doAnswer((Answer<InputStream>) invocation -> getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1230/raoResult.json")).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult1.json");
+        Mockito.doAnswer((Answer<InputStream>) invocation -> getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1330.xiidm")).when(minioAdapter).getFileFromFullPath("/CORE/CC/network2.xiidm");
+        Mockito.doAnswer((Answer<InputStream>) invocation -> getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1330/raoResult.json")).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult2.json");
 
         String timeStampBegin = "2019-01-07T23:00Z";
 
@@ -84,40 +63,36 @@ class DailyF303Generator1Test {
         for (int h = 0; h <= 12; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of()));
         }
 
         // SUCCESS task at 12:30
         OffsetDateTime timestamp1230 = OffsetDateTime.parse("2019-01-08T12:30:00Z");
         ProcessFileDto cgm1ProcessFile = new ProcessFileDto("/CORE/CC/network1.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network1.xiidm", "docId", timestamp1230);
         ProcessFileDto raoResult1ProcessFile = new ProcessFileDto("/CORE/CC/raoResult1.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult1.json", "docId", timestamp1230);
-        final TaskDto successTaskOne = new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of(), List.of(), List.of(), List.of());
+        final TaskDto successTaskOne = new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cracProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of(), List.of(), List.of());
         taskDtos.add(successTaskOne);
 
         // SUCCESS task at 13:30
         OffsetDateTime timestamp1330 = OffsetDateTime.parse("2019-01-08T13:30:00Z");
         ProcessFileDto cgm2ProcessFile = new ProcessFileDto("/CORE/CC/network2.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network2.xiidm", "docId", timestamp1330);
         ProcessFileDto raoResult2ProcessFile = new ProcessFileDto("/CORE/CC/raoResult2.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult2.json", "docId", timestamp1330);
-        final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of(), List.of(), List.of(), List.of());
+        final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of(), List.of(), List.of());
         taskDtos.add(successTaskTwo);
-
-        raoResult.put(successTaskOne, raoResult1ProcessFile);
-        raoResult.put(successTaskTwo, raoResult2ProcessFile);
-        cgms.put(successTaskOne, cgm1ProcessFile);
-        cgms.put(successTaskTwo, cgm2ProcessFile);
 
         // NOT_CREATED tasks from 2019-01-08 14:00 to 2019-01-08 23:00
         for (int h = 15; h <= 23; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of()));
         }
     }
 
     @Test
     void validateMergedFlowBasedCreation() {
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyF303Generator.generate(raoResult, cgms);
+        var inputs = new TaskDtoBasedDailyF303InputsProvider(taskDtos, minioAdapter);
+        FlowBasedConstraintDocument dailyFbConstDocument = DailyF303Generator.generate(inputs);
         assertDocumentProperties(dailyFbConstDocument);
         assertCriticalBranches(dailyFbConstDocument.getCriticalBranches().getCriticalBranch());
         assertComplexVariants(dailyFbConstDocument.getComplexVariants().getComplexVariant());
