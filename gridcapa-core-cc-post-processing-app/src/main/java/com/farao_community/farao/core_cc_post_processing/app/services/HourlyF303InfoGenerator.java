@@ -25,6 +25,7 @@ import com.powsybl.openrao.data.crac.api.rangeaction.RangeAction;
 import com.powsybl.openrao.data.crac.io.commons.api.ImportStatus;
 import com.powsybl.openrao.data.crac.io.fbconstraint.FbConstraintCreationContext;
 import com.powsybl.openrao.data.crac.io.fbconstraint.FbConstraintImporter;
+import com.powsybl.openrao.data.crac.io.fbconstraint.parameters.FbConstraintCracCreationParameters;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.ActionType;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.CriticalBranchType;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
@@ -103,7 +104,9 @@ class HourlyF303InfoGenerator {
 
     private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
         Network network = getNetworkOfTaskDto(cgmProcessFile);
-        FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) new FbConstraintImporter().importData(cracInputStream, cracCreationParameters, network, taskDto.getTimestamp());
+        cracCreationParameters.addExtension(FbConstraintCracCreationParameters.class, new FbConstraintCracCreationParameters());
+        cracCreationParameters.getExtension(FbConstraintCracCreationParameters.class).setTimestamp(taskDto.getTimestamp());
+        FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) new FbConstraintImporter().importData(cracInputStream, cracCreationParameters, network);
         RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac(), raoResultProcessFile);
 
         Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());
