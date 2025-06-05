@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -59,7 +59,7 @@ class DailyF303Generator2Test {
 
     @Autowired
     private DailyF303Generator dailyFbConstraintDocumentGenerator;
-    @MockBean
+    @MockitoBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
     private final Map<TaskDto, ProcessFileDto> raoResult = new HashMap<>();
