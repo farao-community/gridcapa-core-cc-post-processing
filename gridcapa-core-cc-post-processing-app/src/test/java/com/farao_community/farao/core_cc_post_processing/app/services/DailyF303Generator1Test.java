@@ -57,7 +57,7 @@ class DailyF303Generator1Test {
     private final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
         Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputCracXml.xml");
 

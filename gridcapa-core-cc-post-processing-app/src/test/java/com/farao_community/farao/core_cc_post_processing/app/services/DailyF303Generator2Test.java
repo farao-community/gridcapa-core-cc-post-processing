@@ -66,7 +66,7 @@ class DailyF303Generator2Test {
     private final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
 
         String timeStampBegin = "2019-01-07T23:00Z";
 
