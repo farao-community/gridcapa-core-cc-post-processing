@@ -198,6 +198,10 @@
             <artifactId>commons-collections4</artifactId>
             <version>${apache.commons-collections4.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.powsybl</groupId>
+            <artifactId>open-rao-search-tree-rao</artifactId>
+        </dependency>
 
         <!-- RUNTIME -->
         <dependency>
