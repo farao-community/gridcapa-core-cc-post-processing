@@ -61,6 +61,7 @@
         <jaxb-runtime.version>4.0.5</jaxb-runtime.version>
         <maven.jaxb.version>4.0.8</maven.jaxb.version>
         <threeten.version>1.5.0</threeten.version>
+        <argLine /> <!-- required for java agent declaration, do not remove -->
     </properties>
 
     <build>
