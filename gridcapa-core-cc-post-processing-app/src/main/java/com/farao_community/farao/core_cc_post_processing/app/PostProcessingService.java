@@ -6,11 +6,13 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app;
 
+import com.farao_community.farao.core_cc_post_processing.app.configuration.PiSaConfiguration;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
 import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMetadataGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyFbConstraintGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.RaoResponseXmlGenerator;
+import com.farao_community.farao.core_cc_post_processing.app.services.RefProgGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.ZipAndUploadService;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
@@ -56,6 +58,8 @@ public class PostProcessingService {
 
     private final DailyFbConstraintGenerator dailyFbConstraintGenerator;
     private final MinioAdapter minioAdapter;
+    private final PiSaConfiguration.PiSaLinkConfiguration piSaLink1Configuration;
+    private final PiSaConfiguration.PiSaLinkConfiguration piSaLink2Configuration;
     private final ZipAndUploadService zipAndUploadService;
 
     record MetadataExtractedFromMinio(Map<UUID, CoreCCMetadata> metadataMap, RaoMetadata raoMetadata) {
@@ -63,9 +67,13 @@ public class PostProcessingService {
 
     public PostProcessingService(final DailyFbConstraintGenerator dailyFbConstraintGenerator,
                                  final MinioAdapter minioAdapter,
+                                 final PiSaConfiguration.PiSaLinkConfiguration piSaLink1Configuration,
+                                 final PiSaConfiguration.PiSaLinkConfiguration piSaLink2Configuration,
                                  final ZipAndUploadService zipAndUploadService) {
         this.dailyFbConstraintGenerator = dailyFbConstraintGenerator;
         this.minioAdapter = minioAdapter;
+        this.piSaLink1Configuration = piSaLink1Configuration;
+        this.piSaLink2Configuration = piSaLink2Configuration;
         this.zipAndUploadService = zipAndUploadService;
     }
 
@@ -128,6 +136,12 @@ public class PostProcessingService {
 
         // -- F342 : Log files
         zipAndUploadService.zipAndUploadLogs(outputsTargetMinioFolder, logList, raoMetadata.getRaoRequestInstant(), outputFileVersion);
+
+        // -- Fxxx : RefProg
+        final byte[] refProgBytes = new RefProgGenerator(minioAdapter, piSaLink1Configuration, piSaLink2Configuration)
+            .generate(tasksToPostProcess, cgmPerTask, raoResultPerTask)
+            .toByteArray();
+        zipAndUploadService.uploadRefProgToMinio(outputsTargetMinioFolder, refProgBytes, localDate, outputFileVersion);
 
         LOGGER.info("All outputs were uploaded");
     }

@@ -36,7 +36,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class Utils {
 
     public static final OffsetDateTime TIMESTAMP = OffsetDateTime.parse("2023-08-21T15:16:45Z");
+    public static final ProcessFileDto CGM_PROCESS_FILE = new ProcessFileDto("/CORE/CC/network.uct", "CGM", ProcessFileStatus.VALIDATED, "network.uct", "docId", TIMESTAMP);
     public static final ProcessFileDto CRAC_PROCESS_FILE = new ProcessFileDto("/CORE/CC/crac.xml", "CBCORA", ProcessFileStatus.VALIDATED, "crac.xml", "docId", TIMESTAMP);
+    public static final ProcessFileDto RAO_RESULT_PROCESS_FILE = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult.json", "docId", TIMESTAMP);
+    public static final ProcessFileDto REFPROG_PROCESS_FILE = new ProcessFileDto("/CORE/CC/refprog.xml", "REFPROG", ProcessFileStatus.VALIDATED, "refprog.xml", "docId", TIMESTAMP);
     public static final ProcessFileDto CNE_FILE_DTO = new ProcessFileDto("/CORE/CC/cne.xml", "CNE", ProcessFileStatus.VALIDATED, "cne.xml", "docId", TIMESTAMP);
     public static final ProcessFileDto CNE_FILE_DTO_NOT_PRESENT = new ProcessFileDto("/CORE/CC/cne.xml", "CNE", ProcessFileStatus.VALIDATED, "cne.xml", "docId", TIMESTAMP);
     public static final ProcessFileDto CGM_FILE_DTO = new ProcessFileDto("/CORE/CC/network.uct", "CGM_OUT", ProcessFileStatus.VALIDATED, "network.uct", "docId", TIMESTAMP);
@@ -44,7 +47,7 @@ public class Utils {
     public static final ProcessFileDto METADATA_FILE_DTO = new ProcessFileDto("/CORE/CC/metadata.json", "METADATA", ProcessFileStatus.VALIDATED, "metadata.json", "docId", TIMESTAMP);
     public static final ProcessFileDto RAO_RESULT_FILE_DTO = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult.json", "docId", TIMESTAMP);
     public static final ProcessFileDto RAO_RESULT_FILE_DTO_NOT_PRESENT = new ProcessFileDto("/CORE/CC/raoResult.json", "RAO_RESULT", ProcessFileStatus.NOT_PRESENT, "raoResult.json", "docId", TIMESTAMP);
-    public static final List<ProcessFileDto> INPUTS = List.of(CRAC_PROCESS_FILE);
+    public static final List<ProcessFileDto> INPUTS = List.of(CGM_PROCESS_FILE, CRAC_PROCESS_FILE, RAO_RESULT_PROCESS_FILE, REFPROG_PROCESS_FILE);
     public static final List<ProcessFileDto> OUTPUTS = List.of(CNE_FILE_DTO, CGM_FILE_DTO, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO);
     public static final List<ProcessFileDto> OUTPUTS_CGM_NOT_PRESENT = List.of(CNE_FILE_DTO, CGM_FILE_DTO_NOT_PRESENT, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO);
     public static final List<ProcessFileDto> OUTPUTS_NOT_PRESENT = List.of(CNE_FILE_DTO_NOT_PRESENT, CGM_FILE_DTO_NOT_PRESENT, METADATA_FILE_DTO, RAO_RESULT_FILE_DTO_NOT_PRESENT);

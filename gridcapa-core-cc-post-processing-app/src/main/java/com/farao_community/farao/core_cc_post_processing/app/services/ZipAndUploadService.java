@@ -152,6 +152,16 @@ public class ZipAndUploadService {
         uploadOrThrow(fbConstraintBytes, destinationPath, errorMessage);
     }
 
+    public void uploadMetadataToMinio(final String targetMinioFolder,
+                                      final byte[] metadataCsvBytes,
+                                      final String businessDate,
+                                      final int version) {
+        final String filename = NamingRules.generateMetadataFilename(businessDate, version);
+        final String destinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, filename);
+        final String errorMessage = String.format("Exception occurred while uploading metadata file for business date %s", businessDate);
+        uploadOrThrow(metadataCsvBytes, destinationPath, errorMessage);
+    }
+
     public void uploadRaoResponseToMinio(final String targetMinioFolder,
                                          final ResponseMessageType raoResponse,
                                          final LocalDate businessDate,
@@ -163,14 +173,14 @@ public class ZipAndUploadService {
         uploadOrThrow(raoResponseBytes, destinationPath, errorMessage);
     }
 
-    public void uploadMetadataToMinio(final String targetMinioFolder,
-                                      final byte[] metadataCsvBytes,
-                                      final String businessDate,
-                                      final int version) {
-        final String filename = NamingRules.generateMetadataFilename(businessDate, version);
-        final String destinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, filename);
-        final String errorMessage = String.format("Exception occurred while uploading metadata file for business date %s", businessDate);
-        uploadOrThrow(metadataCsvBytes, destinationPath, errorMessage);
+    public void uploadRefProgToMinio(final String targetMinioFolder,
+                                     final byte[] refProgBytes,
+                                     final LocalDate businessDate,
+                                     final int version) {
+        final String fileName = NamingRules.generateRefProgFileName(businessDate, version);
+        final String destinationPath = NamingRules.generateOutputsDestinationPath(targetMinioFolder, fileName);
+        final String errorMessage = String.format("Exception occurred while uploading RefProg file for business date %s", businessDate);
+        uploadOrThrow(refProgBytes, destinationPath, errorMessage);
     }
 
     private void uploadOrThrow(final byte[] byteArray,
