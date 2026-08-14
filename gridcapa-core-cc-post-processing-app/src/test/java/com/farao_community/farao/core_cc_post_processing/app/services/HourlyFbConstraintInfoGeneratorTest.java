@@ -16,7 +16,6 @@ import com.powsybl.openrao.data.crac.api.parameters.JsonCracCreationParameters;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.threeten.extra.Interval;
 
 import java.io.File;
@@ -32,6 +31,8 @@ import java.util.Objects;
 
 import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
@@ -43,7 +44,7 @@ class HourlyFbConstraintInfoGeneratorTest {
     private final Instant instantEnd = Instant.parse("2023-08-21T15:17:00Z");
     private final Interval interval = Interval.of(instantStart, instantEnd);
     private TaskDto taskDto;
-    private final MinioAdapter minioAdapter = Mockito.mock(MinioAdapter.class);
+    private final MinioAdapter minioAdapter = mock(MinioAdapter.class);
     private InputStream networkIS;
     private InputStream raoResultIS;
     private InputStream cracInputStream;
@@ -77,8 +78,8 @@ class HourlyFbConstraintInfoGeneratorTest {
         importNetwork();
         importRaoResult();
         taskDto = Utils.SUCCESS_TASK;
-        Mockito.doReturn(networkIS).when(minioAdapter).getFileFromFullPath("network.uct");
-        Mockito.doReturn(raoResultIS).when(minioAdapter).getFileFromFullPath("raoResult.json");
+        doReturn(networkIS).when(minioAdapter).getFileFromFullPath("network.uct");
+        doReturn(raoResultIS).when(minioAdapter).getFileFromFullPath("raoResult.json");
         //crac creation parameters
         final CracCreationParameters cracCreationParameters = JsonCracCreationParameters.read(getClass().getResourceAsStream("/services/crac/cracCreationParameters.json"));
         HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters);

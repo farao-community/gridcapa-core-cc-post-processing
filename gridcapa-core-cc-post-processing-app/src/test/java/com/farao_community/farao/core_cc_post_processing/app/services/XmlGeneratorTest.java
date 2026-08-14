@@ -41,6 +41,8 @@ import static com.farao_community.farao.core_cc_post_processing.app.Utils.TEMP_D
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
 /**
@@ -84,12 +86,12 @@ class XmlGeneratorTest {
     }
 
     private void initTasksForCgmXmlHeader() {
-        TaskDto taskDtoStart = Mockito.mock(TaskDto.class);
-        Mockito.doReturn(startInstant).when(taskDtoStart).getTimestamp();
-        Mockito.doReturn(TaskStatus.SUCCESS).when(taskDtoStart).getStatus();
-        TaskDto taskDtoEnd = Mockito.mock(TaskDto.class);
-        Mockito.doReturn(endInstant).when(taskDtoEnd).getTimestamp();
-        Mockito.doReturn(TaskStatus.SUCCESS).when(taskDtoEnd).getStatus();
+        TaskDto taskDtoStart = mock(TaskDto.class);
+        doReturn(startInstant).when(taskDtoStart).getTimestamp();
+        doReturn(TaskStatus.SUCCESS).when(taskDtoStart).getStatus();
+        TaskDto taskDtoEnd = mock(TaskDto.class);
+        doReturn(endInstant).when(taskDtoEnd).getTimestamp();
+        doReturn(TaskStatus.SUCCESS).when(taskDtoEnd).getStatus();
         taskDtos = Set.of(taskDtoStart, taskDtoEnd);
     }
 

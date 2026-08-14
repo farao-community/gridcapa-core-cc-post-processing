@@ -20,7 +20,6 @@ import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.IndependantComplexVaria
 import jakarta.xml.bind.JAXBElement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -41,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -90,7 +90,7 @@ class DailyFbConstraintGenerator2Test {
 
         // "store" crac xml in dataBase
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream(bDir + iDir + ts + "_F301-crac.xml");
-        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath(inputCracXmlFileUrl);
+        doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath(inputCracXmlFileUrl);
 
         // set results
         /*
@@ -127,11 +127,11 @@ class DailyFbConstraintGenerator2Test {
 
             // "store" network in dataBase
             InputStream networkInputStream = getClass().getResourceAsStream(bDir + iDir + hFile + "_network.uct");
-            Mockito.doReturn(networkInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network" + hFile + ".uct");
+            doReturn(networkInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network" + hFile + ".uct");
 
             // "store" raoResult in dataBase
             InputStream raoResultInputStream = getClass().getResourceAsStream(bDir + oDir + hFile + "_raoResult.json");
-            Mockito.doReturn(raoResultInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult" + hFile + ".json");
+            doReturn(raoResultInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult" + hFile + ".json");
 
             // add task
             final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of(), List.of(), List.of(), List.of());
