@@ -40,7 +40,7 @@ class CoreCCPostProcessingHandlerTest {
 
     private final CoreCCPostProcessingConfiguration.UrlProperties url = new CoreCCPostProcessingConfiguration.UrlProperties("http://mockUrl/2023-08-21T11_26_00/", "/2023-08-21/");
     private final CoreCCPostProcessingConfiguration.ProcessProperties properties = new CoreCCPostProcessingConfiguration.ProcessProperties("tag", "Europe/Brussels");
-    private final CoreCCPostProcessingConfiguration configuration = new CoreCCPostProcessingConfiguration(url, properties);
+    private final CoreCCPostProcessingConfiguration configuration = new CoreCCPostProcessingConfiguration(url, properties, null);
 
     @Autowired
     private CoreCCPostProcessingHandler coreCCPostProcessingHandler;
