@@ -33,7 +33,7 @@ class CoreCCPostProcessingConfigurationTest {
     void customCoreCCPostProcessingConfiguration() {
         CoreCCPostProcessingConfiguration.ProcessProperties processProperties = new CoreCCPostProcessingConfiguration.ProcessProperties("test", "Europe/Brussels");
         CoreCCPostProcessingConfiguration.UrlProperties urlProperties = new CoreCCPostProcessingConfiguration.UrlProperties("task_manager_2023-08-04T14:30:00Z", "task_manager_20230804");
-        CoreCCPostProcessingConfiguration customCoreCCPostProcessingConfiguration = new CoreCCPostProcessingConfiguration(urlProperties, processProperties);
+        CoreCCPostProcessingConfiguration customCoreCCPostProcessingConfiguration = new CoreCCPostProcessingConfiguration(urlProperties, processProperties, null);
         assertEquals("task_manager_2023-08-04T14:30:00Z", customCoreCCPostProcessingConfiguration.getUrl().taskManagerTimestampUrl());
         assertEquals("task_manager_20230804", customCoreCCPostProcessingConfiguration.getUrl().taskManagerBusinessDateUrl());
         assertEquals("test", customCoreCCPostProcessingConfiguration.getProcess().tag());

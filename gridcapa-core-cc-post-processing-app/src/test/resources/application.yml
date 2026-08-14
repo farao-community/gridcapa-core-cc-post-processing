@@ -1,6 +1,26 @@
 core-cc-post-processing:
   filenames:
     ttc-validation: "'TTC_RTEValidation_'yyyyMMdd'_%s'e'_(?<version>[0-9]{1,2}).xml'"
+  pisa:
+    aligned-ra-names:
+      - PRA_HVDC_GILE_PIOSSASCO_1 + PRA_HVDC_GILE_PIOSSASCO_2
+      - CRA_HVDC_GILE_PIOSSASCO_1 + CRA_HVDC_GILE_PIOSSASCO_2
+    link1:
+      node-fr: FFG.IL12
+      node-it: FFG.IL11
+      fictive-lines:
+        - FFG.IL12 FFG.IL11 1
+        - FFG.IL12 FFG.IL11 2
+        - FFG.IL12 FFG.IL11 3
+      pra-name: PRA_HVDC_GILE_PIOSSASCO_1
+    link2:
+      node-fr: FFG.IL14
+      node-it: FFG.IL13
+      fictive-lines:
+        - FFG.IL14 FFG.IL13 1
+        - FFG.IL14 FFG.IL13 2
+        - FFG.IL14 FFG.IL13 3
+      pra-name: PRA_HVDC_GILE_PIOSSASCO_2
   url:
     task-manager-business-date-url: http://localhost:8080/tasks/businessdate/
   whitelist:

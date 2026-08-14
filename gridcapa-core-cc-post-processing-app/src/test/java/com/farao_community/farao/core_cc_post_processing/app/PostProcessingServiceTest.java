@@ -21,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -61,15 +60,18 @@ class PostProcessingServiceTest {
     private final LocalDate localDate = LocalDate.of(2023, 8, 4);
     private final Set<TaskDto> tasksToPostProcess = Set.of(SUCCESS_TASK);
     private final List<byte[]> logList = new ArrayList<>();
-    private final InputStream inputMetadataInputStream = getClass().getResourceAsStream("/services/metadatas/coreCCMetadata.json");
-    private final InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
     private final ProcessFileDto metadataProcessFile = new ProcessFileDto("/CORE/CC/coreCCMetadata.json", "METADATA", ProcessFileStatus.VALIDATED, "coreCCMetadata.json", "docId", OffsetDateTime.parse("2019-01-08T12:30Z"));
     private final TaskDto task = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000001"), OffsetDateTime.parse("2019-01-08T12:30Z"), TaskStatus.SUCCESS, List.of(metadataProcessFile), List.of(), List.of(), List.of(), List.of(), List.of());
 
     @Test
     void testProcessTasks() {
         //Given
-        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(inputMetadataInputStream);
+        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(getClass().getResourceAsStream("/services/metadatas/coreCCMetadata.json"));
+        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/network.uct")).thenReturn(getClass().getResourceAsStream("/services/network.uct"));
+        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/raoResult.json")).thenReturn(getClass().getResourceAsStream("/services/raoResult.json"));
+        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml"))
+            .thenReturn(getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml"))
+            .thenReturn(getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml")); // Must be declared twice as it will be called twice and the first input stream will be closed
 
         //When
         postProcessingService.processTasks(localDate, tasksToPostProcess, logList);
@@ -102,7 +104,8 @@ class PostProcessingServiceTest {
     @Test
     void testProcessTasksMissingOutputs() {
         //Given
-        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(inputMetadataInputStream);
+        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(getClass().getResourceAsStream("/services/metadatas/coreCCMetadata.json"));
+        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml")).thenReturn(getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml"));
 
         //When
         postProcessingService.processTasks(localDate, Set.of(SUCCESS_TASK_CGM_NOT_PRESENT), logList);
@@ -134,7 +137,7 @@ class PostProcessingServiceTest {
     @Test
     void fetchMetadataFromMinio() {
         final Map<TaskDto, ProcessFileDto> metadatas = Map.of(task, metadataProcessFile);
-        when(minioAdapterMock.getFileFromFullPath(anyString())).thenReturn(inputMetadataInputStream);
+        when(minioAdapterMock.getFileFromFullPath(anyString())).thenReturn(getClass().getResourceAsStream("/services/metadatas/coreCCMetadata.json"));
         final PostProcessingService.MetadataExtractedFromMinio metadataExtractedFromMinio = postProcessingService.fetchMetadataFromMinio(metadatas);
         final Map<UUID, CoreCCMetadata> metadataMap = metadataExtractedFromMinio.metadataMap();
         assertEquals(1, metadataMap.size());
