@@ -56,7 +56,8 @@ public class PostProcessingService {
     private final MinioAdapter minioAdapter;
     private final ZipAndUploadService zipAndUploadService;
 
-    private final RaoMetadata raoMetadata = new RaoMetadata();
+    record MetadataExtractedFromMinio(Map<UUID, CoreCCMetadata> metadataMap, RaoMetadata raoMetadata) {
+    }
 
     public PostProcessingService(final MinioAdapter minioAdapter,
                                  final ZipAndUploadService zipAndUploadService) {
@@ -76,7 +77,9 @@ public class PostProcessingService {
         final Map<TaskDto, ProcessFileDto> metadataPerTask = new HashMap<>();
         final Map<TaskDto, ProcessFileDto> raoResultPerTask = new HashMap<>();
         fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask, raoResultPerTask);
-        final Map<UUID, CoreCCMetadata> metadataMap = fetchMetadataFromMinio(metadataPerTask);
+        final MetadataExtractedFromMinio extractedMetadata = fetchMetadataFromMinio(metadataPerTask);
+        final Map<UUID, CoreCCMetadata> metadataMap = extractedMetadata.metadataMap();
+        final RaoMetadata raoMetadata = extractedMetadata.raoMetadata();
 
         // Generate outputs
 
@@ -155,7 +158,7 @@ public class PostProcessingService {
         );
     }
 
-    Map<UUID, CoreCCMetadata> fetchMetadataFromMinio(final Map<TaskDto, ProcessFileDto> metadatas) {
+    MetadataExtractedFromMinio fetchMetadataFromMinio(final Map<TaskDto, ProcessFileDto> metadatas) {
         final Map<UUID, CoreCCMetadata> metadataMap = new HashMap<>();
 
         final Set<String> timeIntervalSet = new HashSet<>();
@@ -201,6 +204,7 @@ public class PostProcessingService {
         }
 
         // Define raoMetadata attributes
+        final RaoMetadata raoMetadata = new RaoMetadata();
         raoMetadata.setStatus(generateOverallStatus(statusSet));
         raoMetadata.setTimeInterval(timeIntervalSet.iterator().next());
         raoMetadata.setRequestReceivedInstant(getFirstInstant(requestReceivedInstantSet));
@@ -211,7 +215,8 @@ public class PostProcessingService {
         raoMetadata.setComputationStartInstant(getFirstInstant(computationStartSet));
         raoMetadata.setComputationEndInstant(getLastInstant(computationEndSet));
         raoMetadata.setRaoRequestInstant(getLastInstant(raoRequestInstantSet));
-        return metadataMap;
+
+        return new MetadataExtractedFromMinio(metadataMap, raoMetadata);
     }
 
     private void extractTaskMetadataInCollections(final UUID taskId, final ProcessFileDto fileDto, final Map<UUID, CoreCCMetadata> metadataMap, final Set<String> timeIntervalSet, final Set<String> raoRequestFilenameSet, final Set<Integer> versionSet, final Set<String> correlationIdSet, final Set<String> statusSet, final Set<String> requestReceivedInstantSet, final Set<String> computationStartSet, final Set<String> computationEndSet, final Set<String> raoRequestInstantSet) {

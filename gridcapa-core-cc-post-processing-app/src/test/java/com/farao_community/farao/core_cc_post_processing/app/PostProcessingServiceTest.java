@@ -135,7 +135,8 @@ class PostProcessingServiceTest {
     void fetchMetadataFromMinio() {
         final Map<TaskDto, ProcessFileDto> metadatas = Map.of(task, metadataProcessFile);
         when(minioAdapterMock.getFileFromFullPath(anyString())).thenReturn(inputMetadataInputStream);
-        final Map<UUID, CoreCCMetadata> metadataMap = postProcessingService.fetchMetadataFromMinio(metadatas);
+        final PostProcessingService.MetadataExtractedFromMinio metadataExtractedFromMinio = postProcessingService.fetchMetadataFromMinio(metadatas);
+        final Map<UUID, CoreCCMetadata> metadataMap = metadataExtractedFromMinio.metadataMap();
         assertEquals(1, metadataMap.size());
 
         final CoreCCMetadata metadata = metadataMap.get(UUID.fromString("00000000-0000-0000-0000-000000000001"));
