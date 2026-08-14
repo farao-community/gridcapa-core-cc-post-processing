@@ -8,7 +8,6 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
-import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
@@ -26,12 +25,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.xml.transform.stream.StreamSource;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,87 +57,79 @@ class ZipAndUploadServiceTest {
     private static final String TARGET_FOLDER = "targetFolder";
 
     @Test
-    void testZipAndUploadLogs() throws IOException {
-        List<byte[]> logList = List.of(fileToByteArray("/services/export/logs1.txt"));
-        zipAndUploadService.zipAndUploadLogs(logList, "logFileName");
+    void zipAndUploadLogsTest() throws IOException {
+        final List<byte[]> logList = List.of(fileToByteArray("/services/export/logs1.txt"));
+        final String instantString = "2023-08-04T12:42:00Z";
+
+        zipAndUploadService.zipAndUploadLogs(TARGET_FOLDER, logList, instantString, 1);
+
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
     }
 
     @Test
-    void testZipAndUploadLogsWhenExceptionThrown() throws IOException {
-        List<byte[]> logList = List.of(fileToByteArray("/services/export/logs1.txt"));
+    void zipAndUploadLogsThrowsExceptionTest() throws IOException {
+        final List<byte[]> logList = List.of(fileToByteArray("/services/export/logs1.txt"));
         doThrow(CoreCCPostProcessingInternalException.class)
-                .when(minioAdapterMock)
-                .uploadOutput(anyString(), any(InputStream.class));
-        Assertions.assertThrows(CoreCCPostProcessingInternalException.class,
-                () -> zipAndUploadService.zipAndUploadLogs(logList, "logFileName"));
+            .when(minioAdapterMock)
+            .uploadOutput(anyString(), any(InputStream.class));
+        final String instantString = "2023-08-04T12:42:00Z";
 
+        Assertions.assertThrows(
+            CoreCCPostProcessingInternalException.class,
+            () -> zipAndUploadService.zipAndUploadLogs(TARGET_FOLDER, logList, instantString, 1)
+        );
     }
-
-    private byte[] fileToByteArray(final String filename) throws IOException {
-        return getClass().getResourceAsStream(filename).readAllBytes();
-    }
-
-    // ------------ CGMES ------------
 
     @Test
-    void testZipValidatedCgmsAndSendToOutputs() {
-        final Map<TaskDto, ProcessFileDto> cgms = new HashMap<>();
-        cgms.put(SUCCESS_TASK, CGM_FILE_DTO);
+    void zipCgmsAndSendToOutputsTest() {
+        final Map<TaskDto, ProcessFileDto> cgms = Map.of(SUCCESS_TASK, CGM_FILE_DTO);
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/network.uct"))
-                .thenReturn(getClass().getResourceAsStream("/services/network.uct"));
-        zipAndUploadService.zipCgmsAndSendToOutputs(TARGET_FOLDER,
-                cgms,
-                LOCAL_DATE,
-                "00000000-0000-0000-0000-000000000000",
-                "2019-01-07T23:00Z/2019-01-08T23:00Z",
-                1);
-        verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
+            .thenReturn(getClass().getResourceAsStream("/services/network.uct"));
+        zipAndUploadService.zipCgmsAndSendToOutputs(
+            TARGET_FOLDER,
+            cgms,
+            LOCAL_DATE,
+            "00000000-0000-0000-0000-000000000000",
+            "2019-01-07T23:00Z/2019-01-08T23:00Z",
+            1
+        );
 
+        verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
         assertFalse(new File("/tmp/cgms_out/2023-08-04").exists());
     }
 
-    // ------------ CNES ------------
     @Test
-    void testZipCnesAndSendToOutputs() {
-        final Map<TaskDto, ProcessFileDto> cnes = new HashMap<>();
-        cnes.put(SUCCESS_TASK, CNE_FILE_DTO);
+    void zipCnesAndSendToOutputsTest() {
+        final Map<TaskDto, ProcessFileDto> cnes = Map.of(SUCCESS_TASK, CNE_FILE_DTO);
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/cne.xml"))
-                .thenReturn(getClass().getResourceAsStream("/services/cne.xml"));
+            .thenReturn(getClass().getResourceAsStream("/services/cne.xml"));
 
-        zipAndUploadService.zipCnesAndSendToOutputs(TARGET_FOLDER,
-                cnes,
-                LOCAL_DATE,
-                1);
+        zipAndUploadService.zipCnesAndSendToOutputs(TARGET_FOLDER, cnes, LOCAL_DATE, 1);
+
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
-
         assertFalse(new File("/tmp/cnes_out/2023-08-04").exists());
     }
 
-    // ------------ RAO_RESULT ------------
     @Test
-    void testZipRaoResultAndSendToOutputs() {
-        final Map<TaskDto, ProcessFileDto> raoResults = new HashMap<>();
-        raoResults.put(SUCCESS_TASK, RAO_RESULT_FILE_DTO);
+    void zipRaoResultAndSendToOutputsTest() {
+        final Map<TaskDto, ProcessFileDto> raoResults = Map.of(SUCCESS_TASK, RAO_RESULT_FILE_DTO);
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/raoResult.json"))
-                .thenReturn(getClass().getResourceAsStream("/services/raoResult.json"));
+            .thenReturn(getClass().getResourceAsStream("/services/raoResult.json"));
 
-        zipAndUploadService.zipRaoResultsAndSendToOutputs(TARGET_FOLDER,
-                raoResults,
-                LOCAL_DATE);
+        zipAndUploadService.zipRaoResultsAndSendToOutputs(TARGET_FOLDER, raoResults, LOCAL_DATE);
+
         verify(minioAdapterMock).uploadOutput(anyString(), any(InputStream.class));
-
         assertFalse(new File("/tmp/raoResults_out/2023-08-04").exists());
     }
 
-    // ------------ UPLOAD ------------
-
     @Test
-    void testUploadF3O3ToMinio() throws JAXBException {
+    void uploadCbcoraToMinioTest() throws JAXBException {
         final ArgumentCaptor<InputStream> inputStreamArgumentCaptor = ArgumentCaptor.forClass(InputStream.class);
         final ArgumentCaptor<String> destinationPathArgumentCaptor = ArgumentCaptor.forClass(String.class);
         final FlowBasedConstraintDocument document = new FlowBasedConstraintDocument();
-        zipAndUploadService.uploadF303ToMinio(document, TARGET_FOLDER, LOCAL_DATE, 1);
+
+        zipAndUploadService.uploadCbcoraToMinio(TARGET_FOLDER, document, LOCAL_DATE, 1);
+
         verify(minioAdapterMock).uploadOutput(destinationPathArgumentCaptor.capture(), inputStreamArgumentCaptor.capture());
         final FlowBasedConstraintDocument parsedDocument = parseInputStreamToObject(inputStreamArgumentCaptor.getValue(), FlowBasedConstraintDocument.class);
         assertEquals("targetFolder/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-B06A01-303_20230804-F303-01.xml", destinationPathArgumentCaptor.getValue());
@@ -148,11 +137,13 @@ class ZipAndUploadServiceTest {
     }
 
     @Test
-    void testUploadF3O5ToMinio() throws JAXBException {
+    void uploadRaoResponseToMinioTest() throws JAXBException {
         final ArgumentCaptor<InputStream> inputStreamArgumentCaptor = ArgumentCaptor.forClass(InputStream.class);
         final ArgumentCaptor<String> destinationPathArgumentCaptor = ArgumentCaptor.forClass(String.class);
         final ResponseMessageType responseMessage = new ResponseMessageType();
-        zipAndUploadService.uploadF305ToMinio(TARGET_FOLDER, responseMessage, LOCAL_DATE, 1);
+
+        zipAndUploadService.uploadRaoResponseToMinio(TARGET_FOLDER, responseMessage, LOCAL_DATE, 1);
+
         verify(minioAdapterMock).uploadOutput(destinationPathArgumentCaptor.capture(), inputStreamArgumentCaptor.capture());
         final ResponseMessageType parsedResponseMessage = parseInputStreamToObjectUsingJaxbElement(inputStreamArgumentCaptor.getValue(), ResponseMessageType.class);
         assertEquals("targetFolder/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-305_20230804-F305-01.xml", destinationPathArgumentCaptor.getValue());
@@ -162,32 +153,29 @@ class ZipAndUploadServiceTest {
     }
 
     @Test
-    void testUploadF341ToMinio() throws IOException {
+    void uploadMetadataToMinioTest() throws IOException {
         final ArgumentCaptor<InputStream> inputStreamArgumentCaptor = ArgumentCaptor.forClass(InputStream.class);
         final ArgumentCaptor<String> destinationPathArgumentCaptor = ArgumentCaptor.forClass(String.class);
-        final byte[] byteArray = new byte[1024];
-        final RaoMetadata raoMetadata = new RaoMetadata();
+        final byte[] byteArray = "Dummy string".getBytes();
         final String instantString = "2023-08-04T12:42:00Z";
-        raoMetadata.setRaoRequestInstant(instantString);
-        raoMetadata.setVersion(1);
-        zipAndUploadService.uploadF341ToMinio(TARGET_FOLDER, byteArray, raoMetadata, 1);
+
+        zipAndUploadService.uploadMetadataToMinio(TARGET_FOLDER, byteArray, instantString, 1);
+
         verify(minioAdapterMock).uploadOutput(destinationPathArgumentCaptor.capture(), inputStreamArgumentCaptor.capture());
-        final byte[] parsedResponseMessage = inputStreamToByteArray(inputStreamArgumentCaptor.getValue());
+        final InputStream inputStream = inputStreamArgumentCaptor.getValue();
+        final byte[] parsedResponseMessage = inputStream.readAllBytes();
         assertEquals("targetFolder/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-341_20230804-F341-01.csv", destinationPathArgumentCaptor.getValue());
         assertArrayEquals(byteArray, parsedResponseMessage);
     }
 
-    private static byte[] inputStreamToByteArray(final InputStream inputStream) throws IOException {
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        final byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            byteArrayOutputStream.write(buffer, 0, bytesRead);
+    // Util methods
+
+    private byte[] fileToByteArray(final String filename) throws IOException {
+        try (final InputStream inputStream = getClass().getResourceAsStream(filename)) {
+            return inputStream.readAllBytes();
         }
-        return byteArrayOutputStream.toByteArray();
     }
 
-    //Parsing of byte array
     private static <T> T parseInputStreamToObject(final InputStream inputStream,
                                                   final Class<T> classRef) throws JAXBException {
         final JAXBContext jaxbContext = JAXBContext.newInstance(classRef);

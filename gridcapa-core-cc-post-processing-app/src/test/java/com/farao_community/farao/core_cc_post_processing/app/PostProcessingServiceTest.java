@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,17 +60,15 @@ class PostProcessingServiceTest {
     private final Set<TaskDto> tasksToPostProcess = Set.of(SUCCESS_TASK);
     private final List<byte[]> logList = new ArrayList<>();
     private final InputStream inputMetadataInputStream = getClass().getResourceAsStream("/services/metadatas/coreCCMetadata.json");
-    InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
+    private final InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
     private final ProcessFileDto metadataProcessFile = new ProcessFileDto("/CORE/CC/coreCCMetadata.json", "METADATA", ProcessFileStatus.VALIDATED, "coreCCMetadata.json", "docId", OffsetDateTime.parse("2019-01-08T12:30Z"));
     private final TaskDto task = new TaskDto(UUID.fromString("00000000-0000-0000-0000-000000000001"), OffsetDateTime.parse("2019-01-08T12:30Z"), TaskStatus.SUCCESS, List.of(metadataProcessFile), List.of(), List.of(), List.of(), List.of(), List.of());
 
     @Test
     void testProcessTasks() {
         //Given
-        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString()))
-                .thenReturn(inputMetadataInputStream);
-        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml"))
-                .thenReturn(inputCracXmlInputStream);
+        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(inputMetadataInputStream);
+        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml")).thenReturn(inputCracXmlInputStream);
 
         //When
         postProcessingService.processTasks(localDate, tasksToPostProcess, logList);
@@ -83,26 +82,27 @@ class PostProcessingServiceTest {
         final Map<TaskDto, ProcessFileDto> expectedCnePerTask = new HashMap<>();
         expectedCnePerTask.put(SUCCESS_TASK, CNE_FILE_DTO);
 
-        verify(zipAndUploadServiceMock)
-                .zipRaoResultsAndSendToOutputs(expectedTargetMinioFolder, expectedRaoResultPerTask, localDate);
-        verify(zipAndUploadServiceMock).uploadF341ToMinio(any(), any(), any(), anyInt());
-        verify(zipAndUploadServiceMock)
-                .zipAndUploadLogs(logList, "RAO_OUTPUTS_DIR/2023-08-04/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-342_20190108-F342-01.zip");
-        verify(zipAndUploadServiceMock)
-                .zipCgmsAndSendToOutputs(expectedTargetMinioFolder, expectedCgmsPerTask, localDate, "00000000-0000-0000-0000-000000000000", "2019-01-07T23:00Z/2019-01-08T23:00Z", 1);
-        verify(zipAndUploadServiceMock)
-                .zipCnesAndSendToOutputs(expectedTargetMinioFolder, expectedCnePerTask, localDate, 1);
-        verify(zipAndUploadServiceMock).uploadF303ToMinio(any(), any(), any(), anyInt());
-        verify(zipAndUploadServiceMock).uploadF305ToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).zipRaoResultsAndSendToOutputs(expectedTargetMinioFolder, expectedRaoResultPerTask, localDate);
+        verify(zipAndUploadServiceMock).uploadMetadataToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).zipAndUploadLogs(any(), eq(logList), any(), anyInt());
+        verify(zipAndUploadServiceMock).zipCgmsAndSendToOutputs(
+            expectedTargetMinioFolder,
+            expectedCgmsPerTask,
+            localDate,
+            "00000000-0000-0000-0000-000000000000",
+            "2019-01-07T23:00Z/2019-01-08T23:00Z",
+            1
+        );
+        verify(zipAndUploadServiceMock).zipCnesAndSendToOutputs(expectedTargetMinioFolder, expectedCnePerTask, localDate, 1);
+        verify(zipAndUploadServiceMock).uploadCbcoraToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).uploadRaoResponseToMinio(any(), any(), any(), anyInt());
     }
 
     @Test
     void testProcessTasksMissingOutputs() {
         //Given
-        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString()))
-                .thenReturn(inputMetadataInputStream);
-        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml"))
-                .thenReturn(inputCracXmlInputStream);
+        when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(inputMetadataInputStream);
+        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml")).thenReturn(inputCracXmlInputStream);
 
         //When
         postProcessingService.processTasks(localDate, Set.of(SUCCESS_TASK_CGM_NOT_PRESENT), logList);
@@ -114,25 +114,27 @@ class PostProcessingServiceTest {
         final Map<TaskDto, ProcessFileDto> expectedCnePerTask = new HashMap<>();
         expectedCnePerTask.put(SUCCESS_TASK_CGM_NOT_PRESENT, CNE_FILE_DTO);
 
-        verify(zipAndUploadServiceMock)
-                .zipRaoResultsAndSendToOutputs(expectedTargetMinioFolder, expectedRaoResultPerTask, localDate);
-        verify(zipAndUploadServiceMock).uploadF341ToMinio(any(), any(), any(), anyInt());
-        verify(zipAndUploadServiceMock)
-                .zipAndUploadLogs(logList, "RAO_OUTPUTS_DIR/2023-08-04/outputs/22XCORESO------S_10V1001C--00236Y_CORE-FB-342_20190108-F342-01.zip");
+        verify(zipAndUploadServiceMock).zipRaoResultsAndSendToOutputs(expectedTargetMinioFolder, expectedRaoResultPerTask, localDate);
+        verify(zipAndUploadServiceMock).uploadMetadataToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).zipAndUploadLogs(any(), eq(logList), any(), anyInt());
         //No cgm persisted
-        verify(zipAndUploadServiceMock)
-                .zipCgmsAndSendToOutputs(expectedTargetMinioFolder, Collections.emptyMap(), localDate, "00000000-0000-0000-0000-000000000000", "2019-01-07T23:00Z/2019-01-08T23:00Z", 1);
-        verify(zipAndUploadServiceMock)
-                .zipCnesAndSendToOutputs(expectedTargetMinioFolder, expectedCnePerTask, localDate, 1);
-        verify(zipAndUploadServiceMock).uploadF303ToMinio(any(), any(), any(), anyInt());
-        verify(zipAndUploadServiceMock).uploadF305ToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).zipCgmsAndSendToOutputs(
+            expectedTargetMinioFolder,
+            Collections.emptyMap(),
+            localDate,
+            "00000000-0000-0000-0000-000000000000",
+            "2019-01-07T23:00Z/2019-01-08T23:00Z",
+            1
+        );
+        verify(zipAndUploadServiceMock).zipCnesAndSendToOutputs(expectedTargetMinioFolder, expectedCnePerTask, localDate, 1);
+        verify(zipAndUploadServiceMock).uploadCbcoraToMinio(any(), any(), any(), anyInt());
+        verify(zipAndUploadServiceMock).uploadRaoResponseToMinio(any(), any(), any(), anyInt());
     }
 
     @Test
     void fetchMetadataFromMinio() {
         final Map<TaskDto, ProcessFileDto> metadatas = Map.of(task, metadataProcessFile);
-        when(minioAdapterMock.getFileFromFullPath(anyString()))
-                .thenReturn(inputMetadataInputStream);
+        when(minioAdapterMock.getFileFromFullPath(anyString())).thenReturn(inputMetadataInputStream);
         final Map<UUID, CoreCCMetadata> metadataMap = postProcessingService.fetchMetadataFromMinio(metadatas);
         assertEquals(1, metadataMap.size());
 

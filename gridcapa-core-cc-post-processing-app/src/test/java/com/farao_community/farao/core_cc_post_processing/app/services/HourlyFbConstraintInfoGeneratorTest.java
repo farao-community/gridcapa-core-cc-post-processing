@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-class HourlyF303InfoGeneratorTest {
+class HourlyFbConstraintInfoGeneratorTest {
 
     private FlowBasedConstraintDocument nativeCrac;
     private final Instant instantStart = Instant.parse("2023-08-21T15:16:00Z");
@@ -81,62 +81,61 @@ class HourlyF303InfoGeneratorTest {
         Mockito.doReturn(raoResultIS).when(minioAdapter).getFileFromFullPath("raoResult.json");
         //crac creation parameters
         final CracCreationParameters cracCreationParameters = JsonCracCreationParameters.read(getClass().getResourceAsStream("/services/crac/cracCreationParameters.json"));
-        HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters);
+        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters);
         final ProcessFileDto processFileDto = new ProcessFileDto("raoResult.json", "", ProcessFileStatus.VALIDATED, "raoResult.json", "docId", OffsetDateTime.now());
         final ProcessFileDto cgmProcessFile = new ProcessFileDto("network.uct", "", ProcessFileStatus.VALIDATED, "network.uct", "docId", OffsetDateTime.now());
         //
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(processFileDto, cgmProcessFile, cracInputStream);
-        checkCriticalBranchesWithTatlPatl(hourlyF303Info);
-        checkComplexVariants(hourlyF303Info);
+        HourlyFbConstraintInfo hourlyFbConstraintInfo = hourlyFbConstraintInfoGenerator.generate(processFileDto, cgmProcessFile, cracInputStream);
+        checkCriticalBranchesWithTatlPatl(hourlyFbConstraintInfo);
+        checkComplexVariants(hourlyFbConstraintInfo);
     }
 
-    private static void checkComplexVariants(HourlyF303Info hourlyF303Info) {
-        assertEquals(1, hourlyF303Info.getComplexVariants().size());
-        assertEquals("CRA_150001", hourlyF303Info.getComplexVariants().get(0).getId());
-        assertEquals(2, hourlyF303Info.getComplexVariants().get(0).getActionsSet().size());
-        assertEquals("open_fr1_fr3", hourlyF303Info.getComplexVariants().get(0).getActionsSet().get(0).getName());
-        assertEquals("pst_be", hourlyF303Info.getComplexVariants().get(0).getActionsSet().get(1).getName());
+    private static void checkComplexVariants(HourlyFbConstraintInfo hourlyFbConstraintInfo) {
+        assertEquals(1, hourlyFbConstraintInfo.getComplexVariants().size());
+        assertEquals("CRA_150001", hourlyFbConstraintInfo.getComplexVariants().get(0).getId());
+        assertEquals(2, hourlyFbConstraintInfo.getComplexVariants().get(0).getActionsSet().size());
+        assertEquals("open_fr1_fr3", hourlyFbConstraintInfo.getComplexVariants().get(0).getActionsSet().get(0).getName());
+        assertEquals("pst_be", hourlyFbConstraintInfo.getComplexVariants().get(0).getActionsSet().get(1).getName());
     }
 
-    private static void checkCriticalBranchesWithTatlPatl(HourlyF303Info hourlyF303Info) {
-        assertEquals(11, hourlyF303Info.getCriticalBranches().size());
-        assertEquals("de2_nl3_N", hourlyF303Info.getCriticalBranches().get(0).getId());
-        assertEquals("fr4_de1_N", hourlyF303Info.getCriticalBranches().get(1).getId());
-        assertEquals("nl2_be3_N", hourlyF303Info.getCriticalBranches().get(2).getId());
-        assertEquals("fr3_fr5_CO1 - DIR_TATL", hourlyF303Info.getCriticalBranches().get(3).getId());
-        assertEquals("fr3_fr5_CO1 - DIR_PATL", hourlyF303Info.getCriticalBranches().get(4).getId());
-        assertEquals("fr1_fr4_CO1_TATL", hourlyF303Info.getCriticalBranches().get(5).getId());
-        assertEquals("fr1_fr4_CO1_PATL", hourlyF303Info.getCriticalBranches().get(6).getId());
-        assertEquals("fr4_de1_CO1_TATL", hourlyF303Info.getCriticalBranches().get(7).getId());
-        assertEquals("fr4_de1_CO1_PATL", hourlyF303Info.getCriticalBranches().get(8).getId());
-        assertEquals("fr3_fr5_CO1 - OPP_TATL", hourlyF303Info.getCriticalBranches().get(9).getId());
-        assertEquals("fr3_fr5_CO1 - OPP_PATL", hourlyF303Info.getCriticalBranches().get(10).getId());
+    private static void checkCriticalBranchesWithTatlPatl(HourlyFbConstraintInfo hourlyFbConstraintInfo) {
+        assertEquals(11, hourlyFbConstraintInfo.getCriticalBranches().size());
+        assertEquals("de2_nl3_N", hourlyFbConstraintInfo.getCriticalBranches().get(0).getId());
+        assertEquals("fr4_de1_N", hourlyFbConstraintInfo.getCriticalBranches().get(1).getId());
+        assertEquals("nl2_be3_N", hourlyFbConstraintInfo.getCriticalBranches().get(2).getId());
+        assertEquals("fr3_fr5_CO1 - DIR_TATL", hourlyFbConstraintInfo.getCriticalBranches().get(3).getId());
+        assertEquals("fr3_fr5_CO1 - DIR_PATL", hourlyFbConstraintInfo.getCriticalBranches().get(4).getId());
+        assertEquals("fr1_fr4_CO1_TATL", hourlyFbConstraintInfo.getCriticalBranches().get(5).getId());
+        assertEquals("fr1_fr4_CO1_PATL", hourlyFbConstraintInfo.getCriticalBranches().get(6).getId());
+        assertEquals("fr4_de1_CO1_TATL", hourlyFbConstraintInfo.getCriticalBranches().get(7).getId());
+        assertEquals("fr4_de1_CO1_PATL", hourlyFbConstraintInfo.getCriticalBranches().get(8).getId());
+        assertEquals("fr3_fr5_CO1 - OPP_TATL", hourlyFbConstraintInfo.getCriticalBranches().get(9).getId());
+        assertEquals("fr3_fr5_CO1 - OPP_PATL", hourlyFbConstraintInfo.getCriticalBranches().get(10).getId());
     }
 
     @Test
     void generateForNullTask() {
-        HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, null, minioAdapter, new CracCreationParameters());
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, null);
-        checkCriticalBranches(hourlyF303Info);
+        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, null, minioAdapter, new CracCreationParameters());
+        HourlyFbConstraintInfo hourlyFbConstraintInfo = hourlyFbConstraintInfoGenerator.generate(null, null, null);
+        checkCriticalBranches(hourlyFbConstraintInfo);
     }
 
     @Test
     void generateForNotSuccessfulTask() {
         taskDto = Utils.ERROR_TASK;
-        HourlyF303InfoGenerator hourlyF303InfoGenerator = new HourlyF303InfoGenerator(nativeCrac, interval, taskDto, minioAdapter, new CracCreationParameters());
-        HourlyF303Info hourlyF303Info = hourlyF303InfoGenerator.generate(null, null, cracInputStream);
-        checkCriticalBranches(hourlyF303Info);
+        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, new CracCreationParameters());
+        HourlyFbConstraintInfo hourlyFbConstraintInfo = hourlyFbConstraintInfoGenerator.generate(null, null, cracInputStream);
+        checkCriticalBranches(hourlyFbConstraintInfo);
     }
 
-    private static void checkCriticalBranches(HourlyF303Info hourlyF303Info) {
-        assertEquals(7, hourlyF303Info.getCriticalBranches().size());
-        assertEquals("fr4_de1_N", hourlyF303Info.getCriticalBranches().get(0).getId());
-        assertEquals("nl2_be3_N", hourlyF303Info.getCriticalBranches().get(1).getId());
-        assertEquals("de2_nl3_N", hourlyF303Info.getCriticalBranches().get(2).getId());
-        assertEquals("fr4_de1_CO1", hourlyF303Info.getCriticalBranches().get(3).getId());
-        assertEquals("fr3_fr5_CO1 - DIR", hourlyF303Info.getCriticalBranches().get(4).getId());
-        assertEquals("fr3_fr5_CO1 - OPP", hourlyF303Info.getCriticalBranches().get(5).getId());
-        assertEquals("fr1_fr4_CO1", hourlyF303Info.getCriticalBranches().get(6).getId());
+    private static void checkCriticalBranches(HourlyFbConstraintInfo hourlyFbConstraintInfo) {
+        assertEquals(7, hourlyFbConstraintInfo.getCriticalBranches().size());
+        assertEquals("fr4_de1_N", hourlyFbConstraintInfo.getCriticalBranches().get(0).getId());
+        assertEquals("nl2_be3_N", hourlyFbConstraintInfo.getCriticalBranches().get(1).getId());
+        assertEquals("de2_nl3_N", hourlyFbConstraintInfo.getCriticalBranches().get(2).getId());
+        assertEquals("fr4_de1_CO1", hourlyFbConstraintInfo.getCriticalBranches().get(3).getId());
+        assertEquals("fr3_fr5_CO1 - DIR", hourlyFbConstraintInfo.getCriticalBranches().get(4).getId());
+        assertEquals("fr3_fr5_CO1 - OPP", hourlyFbConstraintInfo.getCriticalBranches().get(5).getId());
+        assertEquals("fr1_fr4_CO1", hourlyFbConstraintInfo.getCriticalBranches().get(6).getId());
     }
-
 }

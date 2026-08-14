@@ -17,17 +17,17 @@ import java.util.List;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-class HourlyF303Info {
+class HourlyFbConstraintInfo {
 
     private List<CriticalBranchType> criticalBranches;
     private List<IndependantComplexVariant> complexVariants;
 
-    HourlyF303Info(List<CriticalBranchType> criticalBranches) {
+    HourlyFbConstraintInfo(List<CriticalBranchType> criticalBranches) {
         this.criticalBranches = criticalBranches;
         this.complexVariants = new ArrayList<>();
     }
 
-    HourlyF303Info(List<CriticalBranchType> criticalBranches, List<IndependantComplexVariant> complexVariants) {
+    HourlyFbConstraintInfo(List<CriticalBranchType> criticalBranches, List<IndependantComplexVariant> complexVariants) {
         this.criticalBranches = criticalBranches;
         this.complexVariants = complexVariants;
     }

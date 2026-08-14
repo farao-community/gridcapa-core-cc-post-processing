@@ -40,15 +40,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 
 @SpringBootTest
-class DailyF303Generator1Test {
+class DailyFbConstraintGenerator1Test {
 
     /*
-     * test-case initially designed to test the F303 export, with two hours of data, one contingency
+     * test-case initially designed to test the CBCORA export, with two hours of data, one contingency
      * and some elements which are not CNEC and not MNEC
      */
 
     @Autowired
-    private DailyF303Generator dailyF303Generator;
+    private DailyFbConstraintGenerator dailyFbConstraintGenerator;
 
     @MockitoBean
     private MinioAdapter minioAdapter;
@@ -117,7 +117,7 @@ class DailyF303Generator1Test {
     @Test
     void validateMergedFlowBasedCreation() {
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyF303Generator.generate(raoResult, cgms);
+        FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintGenerator.generate(raoResult, cgms);
         assertDocumentProperties(dailyFbConstDocument);
         assertCriticalBranches(dailyFbConstDocument.getCriticalBranches().getCriticalBranch());
         assertComplexVariants(dailyFbConstDocument.getComplexVariants().getComplexVariant());

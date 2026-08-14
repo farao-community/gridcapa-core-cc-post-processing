@@ -72,10 +72,10 @@ class XmlGeneratorTest {
         try (MockedStatic<Instant> mockedStatic = mockStatic(Instant.class, Mockito.CALLS_REAL_METHODS)) {
             mockedStatic.when(Instant::now).thenReturn(mockedInstant);
             // First pass with not existing directory
-            F305XmlGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+            XmlGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
             Utils.assertFilesContentEqual("/services/CGM_XML_Header.xml", generatedXmlHeaderFile.toString(), true);
             // Second pass with already existing directory
-            F305XmlGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+            XmlGenerator.generateCgmXmlHeaderFile(taskDtos, cgmsArchiveTempPath, localDate, correlationId, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
             Utils.assertFilesContentEqual("/services/CGM_XML_Header.xml", generatedXmlHeaderFile.toString(), true);
             // Delete the temporary directory
             FileUtils.deleteDirectory(new File(generatedXmlHeaderFile.getParent()));
@@ -107,7 +107,7 @@ class XmlGeneratorTest {
         Instant mockedInstant = ZonedDateTime.parse("2023-08-04T12:42:42.000Z").toInstant();
         try (MockedStatic<Instant> mockedStatic = mockStatic(Instant.class, Mockito.CALLS_REAL_METHODS)) {
             mockedStatic.when(Instant::now).thenReturn(mockedInstant);
-            final ResponseMessageType raoResponse = F305XmlGenerator.generateRaoResponse(taskDtos, cgmPerTask, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+            final ResponseMessageType raoResponse = XmlGenerator.generateRaoResponse(taskDtos, cgmPerTask, localDate, correlationId, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
             // JSON => OBJECT => JSON to get rid of formatting
             String expectedFileContents = new String(Utils.class.getResourceAsStream("/services/raoResponseMessageType.json").readAllBytes()).replace("\r", "");
             final ObjectMapper mapper = new ObjectMapper();
@@ -131,7 +131,7 @@ class XmlGeneratorTest {
     @Test
     void generateRaoResponseHeader() {
         ResponseMessageType responseMessage = new ResponseMessageType();
-        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateRaoResponseHeader", responseMessage, localDate, correlationId);
+        ReflectionTestUtils.invokeMethod(XmlGenerator.class, "generateRaoResponseHeader", responseMessage, localDate, correlationId);
         HeaderType header = responseMessage.getHeader();
         assertEquals("created", header.getVerb());
         assertEquals("OptimizedRemedialActions", header.getNoun());
@@ -149,7 +149,7 @@ class XmlGeneratorTest {
         initTasksForRaoResponse();
         initMetadataMap();
         initCgmPerTaskMap();
-        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateRaoResponsePayLoad", taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+        ReflectionTestUtils.invokeMethod(XmlGenerator.class, "generateRaoResponsePayLoad", taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
 
         assertEquals(4, payload.getResponseItems().getResponseItem().size());
@@ -174,7 +174,7 @@ class XmlGeneratorTest {
     @Test
     void generateCgmXmlHeaderFileHeader() {
         ResponseMessageType responseMessage = new ResponseMessageType();
-        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateCgmXmlHeaderFileHeader", responseMessage, localDate, correlationId);
+        ReflectionTestUtils.invokeMethod(XmlGenerator.class, "generateCgmXmlHeaderFileHeader", responseMessage, localDate, correlationId);
         HeaderType header = responseMessage.getHeader();
         assertEquals("created", header.getVerb());
         assertEquals("OptimizedCommonGridModel", header.getNoun());
@@ -190,7 +190,7 @@ class XmlGeneratorTest {
     void generateCgmXmlHeaderFilePayLoad() {
         ResponseMessageType responseMessage = new ResponseMessageType();
         initTasksForCgmXmlHeader();
-        ReflectionTestUtils.invokeMethod(F305XmlGenerator.class, "generateCgmXmlHeaderFilePayLoad", taskDtos, responseMessage, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+        ReflectionTestUtils.invokeMethod(XmlGenerator.class, "generateCgmXmlHeaderFilePayLoad", taskDtos, responseMessage, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
         assertEquals(1, payload.getResponseItems().getResponseItem().size());
         ResponseItem responseItem = payload.getResponseItems().getResponseItem().get(0);

@@ -37,15 +37,15 @@ import java.util.Objects;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-class DailyF303Clusterizer {
+class DailyFbConstraintClusterizer {
 
-    private final List<HourlyF303Info> hourlyF303Infos;
+    private final List<HourlyFbConstraintInfo> hourlyFbConstraintInfos;
     private final FlowBasedConstraintDocument flowBasedConstraintDocument;
     private static final int DOCUMENT_VERSION = 1;
     private static final MessageTypeList DOCUMENT_TYPE = MessageTypeList.B_07;
 
     private static final Comparator<CriticalBranchType> CRITICAL_BRANCH_COMPARATOR =
-            Comparator.comparing(DailyF303Clusterizer::getOriginalIdOrId)
+            Comparator.comparing(DailyFbConstraintClusterizer::getOriginalIdOrId)
                     .thenComparing((CriticalBranchType cb) -> getStartTime(cb.getTimeInterval()))
                     .thenComparing((CriticalBranchType cb) -> getEndTime(cb.getTimeInterval()));
 
@@ -54,8 +54,8 @@ class DailyF303Clusterizer {
                     .thenComparing((IndependantComplexVariant icv) -> getStartTime(icv.getTimeInterval()))
                     .thenComparing((IndependantComplexVariant icv) -> getEndTime(icv.getTimeInterval()));
 
-    DailyF303Clusterizer(List<HourlyF303Info> hourlyF303Infos, FlowBasedConstraintDocument flowBasedConstraintDocument) {
-        this.hourlyF303Infos = hourlyF303Infos;
+    DailyFbConstraintClusterizer(List<HourlyFbConstraintInfo> hourlyFbConstraintInfos, FlowBasedConstraintDocument flowBasedConstraintDocument) {
+        this.hourlyFbConstraintInfos = hourlyFbConstraintInfos;
         this.flowBasedConstraintDocument = flowBasedConstraintDocument;
     }
 
@@ -72,7 +72,7 @@ class DailyF303Clusterizer {
 
     private List<IndependantComplexVariant> getComplexVariants() {
         List<IndependantComplexVariant> independentComplexVariants = new ArrayList<>();
-        for (HourlyF303Info hourlyInfos : hourlyF303Infos) {
+        for (HourlyFbConstraintInfo hourlyInfos : hourlyFbConstraintInfos) {
             independentComplexVariants.addAll(hourlyInfos.getComplexVariants());
         }
 
@@ -152,13 +152,13 @@ class DailyF303Clusterizer {
             return false;
         }
 
-        // Check that the branch has not changed between the two timestamps (can occur if it was initially duplicated in the F301)
+        // Check that the branch has not changed between the two timestamps (can occur if it was initially duplicated in the input CBCORA (F301))
         return areCriticalBranchesEquivalent(headBranch, tailBranch);
     }
 
     private Map<String, List<CriticalBranchType>> arrangeCriticalBranchesById() {
         Map<String, List<CriticalBranchType>> criticalBranchesById = new HashMap<>();
-        for (HourlyF303Info hourlyInfos : hourlyF303Infos) {
+        for (HourlyFbConstraintInfo hourlyInfos : hourlyFbConstraintInfos) {
             for (CriticalBranchType cb : hourlyInfos.getCriticalBranches()) {
                 String cbId = cb.getId();
                 if (criticalBranchesById.containsKey(cbId)) {

@@ -46,22 +46,22 @@ import java.util.UUID;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 @Service
-public final class F305XmlGenerator {
-    public static final String F299_PATH = "%s-%s-F299v%s";
-    public static final String F303_PATH = "%s-%s-F303v%s";
-    public static final String F304_PATH = "%s-%s-F304v%s";
-    public static final String OPTIMIZED_CGM = "OPTIMIZED_CGM";
-    public static final String OPTIMIZED_CB = "OPTIMIZED_CB";
-    public static final String RAO_REPORT = "RAO_REPORT";
-    public static final String CGM = "CGM";
-    public static final String FILENAME = "fileName://";
-    public static final String DOCUMENT_IDENTIFICATION = "documentIdentification://";
-    public static final String SENDER_ID = "22XCORESO------S";
-    public static final String RECEIVER_ID = "17XTSO-CS------W";
-    public static final String INTERNAL_EXCEPTION = "500-InternalException";
-    public static final String NO_OUTPUT_AVAILABLE = "No output available";
+public final class XmlGenerator {
+    private static final String F299_PATH = "%s-%s-F299v%s";
+    private static final String F303_PATH = "%s-%s-F303v%s";
+    private static final String F304_PATH = "%s-%s-F304v%s";
+    private static final String OPTIMIZED_CGM = "OPTIMIZED_CGM";
+    private static final String OPTIMIZED_CB = "OPTIMIZED_CB";
+    private static final String RAO_REPORT = "RAO_REPORT";
+    private static final String CGM = "CGM";
+    private static final String FILENAME = "fileName://";
+    private static final String DOCUMENT_IDENTIFICATION = "documentIdentification://";
+    private static final String SENDER_ID = "22XCORESO------S";
+    private static final String RECEIVER_ID = "17XTSO-CS------W";
+    private static final String INTERNAL_EXCEPTION = "500-InternalException";
+    private static final String NO_OUTPUT_AVAILABLE = "No output available";
 
-    private F305XmlGenerator() {
+    private XmlGenerator() {
     }
 
     public static ResponseMessageType generateRaoResponse(Set<TaskDto> taskDtos, Map<TaskDto, ProcessFileDto> cgmPerTask, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
@@ -71,7 +71,7 @@ public final class F305XmlGenerator {
             generateRaoResponsePayLoad(taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, timeInterval);
             return responseMessage;
         } catch (Exception e) {
-            throw new CoreCCPostProcessingInternalException("Error occurred during F305 file creation", e);
+            throw new CoreCCPostProcessingInternalException("Error occurred during RaoResponse file creation", e);
         }
     }
 
@@ -202,7 +202,7 @@ public final class F305XmlGenerator {
                 com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
 
                 file.setCode(CGM);
-                file.setUrl(FILENAME + NamingRules.generateUctFileName(instant.toString(), 1));
+                file.setUrl(FILENAME + NamingRules.generateCgmFilename(instant.toString(), 1));
                 files.getFile().add(file);
                 responseItem.setFiles(files);
             }
