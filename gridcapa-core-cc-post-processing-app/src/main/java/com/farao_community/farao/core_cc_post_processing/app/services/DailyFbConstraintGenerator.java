@@ -74,7 +74,10 @@ public class DailyFbConstraintGenerator {
                         hourlyFbConstraintInfos.add(new HourlyFbConstraintInfoGenerator(flowBasedConstraintDocument, interval, taskDto, minioAdapter, cracCreationParameters)
                                 .generate(raoResults.get(taskDto), cgms.get(taskDto), tempCracXmlInputStream));
                     } catch (final IOException e) {
-                        throw new CoreCCPostProcessingInternalException("Exception occurred during CBCORA file creation", e);
+                        throw new CoreCCPostProcessingInternalException(
+                            String.format("Exception occurred while reading hourly data for timestamp %s", taskDto.getTimestamp()),
+                            e
+                        );
                     }
                 } else {
                     LOGGER.warn(String.format("Cannot find taskDto for interval %s", interval));

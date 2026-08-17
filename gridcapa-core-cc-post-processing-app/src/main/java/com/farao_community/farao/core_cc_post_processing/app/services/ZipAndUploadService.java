@@ -71,7 +71,7 @@ public class ZipAndUploadService {
                                         final String timeInterval,
                                         final int version) {
         final String zipTmpDir = TMP + "cgms_out/" + businessDate.toString() + "/";
-        XmlGenerator.generateCgmXmlHeaderFile(cgms.keySet(), zipTmpDir, businessDate, correlationId, timeInterval);
+        CgmHeaderXmlGenerator.generateCgmXmlHeaderFile(cgms.keySet(), zipTmpDir, businessDate, correlationId, timeInterval);
         copyFilesToTmpDir(cgms.values(), zipTmpDir, "CGM");
 
         final byte[] zipResult = ZipUtil.zipDirectory(zipTmpDir);
@@ -126,15 +126,17 @@ public class ZipAndUploadService {
     private void copyFilesToTmpDir(final Collection<ProcessFileDto> fileDtos,
                                    final String tmpDir,
                                    final String filetype) {
-        fileDtos.forEach(fileDto -> {
-            try (final InputStream inputStream = minioAdapter.getFileFromFullPath(fileDto.getFilePath())) {
-                final File file = new File(tmpDir + fileDto.getFilename());
-                FileUtils.copyInputStreamToFile(inputStream, file);
-            } catch (final IOException e) {
-                final String errorMessage = String.format("Exception occurred while copying %s %s to tmp folder", filetype, fileDto.getFilename());
-                throw new CoreCCPostProcessingInternalException(errorMessage, e);
-            }
-        });
+        fileDtos.forEach(fileDto -> copyFileToTmpDir(tmpDir, filetype, fileDto));
+    }
+
+    private void copyFileToTmpDir(final String tmpDir, final String filetype, final ProcessFileDto fileDto) {
+        try (final InputStream inputStream = minioAdapter.getFileFromFullPath(fileDto.getFilePath())) {
+            final File file = new File(tmpDir + fileDto.getFilename());
+            FileUtils.copyInputStreamToFile(inputStream, file);
+        } catch (final IOException e) {
+            final String errorMessage = String.format("Exception occurred while copying %s %s to tmp folder", filetype, fileDto.getFilename());
+            throw new CoreCCPostProcessingInternalException(errorMessage, e);
+        }
     }
 
     // --------- SIMPLE UPLOAD ---------

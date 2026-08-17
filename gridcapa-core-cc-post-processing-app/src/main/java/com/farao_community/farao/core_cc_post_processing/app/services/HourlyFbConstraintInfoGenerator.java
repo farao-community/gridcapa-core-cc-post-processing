@@ -57,8 +57,8 @@ import java.util.stream.Collectors;
  */
 class HourlyFbConstraintInfoGenerator {
 
-    private static final String TATL = "_TATL";
-    private static final String PATL = "_PATL";
+    private static final String TATL_SUFFIX = "_TATL";
+    private static final String PATL_SUFFIX = "_PATL";
 
     private final FlowBasedConstraintDocument flowBasedConstraintDocument;
     private final Interval interval;
@@ -143,14 +143,14 @@ class HourlyFbConstraintInfoGenerator {
 
                     CriticalBranchType tatlCb = (CriticalBranchType) refCb.clone();
                     tatlCb.setTimeInterval(ti);
-                    tatlCb.setId(refCb.getId() + TATL);
+                    tatlCb.setId(refCb.getId() + TATL_SUFFIX);
                     tatlCb.setOriginalId(refCb.getId());
                     setTemporaryLimit(tatlCb);
                     criticalBranches.add(tatlCb);
 
                     CriticalBranchType patlCb = (CriticalBranchType) refCb.clone();
                     patlCb.setTimeInterval(ti);
-                    patlCb.setId(refCb.getId() + PATL);
+                    patlCb.setId(refCb.getId() + PATL_SUFFIX);
                     patlCb.setOriginalId(refCb.getId());
                     patlCb.setComplexVariantId(statesWithCrac.get(cracCreationContext.getCrac().getState(refCb.getOutage().getId(), cracCreationContext.getCrac().getLastInstant())));
                     setPermanentLimit(patlCb);

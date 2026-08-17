@@ -10,7 +10,7 @@ import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPos
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
 import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMetadataGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyFbConstraintGenerator;
-import com.farao_community.farao.core_cc_post_processing.app.services.XmlGenerator;
+import com.farao_community.farao.core_cc_post_processing.app.services.RaoResponseXmlGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.ZipAndUploadService;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -97,7 +98,7 @@ public class PostProcessingService {
         zipAndUploadService.zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId(), raoMetadata.getTimeInterval(), outputFileVersion);
 
         // F305 : RaoResponse files
-        final ResponseMessageType responseMessage = XmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval());
+        final ResponseMessageType responseMessage = RaoResponseXmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval());
         zipAndUploadService.uploadRaoResponseToMinio(outputsTargetMinioFolder, responseMessage, localDate, outputFileVersion);
 
         // -- F341 : Metadata files
@@ -231,15 +232,12 @@ public class PostProcessingService {
             statusSet.add(coreCCMetadata.getStatus());
             requestReceivedInstantSet.add(coreCCMetadata.getRequestReceivedInstant());
             // The following metadata can be null
-            if (coreCCMetadata.getComputationStart() != null) {
-                computationStartSet.add(coreCCMetadata.getComputationStart());
-            }
-            if (coreCCMetadata.getComputationEnd() != null) {
-                computationEndSet.add(coreCCMetadata.getComputationEnd());
-            }
-            if (coreCCMetadata.getRaoRequestInstant() != null) {
-                raoRequestInstantSet.add(coreCCMetadata.getRaoRequestInstant());
-            }
+            Optional.ofNullable(coreCCMetadata.getComputationStart())
+                .ifPresent(computationStartSet::add);
+            Optional.ofNullable(coreCCMetadata.getComputationEnd())
+                .ifPresent(computationEndSet::add);
+            Optional.ofNullable(coreCCMetadata.getRaoRequestInstant())
+                .ifPresent(raoRequestInstantSet::add);
         } catch (IOException e) {
             throw new CoreCCPostProcessingInternalException("Exception occurred while fetching individual metadata", e);
         }
