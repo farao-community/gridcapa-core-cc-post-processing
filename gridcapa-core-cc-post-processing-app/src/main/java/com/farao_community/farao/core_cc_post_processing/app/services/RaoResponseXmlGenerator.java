@@ -14,23 +14,16 @@ import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_respons
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseItems;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
-import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
-import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
+
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -46,22 +39,20 @@ import java.util.UUID;
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
 @Service
-public final class F305XmlGenerator {
-    public static final String F299_PATH = "%s-%s-F299v%s";
-    public static final String F303_PATH = "%s-%s-F303v%s";
-    public static final String F304_PATH = "%s-%s-F304v%s";
-    public static final String OPTIMIZED_CGM = "OPTIMIZED_CGM";
-    public static final String OPTIMIZED_CB = "OPTIMIZED_CB";
-    public static final String RAO_REPORT = "RAO_REPORT";
-    public static final String CGM = "CGM";
-    public static final String FILENAME = "fileName://";
-    public static final String DOCUMENT_IDENTIFICATION = "documentIdentification://";
-    public static final String SENDER_ID = "22XCORESO------S";
-    public static final String RECEIVER_ID = "17XTSO-CS------W";
-    public static final String INTERNAL_EXCEPTION = "500-InternalException";
-    public static final String NO_OUTPUT_AVAILABLE = "No output available";
+public final class RaoResponseXmlGenerator {
+    private static final String F299_PATH = "%s-%s-F299v%s";
+    private static final String F303_PATH = "%s-%s-F303v%s";
+    private static final String F304_PATH = "%s-%s-F304v%s";
+    private static final String OPTIMIZED_CGM = "OPTIMIZED_CGM";
+    private static final String OPTIMIZED_CB = "OPTIMIZED_CB";
+    private static final String RAO_REPORT = "RAO_REPORT";
+    private static final String DOCUMENT_IDENTIFICATION = "documentIdentification://";
+    private static final String SENDER_ID = "22XCORESO------S";
+    private static final String RECEIVER_ID = "17XTSO-CS------W";
+    private static final String INTERNAL_EXCEPTION = "500-InternalException";
+    private static final String NO_OUTPUT_AVAILABLE = "No output available";
 
-    private F305XmlGenerator() {
+    private RaoResponseXmlGenerator() {
     }
 
     public static ResponseMessageType generateRaoResponse(Set<TaskDto> taskDtos, Map<TaskDto, ProcessFileDto> cgmPerTask, LocalDate localDate, String correlationId, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
@@ -71,18 +62,7 @@ public final class F305XmlGenerator {
             generateRaoResponsePayLoad(taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, timeInterval);
             return responseMessage;
         } catch (Exception e) {
-            throw new CoreCCPostProcessingInternalException("Error occurred during F305 file creation", e);
-        }
-    }
-
-    public static void generateCgmXmlHeaderFile(Set<TaskDto> taskDtos, String cgmsTempDirPath, LocalDate localDate, String correlationId, String timeInterval) {
-        try {
-            ResponseMessageType responseMessage = new ResponseMessageType();
-            generateCgmXmlHeaderFileHeader(responseMessage, localDate, correlationId);
-            generateCgmXmlHeaderFilePayLoad(taskDtos, responseMessage, timeInterval);
-            exportCgmXmlHeaderFile(responseMessage, cgmsTempDirPath);
-        } catch (Exception e) {
-            throw new CoreCCPostProcessingInternalException("Error occurred during CGM_XML_HEADER creation", e);
+            throw new CoreCCPostProcessingInternalException("Error occurred during RAO response file creation", e);
         }
     }
 
@@ -102,24 +82,6 @@ public final class F305XmlGenerator {
         responseMessage.setHeader(header);
     }
 
-    private static void generateCgmXmlHeaderFileHeader(ResponseMessageType responseMessage, LocalDate localDate, String correlationId) throws DatatypeConfigurationException {
-        HeaderType header = new HeaderType();
-        header.setVerb("created");
-        header.setNoun("OptimizedCommonGridModel");
-        header.setContext("PRODUCTION");
-        header.setRevision(String.valueOf(1));
-        header.setSource(SENDER_ID);
-        header.setReplyAddress(RECEIVER_ID);
-        header.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(Instant.now().toString()));
-        header.setCorrelationID(correlationId);
-
-        //need to save this MessageID and reuse in rao response
-        String outputCgmXmlHeaderMessageId = String.format(F304_PATH, SENDER_ID, IntervalUtil.getFormattedBusinessDay(localDate), 1);
-        header.setMessageID(outputCgmXmlHeaderMessageId);
-
-        responseMessage.setHeader(header);
-    }
-
     private static void generateRaoResponsePayLoad(Set<TaskDto> taskDtos, Map<TaskDto, ProcessFileDto> cgmPerTask, ResponseMessageType responseMessage, LocalDate localDate, Map<UUID, CoreCCMetadata> metadataMap, String timeInterval) {
         ResponseItems responseItems = new ResponseItems();
         responseItems.setTimeInterval(timeInterval);
@@ -135,7 +97,7 @@ public final class F305XmlGenerator {
                     if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
                         if (!metadataMap.containsKey(taskDto.getId())) {
                             fillFailedHours(responseItem, INTERNAL_EXCEPTION, NO_OUTPUT_AVAILABLE, true);
-                        } else if (StringUtils.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
+                        } else if (Strings.CS.equals(metadataMap.get(taskDto.getId()).getErrorMessage(), "Missing raoRequest")) {
                             // Do not generate a responseItem : raoRequest was not defined for this timestamp
                             includeResponseItem = false;
                         } else if (!cgmPerTask.containsKey(taskDto)) {
@@ -176,53 +138,6 @@ public final class F305XmlGenerator {
         responseMessage.setPayload(payload);
     }
 
-    static void generateCgmXmlHeaderFilePayLoad(Set<TaskDto> taskDtos, ResponseMessageType responseMessage, String timeInterval) {
-        ResponseItems responseItems = new ResponseItems();
-        responseItems.setTimeInterval(timeInterval);
-
-        String[] splitTimeInterval = timeInterval.split("/");
-        Instant start = parseInstantWithoutSeconds(splitTimeInterval[0]);
-        Instant end = parseInstantWithoutSeconds(splitTimeInterval[1]);
-
-        for (Instant instant = start; instant.isBefore(end); instant = instant.plus(1, ChronoUnit.HOURS)) {
-            Interval hourInterval = Interval.of(instant, instant.plus(1, ChronoUnit.HOURS));
-            TaskDto taskDto = taskDtos.stream()
-                    .filter(task -> hourInterval.contains(task.getTimestamp().toInstant()))
-                    .findAny()
-                    .orElse(null);
-            ResponseItem responseItem = new ResponseItem();
-            //set time interval
-            responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(hourInterval));
-
-            if (taskDto == null) {
-                fillMissingCgmOutput(responseItem);
-            } else if (taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
-                //set file
-                com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files files = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.Files();
-                com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File file = new com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.File();
-
-                file.setCode(CGM);
-                file.setUrl(FILENAME + NamingRules.generateUctFileName(instant.toString(), 1));
-                files.getFile().add(file);
-                responseItem.setFiles(files);
-            }
-            responseItems.getResponseItem().add(responseItem);
-        }
-        PayloadType payload = new PayloadType();
-        payload.setResponseItems(responseItems);
-        responseMessage.setPayload(payload);
-    }
-
-    private static Instant parseInstantWithoutSeconds(String instant) {
-        return Instant.parse(instant.replace(":00Z", ":00:00Z"));
-    }
-
-    private static void fillMissingCgmOutput(final ResponseItem responseItem) {
-        final ErrorType error = new ErrorType();
-        error.setCode("CGM");
-        responseItem.setError(error);
-    }
-
     private static void fillFailedHours(ResponseItem responseItem, String errorCode, String errorMessage, boolean withFatalLevel) {
         ErrorType error = new ErrorType();
         error.setCode(errorCode);
@@ -231,23 +146,5 @@ public final class F305XmlGenerator {
         }
         error.setReason(errorMessage);
         responseItem.setError(error);
-    }
-
-    private static void exportCgmXmlHeaderFile(ResponseMessageType responseMessage, String cgmsArchiveTempPath) {
-        try {
-            byte[] responseMessageBytes = JaxbUtil.marshallMessageAndSetJaxbProperties(responseMessage);
-            File targetFile = new File(cgmsArchiveTempPath, NamingRules.CGM_XML_HEADER_FILENAME); //NOSONAR
-
-            if (!Files.exists(targetFile.getParentFile().toPath())) {
-                targetFile.getParentFile().mkdirs();
-            }
-
-            try (InputStream raoResponseIs = new ByteArrayInputStream(responseMessageBytes)) {
-                Files.copy(raoResponseIs, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            }
-
-        } catch (IOException e) {
-            throw new CoreCCPostProcessingInternalException("Exception occurred during CGM_XML_HEADER Response export.", e);
-        }
     }
 }

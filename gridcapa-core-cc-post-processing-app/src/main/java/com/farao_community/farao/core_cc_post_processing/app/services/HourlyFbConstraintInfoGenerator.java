@@ -55,10 +55,10 @@ import java.util.stream.Collectors;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-class HourlyF303InfoGenerator {
+class HourlyFbConstraintInfoGenerator {
 
-    private static final String TATL = "_TATL";
-    private static final String PATL = "_PATL";
+    private static final String TATL_SUFFIX = "_TATL";
+    private static final String PATL_SUFFIX = "_PATL";
 
     private final FlowBasedConstraintDocument flowBasedConstraintDocument;
     private final Interval interval;
@@ -66,7 +66,7 @@ class HourlyF303InfoGenerator {
     private final MinioAdapter minioAdapter;
     private final CracCreationParameters cracCreationParameters;
 
-    HourlyF303InfoGenerator(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter, CracCreationParameters cracCreationParameters) {
+    HourlyFbConstraintInfoGenerator(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter, CracCreationParameters cracCreationParameters) {
         this.flowBasedConstraintDocument = flowBasedConstraintDocument;
         this.interval = interval;
         this.taskDto = taskDto;
@@ -74,7 +74,7 @@ class HourlyF303InfoGenerator {
         this.cracCreationParameters = cracCreationParameters;
     }
 
-    HourlyF303Info generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
+    HourlyFbConstraintInfo generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
         if (taskDto == null || !taskDto.getStatus().equals(TaskStatus.SUCCESS)) {
             return getInfoForNonRequestedOrFailedInterval();
         }
@@ -84,7 +84,7 @@ class HourlyF303InfoGenerator {
         return getInfoForSuccessfulInterval(raoResultProcessFile, cgmProcessFile, cracInputStream);
     }
 
-    private HourlyF303Info getInfoForNonRequestedOrFailedInterval() {
+    private HourlyFbConstraintInfo getInfoForNonRequestedOrFailedInterval() {
         OffsetDateTime startTime = OffsetDateTime.ofInstant(interval.getStart(), ZoneOffset.UTC);
         List<CriticalBranchType> criticalBranches = new ArrayList<>();
         TimeIntervalType ti = new TimeIntervalType();
@@ -99,10 +99,10 @@ class HourlyF303InfoGenerator {
                     criticalBranches.add(clonedCb);
                 });
 
-        return new HourlyF303Info(criticalBranches);
+        return new HourlyFbConstraintInfo(criticalBranches);
     }
 
-    private HourlyF303Info getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
+    private HourlyFbConstraintInfo getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
         Network network = getNetworkOfTaskDto(cgmProcessFile);
         cracCreationParameters.addExtension(FbConstraintCracCreationParameters.class, new FbConstraintCracCreationParameters());
         cracCreationParameters.getExtension(FbConstraintCracCreationParameters.class).setTimestamp(taskDto.getTimestamp());
@@ -114,7 +114,7 @@ class HourlyF303InfoGenerator {
         List<CriticalBranchType> criticalBranches = getCriticalBranchesOfSuccessfulInterval(cracCreationContext, statesWithCra);
         List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval(cracCreationContext, raoResult, statesWithCra);
 
-        return new HourlyF303Info(criticalBranches, complexVariants);
+        return new HourlyFbConstraintInfo(criticalBranches, complexVariants);
     }
 
     private List<CriticalBranchType> getCriticalBranchesOfSuccessfulInterval(FbConstraintCreationContext cracCreationContext, Map<State, String> statesWithCrac) {
@@ -143,14 +143,14 @@ class HourlyF303InfoGenerator {
 
                     CriticalBranchType tatlCb = (CriticalBranchType) refCb.clone();
                     tatlCb.setTimeInterval(ti);
-                    tatlCb.setId(refCb.getId() + TATL);
+                    tatlCb.setId(refCb.getId() + TATL_SUFFIX);
                     tatlCb.setOriginalId(refCb.getId());
                     setTemporaryLimit(tatlCb);
                     criticalBranches.add(tatlCb);
 
                     CriticalBranchType patlCb = (CriticalBranchType) refCb.clone();
                     patlCb.setTimeInterval(ti);
-                    patlCb.setId(refCb.getId() + PATL);
+                    patlCb.setId(refCb.getId() + PATL_SUFFIX);
                     patlCb.setOriginalId(refCb.getId());
                     patlCb.setComplexVariantId(statesWithCrac.get(cracCreationContext.getCrac().getState(refCb.getOutage().getId(), cracCreationContext.getCrac().getLastInstant())));
                     setPermanentLimit(patlCb);

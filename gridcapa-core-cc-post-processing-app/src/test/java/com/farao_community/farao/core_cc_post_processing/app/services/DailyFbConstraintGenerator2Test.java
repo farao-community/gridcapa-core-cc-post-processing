@@ -20,7 +20,6 @@ import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.IndependantComplexVaria
 import jakarta.xml.bind.JAXBElement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -41,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -49,16 +49,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Thomas Bouquet {@literal  <thomas.bouquet at rte-france.com>}
  */
 @SpringBootTest
-class DailyF303Generator2Test {
+class DailyFbConstraintGenerator2Test {
 
     /*
-     * second test-case to test the F303 export, with four hours of data, several contingencies,
-     * critical branches with varying parameters other time in the F301, and some invalid
+     * second test-case to test the CBCORA export, with four hours of data, several contingencies,
+     * critical branches with varying parameters other time in the input CBCORA (F301), and some invalid
      * elements in the F301 which are not imported
      */
 
     @Autowired
-    private DailyF303Generator dailyFbConstraintDocumentGenerator;
+    private DailyFbConstraintGenerator dailyFbConstraintDocumentGenerator;
     @MockitoBean
     private MinioAdapter minioAdapter;
     private final Set<TaskDto> taskDtos = new HashSet<>();
@@ -90,7 +90,7 @@ class DailyF303Generator2Test {
 
         // "store" crac xml in dataBase
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream(bDir + iDir + ts + "_F301-crac.xml");
-        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath(inputCracXmlFileUrl);
+        doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath(inputCracXmlFileUrl);
 
         // set results
         /*
@@ -127,11 +127,11 @@ class DailyF303Generator2Test {
 
             // "store" network in dataBase
             InputStream networkInputStream = getClass().getResourceAsStream(bDir + iDir + hFile + "_network.uct");
-            Mockito.doReturn(networkInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network" + hFile + ".uct");
+            doReturn(networkInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network" + hFile + ".uct");
 
             // "store" raoResult in dataBase
             InputStream raoResultInputStream = getClass().getResourceAsStream(bDir + oDir + hFile + "_raoResult.json");
-            Mockito.doReturn(raoResultInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult" + hFile + ".json");
+            doReturn(raoResultInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult" + hFile + ".json");
 
             // add task
             final TaskDto taskDto = new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgmProcessFile, raoResultProcessFile), List.of(), List.of(), List.of(), List.of());
@@ -151,7 +151,7 @@ class DailyF303Generator2Test {
     }
 
     @Test
-    void testF303Generation() {
+    void fbConstraintGenerationTest() {
         assertEquals(24, taskDtos.size());
         FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintDocumentGenerator.generate(raoResult, cgms);
 
@@ -161,7 +161,7 @@ class DailyF303Generator2Test {
         Collection<CriticalBranchType> cb007 = criticalBranches.get("007_DE-NL [CO1][DIR]");
         String varId1213Co2 = getCriticalBranch(criticalBranches.values(), "017_FR12-FR32 [CO2][DIR]_PATL", "2019-01-08T12:00Z/2019-01-08T13:00Z").getComplexVariantId();
 
-        // the initial f301 file contains 22 critical branches, so is the f303 file
+        // the input CBCORA (F301) file contains 22 critical branches, so does the exported CBCORA (F303) file
         assertEquals(23, criticalBranches.keySet().size());
 
         // check that critical branches on N state, with a fixed definition, are the same for the 24hours
@@ -172,7 +172,7 @@ class DailyF303Generator2Test {
 
         // check that the invalid critical branches has been removed of the optimized hours
 
-        // 02/02/2022 -> change in F303 export, invalid elements are now exported for all time-stamps
+        // 02/02/2022 -> change in CBCORA export, invalid elements are now exported for all time-stamps
         assertEquals(1, criticalBranches.get("022_NEVER_VALID").size());
         assertTrue(criticalBranches.get("022_NEVER_VALID").stream().anyMatch(cb -> cb.getTimeInterval().getV().equals("2019-01-08T11:00Z/2019-01-08T15:00Z")));
 
@@ -234,7 +234,7 @@ class DailyF303Generator2Test {
         Collection<CriticalBranchType> cb002 = criticalBranches.get("002_FR-DE [N][OPP]");
         assertEquals(2, cb002.size());
 
-        // same definition as in the f301
+        // same definition as in the input CBCORA (F301)
         CriticalBranchType pureMnec = getCriticalBranch(cb002, "002_FR-DE [N][OPP]", "2019-01-08T11:00Z/2019-01-08T13:00Z");
         CriticalBranchType cnecAndMnec = getCriticalBranch(cb002, "002_FR-DE [N][OPP]", "2019-01-08T13:00Z/2019-01-08T15:00Z");
         assertNotNull(pureMnec);

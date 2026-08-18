@@ -16,7 +16,6 @@ import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocu
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.IndependantComplexVariant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -32,6 +31,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * @author Pengbo Wang {@literal <pengbo.wang at rte-international.com>}
@@ -40,15 +40,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 
 @SpringBootTest
-class DailyF303Generator1Test {
+class DailyFbConstraintGenerator1Test {
 
     /*
-     * test-case initially designed to test the F303 export, with two hours of data, one contingency
+     * test-case initially designed to test the CBCORA export, with two hours of data, one contingency
      * and some elements which are not CNEC and not MNEC
      */
 
     @Autowired
-    private DailyF303Generator dailyF303Generator;
+    private DailyFbConstraintGenerator dailyFbConstraintGenerator;
 
     @MockitoBean
     private MinioAdapter minioAdapter;
@@ -59,19 +59,19 @@ class DailyF303Generator1Test {
     @BeforeEach
     void setUp() {
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
-        Mockito.doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputCracXml.xml");
+        doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputCracXml.xml");
 
         InputStream network1InputStream = getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1230.xiidm");
-        Mockito.doReturn(network1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network1.xiidm");
+        doReturn(network1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network1.xiidm");
 
         InputStream raoResult1InputStream = getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1230/raoResult.json");
-        Mockito.doReturn(raoResult1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult1.json");
+        doReturn(raoResult1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult1.json");
 
         InputStream network2InputStream = getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1330.xiidm");
-        Mockito.doReturn(network2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network2.xiidm");
+        doReturn(network2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network2.xiidm");
 
         InputStream raoResult2InputStream = getClass().getResourceAsStream("/services/f303-1/hourly_rao_results/20190108_1330/raoResult.json");
-        Mockito.doReturn(raoResult2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult2.json");
+        doReturn(raoResult2InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/raoResult2.json");
 
         String timeStampBegin = "2019-01-07T23:00Z";
 
@@ -117,7 +117,7 @@ class DailyF303Generator1Test {
     @Test
     void validateMergedFlowBasedCreation() {
         assertEquals(24, taskDtos.size());
-        FlowBasedConstraintDocument dailyFbConstDocument = dailyF303Generator.generate(raoResult, cgms);
+        FlowBasedConstraintDocument dailyFbConstDocument = dailyFbConstraintGenerator.generate(raoResult, cgms);
         assertDocumentProperties(dailyFbConstDocument);
         assertCriticalBranches(dailyFbConstDocument.getCriticalBranches().getCriticalBranch());
         assertComplexVariants(dailyFbConstDocument.getComplexVariants().getComplexVariant());
