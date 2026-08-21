@@ -71,14 +71,14 @@ class RaoResponseXmlGeneratorTest {
     }
 
     private void initTasksForRaoResponse() {
-        taskDtos = Set.of(Utils.ERROR_TASK, Utils.RUNNING_TASK, Utils.SUCCESS_TASK, Utils.ERROR_TASK_NO_METADATA, Utils.ERROR_TASK_NOT_IN_RAO);
+        taskDtos = Set.of(Utils.ERROR_TASK_2023, Utils.RUNNING_TASK_2023, Utils.SUCCESS_TASK_2023, Utils.ERROR_TASK_NO_METADATA_2023, Utils.ERROR_TASK_NOT_IN_RAO_2023);
     }
 
     private void initMetadataMap() {
-        metadataMap.put(Utils.ERROR_TASK.getId(), Utils.CORE_CC_METADATA_ERROR);
-        metadataMap.put(Utils.RUNNING_TASK.getId(), Utils.CORE_CC_METADATA_RUNNING);
-        metadataMap.put(Utils.SUCCESS_TASK.getId(), Utils.CORE_CC_METADATA_SUCCESS);
-        metadataMap.put(Utils.ERROR_TASK_NOT_IN_RAO.getId(), Utils.CORE_CC_METADATA_ERROR_NOT_IN_RAO);
+        metadataMap.put(Utils.ERROR_TASK_2023.getId(), Utils.CORE_CC_METADATA_ERROR);
+        metadataMap.put(Utils.RUNNING_TASK_2023.getId(), Utils.CORE_CC_METADATA_RUNNING);
+        metadataMap.put(Utils.SUCCESS_TASK_2023.getId(), Utils.CORE_CC_METADATA_SUCCESS);
+        metadataMap.put(Utils.ERROR_TASK_NOT_IN_RAO_2023.getId(), Utils.CORE_CC_METADATA_ERROR_NOT_IN_RAO);
     }
 
     @Test

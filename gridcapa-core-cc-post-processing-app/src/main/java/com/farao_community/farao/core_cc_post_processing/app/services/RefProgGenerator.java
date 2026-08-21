@@ -22,6 +22,7 @@ import com.powsybl.openrao.data.crac.api.parameters.CracCreationParameters;
 import com.powsybl.openrao.data.crac.api.parameters.JsonCracCreationParameters;
 import com.powsybl.openrao.data.crac.api.rangeaction.InjectionRangeAction;
 import com.powsybl.openrao.data.crac.io.fbconstraint.FbConstraintImporter;
+import com.powsybl.openrao.data.crac.io.fbconstraint.parameters.FbConstraintCracCreationParameters;
 import com.powsybl.openrao.data.raoresult.api.RaoResult;
 import com.powsybl.openrao.data.refprog.refprogxmlimporter.RefProgImporter;
 import org.slf4j.Logger;
@@ -81,6 +82,8 @@ public class RefProgGenerator {
 
         for (TaskDto task : tasksToPostProcess) {
             final OffsetDateTime timestamp = task.getTimestamp();
+            cracCreationParameters.addExtension(FbConstraintCracCreationParameters.class, new FbConstraintCracCreationParameters());
+            cracCreationParameters.getExtension(FbConstraintCracCreationParameters.class).setTimestamp(timestamp);
 
             final ProcessFileDto cgmFileDto = cgms.get(task);
             final ProcessFileDto raoResultFileDto = raoResults.get(task);
