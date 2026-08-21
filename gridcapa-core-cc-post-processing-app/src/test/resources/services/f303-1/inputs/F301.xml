@@ -114,7 +114,7 @@
             <temporaryImaxFactor>1000</temporaryImaxFactor>
             <frmMw>0</frmMw>
             <minRAMfactor>75</minRAMfactor>
-            <CNEC>false</CNEC>
+            <CNEC>true</CNEC>
             <MNEC>false</MNEC>
             <direction>DIRECT</direction>
             <tsoOrigin>FR</tsoOrigin>
