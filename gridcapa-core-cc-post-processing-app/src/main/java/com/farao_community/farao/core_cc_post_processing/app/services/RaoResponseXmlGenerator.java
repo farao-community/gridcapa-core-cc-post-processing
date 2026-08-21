@@ -19,7 +19,6 @@ import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.lang3.Strings;
-import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -38,7 +37,6 @@ import java.util.UUID;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-@Service
 public final class RaoResponseXmlGenerator {
     private static final String F299_PATH = "%s-%s-F299v%s";
     private static final String F303_PATH = "%s-%s-F303v%s";

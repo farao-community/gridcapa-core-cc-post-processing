@@ -54,14 +54,17 @@ public class PostProcessingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostProcessingService.class);
     private static final String OUTPUTS_DIR = "RAO_OUTPUTS_DIR/";
 
+    private final DailyFbConstraintGenerator dailyFbConstraintGenerator;
     private final MinioAdapter minioAdapter;
     private final ZipAndUploadService zipAndUploadService;
 
     record MetadataExtractedFromMinio(Map<UUID, CoreCCMetadata> metadataMap, RaoMetadata raoMetadata) {
     }
 
-    public PostProcessingService(final MinioAdapter minioAdapter,
+    public PostProcessingService(final DailyFbConstraintGenerator dailyFbConstraintGenerator,
+                                 final MinioAdapter minioAdapter,
                                  final ZipAndUploadService zipAndUploadService) {
+        this.dailyFbConstraintGenerator = dailyFbConstraintGenerator;
         this.minioAdapter = minioAdapter;
         this.zipAndUploadService = zipAndUploadService;
     }
@@ -91,7 +94,7 @@ public class PostProcessingService {
         zipAndUploadService.zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate, outputFileVersion);
 
         // F303 : CBCORA files
-        final FlowBasedConstraintDocument flowBasedConstraintDocument = new DailyFbConstraintGenerator(minioAdapter).generate(raoResultPerTask, cgmPerTask);
+        final FlowBasedConstraintDocument flowBasedConstraintDocument = dailyFbConstraintGenerator.generate(raoResultPerTask, cgmPerTask);
         zipAndUploadService.uploadCbcoraToMinio(outputsTargetMinioFolder, flowBasedConstraintDocument, localDate, outputFileVersion);
 
         // F304 : CGM files
