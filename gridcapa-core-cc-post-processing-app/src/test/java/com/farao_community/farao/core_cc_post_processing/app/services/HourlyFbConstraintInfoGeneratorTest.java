@@ -77,11 +77,11 @@ class HourlyFbConstraintInfoGeneratorTest {
     void generate() throws FileNotFoundException {
         importNetwork();
         importRaoResult();
-        taskDto = Utils.SUCCESS_TASK;
+        taskDto = Utils.SUCCESS_TASK_2023;
         doReturn(networkIS).when(minioAdapter).getFileFromFullPath("network.uct");
         doReturn(raoResultIS).when(minioAdapter).getFileFromFullPath("raoResult.json");
         //crac creation parameters
-        final CracCreationParameters cracCreationParameters = JsonCracCreationParameters.read(getClass().getResourceAsStream("/services/crac/cracCreationParameters.json"));
+        final CracCreationParameters cracCreationParameters = JsonCracCreationParameters.read(getClass().getResourceAsStream("/crac/cracCreationParameters.json"));
         HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters);
         final ProcessFileDto processFileDto = new ProcessFileDto("raoResult.json", "", ProcessFileStatus.VALIDATED, "raoResult.json", "docId", OffsetDateTime.now());
         final ProcessFileDto cgmProcessFile = new ProcessFileDto("network.uct", "", ProcessFileStatus.VALIDATED, "network.uct", "docId", OffsetDateTime.now());
@@ -123,7 +123,7 @@ class HourlyFbConstraintInfoGeneratorTest {
 
     @Test
     void generateForNotSuccessfulTask() {
-        taskDto = Utils.ERROR_TASK;
+        taskDto = Utils.ERROR_TASK_2023;
         HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, new CracCreationParameters());
         HourlyFbConstraintInfo hourlyFbConstraintInfo = hourlyFbConstraintInfoGenerator.generate(null, null, cracInputStream);
         checkCriticalBranches(hourlyFbConstraintInfo);

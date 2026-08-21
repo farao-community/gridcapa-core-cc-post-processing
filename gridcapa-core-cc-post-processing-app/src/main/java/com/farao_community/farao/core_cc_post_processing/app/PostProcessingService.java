@@ -6,7 +6,6 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app;
 
-import com.farao_community.farao.core_cc_post_processing.app.configuration.PiSaConfiguration;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
 import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMetadataGenerator;
@@ -58,8 +57,7 @@ public class PostProcessingService {
 
     private final DailyFbConstraintGenerator dailyFbConstraintGenerator;
     private final MinioAdapter minioAdapter;
-    private final PiSaConfiguration.PiSaLinkConfiguration piSaLink1Configuration;
-    private final PiSaConfiguration.PiSaLinkConfiguration piSaLink2Configuration;
+    private final RefProgGenerator refProgGenerator;
     private final ZipAndUploadService zipAndUploadService;
 
     record MetadataExtractedFromMinio(Map<UUID, CoreCCMetadata> metadataMap, RaoMetadata raoMetadata) {
@@ -67,13 +65,11 @@ public class PostProcessingService {
 
     public PostProcessingService(final DailyFbConstraintGenerator dailyFbConstraintGenerator,
                                  final MinioAdapter minioAdapter,
-                                 final PiSaConfiguration.PiSaLinkConfiguration piSaLink1Configuration,
-                                 final PiSaConfiguration.PiSaLinkConfiguration piSaLink2Configuration,
+                                 final RefProgGenerator refProgGenerator,
                                  final ZipAndUploadService zipAndUploadService) {
         this.dailyFbConstraintGenerator = dailyFbConstraintGenerator;
         this.minioAdapter = minioAdapter;
-        this.piSaLink1Configuration = piSaLink1Configuration;
-        this.piSaLink2Configuration = piSaLink2Configuration;
+        this.refProgGenerator = refProgGenerator;
         this.zipAndUploadService = zipAndUploadService;
     }
 
@@ -138,9 +134,7 @@ public class PostProcessingService {
         zipAndUploadService.zipAndUploadLogs(outputsTargetMinioFolder, logList, raoMetadata.getRaoRequestInstant(), outputFileVersion);
 
         // -- Fxxx : RefProg
-        final byte[] refProgBytes = new RefProgGenerator(minioAdapter, piSaLink1Configuration, piSaLink2Configuration)
-            .generate(tasksToPostProcess, cgmPerTask, raoResultPerTask)
-            .toByteArray();
+        final byte[] refProgBytes = refProgGenerator.generate(tasksToPostProcess, cgmPerTask, raoResultPerTask).toByteArray();
         zipAndUploadService.uploadRefProgToMinio(outputsTargetMinioFolder, refProgBytes, localDate, outputFileVersion);
 
         LOGGER.info("All outputs were uploaded");

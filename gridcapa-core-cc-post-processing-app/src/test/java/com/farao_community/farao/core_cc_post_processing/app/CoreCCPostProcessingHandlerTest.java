@@ -62,7 +62,7 @@ class CoreCCPostProcessingHandlerTest {
         Mockito.when(restTemplate.getForEntity("http://mockUrl/2023-08-21T11_26_00/2023-08-21T15:16:45Z/log", byte[].class)).thenReturn(responseEntity);
         Mockito.when(restTemplateBuilder.build()).thenReturn(restTemplate);
         initCoreCCPostProcessingHandler();
-        List<byte[]> logList = coreCCPostProcessingHandler.getLogsForTask(Set.of(Utils.SUCCESS_TASK));
+        List<byte[]> logList = coreCCPostProcessingHandler.getLogsForTask(Set.of(Utils.SUCCESS_TASK_2023));
         assertEquals(1, logList.size());
         assertEquals("Hello world!", new String(logList.getFirst()));
     }
@@ -70,7 +70,7 @@ class CoreCCPostProcessingHandlerTest {
     @Test
     void getLogsForTaskWithError() {
         // Without further mock, a null exception is thrown
-        List<byte[]> logList = coreCCPostProcessingHandler.getLogsForTask(Set.of(Utils.SUCCESS_TASK));
+        List<byte[]> logList = coreCCPostProcessingHandler.getLogsForTask(Set.of(Utils.SUCCESS_TASK_2023));
         assertEquals(0, logList.size());
     }
 
@@ -83,7 +83,7 @@ class CoreCCPostProcessingHandlerTest {
         Mockito.when(restTemplate.getForEntity("http://mockUrl/2023-08-21T11_26_00/2023-08-21T15:16:45Z/log", byte[].class)).thenReturn(responseEntity);
         Mockito.when(restTemplateBuilder.build()).thenReturn(restTemplate);
         initCoreCCPostProcessingHandler();
-        List<byte[]> logList = coreCCPostProcessingHandler.getLogsForTask(Set.of(Utils.SUCCESS_TASK));
+        List<byte[]> logList = coreCCPostProcessingHandler.getLogsForTask(Set.of(Utils.SUCCESS_TASK_2023));
         assertEquals(0, logList.size());
     }
 
@@ -92,7 +92,7 @@ class CoreCCPostProcessingHandlerTest {
         LocalDate localDate = LocalDate.of(2023, 8, 21);
 
         ResponseEntity responseEntity = Mockito.mock(ResponseEntity.class);
-        TaskDto[] taskToRetrieve = new TaskDto[]{Utils.SUCCESS_TASK, Utils.ERROR_TASK};
+        TaskDto[] taskToRetrieve = new TaskDto[]{Utils.SUCCESS_TASK_2023, Utils.ERROR_TASK_2023};
         Mockito.when(responseEntity.getBody()).thenReturn(taskToRetrieve);
         Mockito.when(responseEntity.getStatusCode()).thenReturn(HttpStatus.OK);
         RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
@@ -128,7 +128,7 @@ class CoreCCPostProcessingHandlerTest {
         LocalDate localDate = LocalDate.of(2023, 8, 21);
 
         ResponseEntity responseEntity = Mockito.mock(ResponseEntity.class);
-        TaskDto[] taskToRetrieve = new TaskDto[]{Utils.SUCCESS_TASK, Utils.ERROR_TASK};
+        TaskDto[] taskToRetrieve = new TaskDto[]{Utils.SUCCESS_TASK_2023, Utils.ERROR_TASK_2023};
         Mockito.when(responseEntity.getBody()).thenReturn(taskToRetrieve);
         Mockito.when(responseEntity.getStatusCode()).thenReturn(HttpStatus.INTERNAL_SERVER_ERROR);
         RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
@@ -161,7 +161,7 @@ class CoreCCPostProcessingHandlerTest {
     @Test
     void postProcessFinishedTasks() {
         LocalDate localDate = LocalDate.of(2023, 8, 21);
-        TaskDto[] tasks = new TaskDto[]{Utils.SUCCESS_TASK, Utils.ERROR_TASK, Utils.RUNNING_TASK};
+        TaskDto[] tasks = new TaskDto[]{Utils.SUCCESS_TASK_2023, Utils.ERROR_TASK_2023, Utils.RUNNING_TASK_2023};
         Set<TaskDto> tasksAsSet = new HashSet<>(Arrays.asList(tasks));
         initCoreCCPostProcessingHandler();
 
@@ -175,11 +175,11 @@ class CoreCCPostProcessingHandlerTest {
         Mockito.doAnswer(ans -> tasksProcessed = true).when(postProcessingService).processTasks(Mockito.eq(localDate), Mockito.eq(tasksAsSet), Mockito.any());
 
         // Running task is not over
-        coreCCPostProcessingHandler.postProcessFinishedTasks(Utils.RUNNING_TASK);
+        coreCCPostProcessingHandler.postProcessFinishedTasks(Utils.RUNNING_TASK_2023);
         assertFalse(tasksProcessed);
 
         // Success task is over but all tasks not finished
-        coreCCPostProcessingHandler.postProcessFinishedTasks(Utils.SUCCESS_TASK);
+        coreCCPostProcessingHandler.postProcessFinishedTasks(Utils.SUCCESS_TASK_2023);
         assertFalse(tasksProcessed);
 
         ResponseEntity responseEntityTasksFinishedBoolean = Mockito.mock(ResponseEntity.class);
@@ -197,7 +197,7 @@ class CoreCCPostProcessingHandlerTest {
         Mockito.when(restTemplateBuilder.build()).thenReturn(restTemplateTasksFinished);
 
         // Error task is over and all tasks are finished
-        coreCCPostProcessingHandler.postProcessFinishedTasks(Utils.ERROR_TASK);
+        coreCCPostProcessingHandler.postProcessFinishedTasks(Utils.ERROR_TASK_2023);
         assertTrue(tasksProcessed);
     }
 }

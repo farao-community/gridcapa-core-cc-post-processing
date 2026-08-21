@@ -32,10 +32,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.CGM_FILE_DTO;
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.CNE_FILE_DTO;
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.RAO_RESULT_FILE_DTO;
-import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK;
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.CGM_FILE_DTO_2019;
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.CNE_FILE_DTO_2019;
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.RAO_RESULT_FILE_DTO_2019;
+import static com.farao_community.farao.core_cc_post_processing.app.Utils.SUCCESS_TASK_2019;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -82,7 +82,7 @@ class ZipAndUploadServiceTest {
 
     @Test
     void zipCgmsAndSendToOutputsTest() {
-        final Map<TaskDto, ProcessFileDto> cgms = Map.of(SUCCESS_TASK, CGM_FILE_DTO);
+        final Map<TaskDto, ProcessFileDto> cgms = Map.of(SUCCESS_TASK_2019, CGM_FILE_DTO_2019);
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/network.uct"))
             .thenReturn(getClass().getResourceAsStream("/services/network.uct"));
         zipAndUploadService.zipCgmsAndSendToOutputs(
@@ -100,7 +100,7 @@ class ZipAndUploadServiceTest {
 
     @Test
     void zipCnesAndSendToOutputsTest() {
-        final Map<TaskDto, ProcessFileDto> cnes = Map.of(SUCCESS_TASK, CNE_FILE_DTO);
+        final Map<TaskDto, ProcessFileDto> cnes = Map.of(SUCCESS_TASK_2019, CNE_FILE_DTO_2019);
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/cne.xml"))
             .thenReturn(getClass().getResourceAsStream("/services/cne.xml"));
 
@@ -112,7 +112,7 @@ class ZipAndUploadServiceTest {
 
     @Test
     void zipRaoResultAndSendToOutputsTest() {
-        final Map<TaskDto, ProcessFileDto> raoResults = Map.of(SUCCESS_TASK, RAO_RESULT_FILE_DTO);
+        final Map<TaskDto, ProcessFileDto> raoResults = Map.of(SUCCESS_TASK_2019, RAO_RESULT_FILE_DTO_2019);
         when(minioAdapterMock.getFileFromFullPath("/CORE/CC/raoResult.json"))
             .thenReturn(getClass().getResourceAsStream("/services/raoResult.json"));
 
