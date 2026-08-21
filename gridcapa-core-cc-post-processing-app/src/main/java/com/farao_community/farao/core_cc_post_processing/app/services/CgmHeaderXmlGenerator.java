@@ -18,7 +18,6 @@ import com.farao_community.farao.core_cc_post_processing.app.util.JaxbUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.NamingRules;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
-import org.springframework.stereotype.Service;
 import org.threeten.extra.Interval;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -40,7 +39,6 @@ import java.util.Set;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-@Service
 public final class CgmHeaderXmlGenerator {
     private static final String F304_PATH = "%s-%s-F304v%s";
     private static final String CGM = "CGM";

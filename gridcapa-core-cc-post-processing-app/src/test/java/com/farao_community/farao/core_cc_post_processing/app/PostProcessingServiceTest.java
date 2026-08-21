@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app;
 
+import com.farao_community.farao.core_cc_post_processing.app.services.DailyFbConstraintGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.ZipAndUploadService;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
@@ -48,8 +49,9 @@ import static org.mockito.Mockito.when;
 class PostProcessingServiceTest {
 
     @Mock
+    private DailyFbConstraintGenerator dailyFbConstraintGenerator;
+    @Mock
     private MinioAdapter minioAdapterMock;
-
     @Mock
     private ZipAndUploadService zipAndUploadServiceMock;
 
@@ -68,7 +70,6 @@ class PostProcessingServiceTest {
     void testProcessTasks() {
         //Given
         when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(inputMetadataInputStream);
-        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml")).thenReturn(inputCracXmlInputStream);
 
         //When
         postProcessingService.processTasks(localDate, tasksToPostProcess, logList);
@@ -102,7 +103,6 @@ class PostProcessingServiceTest {
     void testProcessTasksMissingOutputs() {
         //Given
         when(minioAdapterMock.getFileFromFullPath(ArgumentMatchers.anyString())).thenReturn(inputMetadataInputStream);
-        when(minioAdapterMock.getFileFromFullPath("/CORE/CC/crac.xml")).thenReturn(inputCracXmlInputStream);
 
         //When
         postProcessingService.processTasks(localDate, Set.of(SUCCESS_TASK_CGM_NOT_PRESENT), logList);
