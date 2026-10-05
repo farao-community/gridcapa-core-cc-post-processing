@@ -171,7 +171,6 @@ public class PostProcessingService {
 
         final Set<String> timeIntervalSet = new HashSet<>();
         final Set<String> raoRequestFilenameSet = new HashSet<>();
-        final Set<Integer> versionSet = new HashSet<>();
         final Set<String> correlationIdSet = new HashSet<>();
         final Set<String> statusSet = new HashSet<>();
         final Set<String> requestReceivedInstantSet = new HashSet<>();
@@ -187,7 +186,6 @@ public class PostProcessingService {
                 metadataMap,
                 timeIntervalSet,
                 raoRequestFilenameSet,
-                versionSet,
                 correlationIdSet,
                 statusSet,
                 requestReceivedInstantSet,
@@ -204,9 +202,6 @@ public class PostProcessingService {
         if (raoRequestFilenameSet.size() > 1) {
             throw new CoreCCPostProcessingInternalException("Wrong RAO request file name in metadata");
         }
-        if (versionSet.size() > 1) {
-            throw new CoreCCPostProcessingInternalException("Wrong version in metadata");
-        }
         if (correlationIdSet.size() > 1) {
             throw new CoreCCPostProcessingInternalException("Wrong correlationId in metadata");
         }
@@ -217,7 +212,6 @@ public class PostProcessingService {
         raoMetadata.setTimeInterval(timeIntervalSet.iterator().next());
         raoMetadata.setRequestReceivedInstant(getFirstInstant(requestReceivedInstantSet));
         raoMetadata.setRaoRequestFileName(raoRequestFilenameSet.iterator().next());
-        raoMetadata.setVersion(versionSet.iterator().next());
         raoMetadata.setOutputsSendingInstant(Instant.now().toString());
         raoMetadata.setComputationStartInstant(getFirstInstant(computationStartSet));
         raoMetadata.setComputationEndInstant(getLastInstant(computationEndSet));
@@ -226,14 +220,13 @@ public class PostProcessingService {
         return new MetadataExtractedFromMinio(metadataMap, raoMetadata, correlationIdSet.iterator().next());
     }
 
-    private void extractTaskMetadataInCollections(final UUID taskId, final ProcessFileDto fileDto, final Map<UUID, CoreCCMetadata> metadataMap, final Set<String> timeIntervalSet, final Set<String> raoRequestFilenameSet, final Set<Integer> versionSet, final Set<String> correlationIdSet, final Set<String> statusSet, final Set<String> requestReceivedInstantSet, final Set<String> computationStartSet, final Set<String> computationEndSet, final Set<String> raoRequestInstantSet) {
+    private void extractTaskMetadataInCollections(final UUID taskId, final ProcessFileDto fileDto, final Map<UUID, CoreCCMetadata> metadataMap, final Set<String> timeIntervalSet, final Set<String> raoRequestFilenameSet, final Set<String> correlationIdSet, final Set<String> statusSet, final Set<String> requestReceivedInstantSet, final Set<String> computationStartSet, final Set<String> computationEndSet, final Set<String> raoRequestInstantSet) {
         try (final InputStream inputStream = minioAdapter.getFileFromFullPath(fileDto.getFilePath())) {
             final CoreCCMetadata coreCCMetadata = new ObjectMapper().readValue(IOUtils.toString(inputStream, StandardCharsets.UTF_8), CoreCCMetadata.class);
 
             metadataMap.put(taskId, coreCCMetadata);
             timeIntervalSet.add(coreCCMetadata.getTimeInterval());
             raoRequestFilenameSet.add(coreCCMetadata.getRaoRequestFileName());
-            versionSet.add(coreCCMetadata.getVersion());
             correlationIdSet.add(coreCCMetadata.getCorrelationId());
             statusSet.add(coreCCMetadata.getStatus());
             requestReceivedInstantSet.add(coreCCMetadata.getRequestReceivedInstant());

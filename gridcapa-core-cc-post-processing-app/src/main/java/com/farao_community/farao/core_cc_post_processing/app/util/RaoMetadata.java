@@ -24,7 +24,6 @@ public class RaoMetadata {
     String requestReceivedInstant;
     String outputsSendingInstant;
     String status;
-    int version;
     String computationStartInstant;
     String computationEndInstant;
     String raoRequestInstant;
@@ -142,14 +141,6 @@ public class RaoMetadata {
 
     public void setComputationEndInstant(String computationEndInstant) {
         this.computationEndInstant = computationEndInstant;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
     }
 
     public String getRaoRequestInstant() {
