@@ -37,7 +37,6 @@ class CoreCCMetadataGeneratorTest {
         successMacroMetadata.setComputationStartInstant("2023-08-04T11:27:00Z");
         successMacroMetadata.setComputationEndInstant("2023-08-04T11:29:00Z");
         successMacroMetadata.setVersion(1);
-        successMacroMetadata.setCorrelationId("6fe0a389-9315-417e-956d-b3fbaa479caz");
     }
 
     private void setUpErrorMacroMetadata() {
@@ -50,7 +49,6 @@ class CoreCCMetadataGeneratorTest {
         errorMacroMetadata.setComputationStartInstant("2023-08-04T11:27:00Z");
         errorMacroMetadata.setComputationEndInstant("2023-08-04T11:29:00Z");
         errorMacroMetadata.setVersion(1);
-        errorMacroMetadata.setCorrelationId("6fe0a389-9315-417e-956d-b3fbaa479caz");
     }
 
     @Test

@@ -28,7 +28,6 @@ public class RaoMetadata {
     String computationStartInstant;
     String computationEndInstant;
     String raoRequestInstant;
-    String correlationId;
 
     public enum Indicator {
         RAO_REQUESTS_RECEIVED("RAO requests received", 1), // per BD
@@ -95,14 +94,6 @@ public class RaoMetadata {
 
     public void setTimeInterval(String timeInterval) {
         this.timeInterval = timeInterval;
-    }
-
-    public String getCorrelationId() {
-        return correlationId;
-    }
-
-    public void setCorrelationId(String correlationId) {
-        this.correlationId = correlationId;
     }
 
     public String getRaoRequestFileName() {

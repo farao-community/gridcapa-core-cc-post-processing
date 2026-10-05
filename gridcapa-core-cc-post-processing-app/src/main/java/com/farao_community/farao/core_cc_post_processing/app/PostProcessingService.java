@@ -58,7 +58,9 @@ public class PostProcessingService {
     private final MinioAdapter minioAdapter;
     private final ZipAndUploadService zipAndUploadService;
 
-    record MetadataExtractedFromMinio(Map<UUID, CoreCCMetadata> metadataMap, RaoMetadata raoMetadata) {
+    record MetadataExtractedFromMinio(Map<UUID, CoreCCMetadata> metadataMap,
+                                      RaoMetadata raoMetadata,
+                                      String correlationId) {
     }
 
     public PostProcessingService(final DailyFbConstraintGenerator dailyFbConstraintGenerator,
@@ -81,7 +83,9 @@ public class PostProcessingService {
         final Map<TaskDto, ProcessFileDto> metadataPerTask = new HashMap<>();
         final Map<TaskDto, ProcessFileDto> raoResultPerTask = new HashMap<>();
         fillMapsOfOutputs(tasksToPostProcess, cnePerTask, cgmPerTask, metadataPerTask, raoResultPerTask);
+
         final MetadataExtractedFromMinio extractedMetadata = fetchMetadataFromMinio(metadataPerTask);
+        final String correlationId = extractedMetadata.correlationId();
         final Map<UUID, CoreCCMetadata> metadataMap = extractedMetadata.metadataMap();
         final RaoMetadata raoMetadata = extractedMetadata.raoMetadata();
 
@@ -98,10 +102,10 @@ public class PostProcessingService {
         zipAndUploadService.uploadCbcoraToMinio(outputsTargetMinioFolder, flowBasedConstraintDocument, localDate, outputFileVersion);
 
         // F304 : CGM files
-        zipAndUploadService.zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, raoMetadata.getCorrelationId(), raoMetadata.getTimeInterval(), outputFileVersion);
+        zipAndUploadService.zipCgmsAndSendToOutputs(outputsTargetMinioFolder, cgmPerTask, localDate, correlationId, raoMetadata.getTimeInterval(), outputFileVersion);
 
         // F305 : RaoResponse files
-        final ResponseMessageType responseMessage = RaoResponseXmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, raoMetadata.getCorrelationId(), metadataMap, raoMetadata.getTimeInterval());
+        final ResponseMessageType responseMessage = RaoResponseXmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, correlationId, metadataMap, raoMetadata.getTimeInterval());
         zipAndUploadService.uploadRaoResponseToMinio(outputsTargetMinioFolder, responseMessage, localDate, outputFileVersion);
 
         // -- F341 : Metadata files
@@ -214,13 +218,12 @@ public class PostProcessingService {
         raoMetadata.setRequestReceivedInstant(getFirstInstant(requestReceivedInstantSet));
         raoMetadata.setRaoRequestFileName(raoRequestFilenameSet.iterator().next());
         raoMetadata.setVersion(versionSet.iterator().next());
-        raoMetadata.setCorrelationId(correlationIdSet.iterator().next());
         raoMetadata.setOutputsSendingInstant(Instant.now().toString());
         raoMetadata.setComputationStartInstant(getFirstInstant(computationStartSet));
         raoMetadata.setComputationEndInstant(getLastInstant(computationEndSet));
         raoMetadata.setRaoRequestInstant(getLastInstant(raoRequestInstantSet));
 
-        return new MetadataExtractedFromMinio(metadataMap, raoMetadata);
+        return new MetadataExtractedFromMinio(metadataMap, raoMetadata, correlationIdSet.iterator().next());
     }
 
     private void extractTaskMetadataInCollections(final UUID taskId, final ProcessFileDto fileDto, final Map<UUID, CoreCCMetadata> metadataMap, final Set<String> timeIntervalSet, final Set<String> raoRequestFilenameSet, final Set<Integer> versionSet, final Set<String> correlationIdSet, final Set<String> statusSet, final Set<String> requestReceivedInstantSet, final Set<String> computationStartSet, final Set<String> computationEndSet, final Set<String> raoRequestInstantSet) {
