@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.entities.HourlyFbConstraintInfo;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.util.IntervalUtil;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;

@@ -7,7 +7,7 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.Utils;
-import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
+import com.farao_community.farao.core_cc_post_processing.app.entities.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

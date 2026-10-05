@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.entities.HourlyFbConstraintInfo;
 import com.farao_community.farao.core_cc_post_processing.app.util.XmlOutputsUtil;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.ComplexVariantsType;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.CriticalBranchType;

@@ -12,7 +12,7 @@ import com.farao_community.farao.core_cc_post_processing.app.services.CoreCCMeta
 import com.farao_community.farao.core_cc_post_processing.app.services.DailyFbConstraintGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.RaoResponseXmlGenerator;
 import com.farao_community.farao.core_cc_post_processing.app.services.ZipAndUploadService;
-import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
+import com.farao_community.farao.core_cc_post_processing.app.entities.RaoMetadata;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileDto;
 import com.farao_community.farao.gridcapa.task_manager.api.ProcessFileStatus;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
