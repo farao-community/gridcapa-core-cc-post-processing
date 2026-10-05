@@ -18,18 +18,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * @author Thomas Bouquet {@literal <thomas.bouquet at rte-france.com>}
  */
-class RaoMetadataTest {
+class MetadataUtilTest {
 
     @Test
     void generateOverallStatus() {
-        assertEquals("FAILURE", RaoMetadata.generateOverallStatus(Set.of("PENDING", "RUNNING", "FAILURE", "SUCCESS")));
-        assertEquals("PENDING", RaoMetadata.generateOverallStatus(Set.of("RUNNING", "PENDING", "SUCCESS")));
+        assertEquals("FAILURE", MetadataUtil.generateOverallStatus(Set.of("PENDING", "RUNNING", "FAILURE", "SUCCESS")));
+        assertEquals("PENDING", MetadataUtil.generateOverallStatus(Set.of("RUNNING", "PENDING", "SUCCESS")));
         final Set<String> runningSuccess = Set.of("RUNNING", "SUCCESS");
-        assertThrows(CoreCCInternalException.class, () -> RaoMetadata.generateOverallStatus(runningSuccess));
-        assertEquals("SUCCESS", RaoMetadata.generateOverallStatus(Set.of("SUCCESS")));
-        assertEquals("SUCCESS", RaoMetadata.generateOverallStatus(Set.of()));
+        assertThrows(CoreCCInternalException.class, () -> MetadataUtil.generateOverallStatus(runningSuccess));
+        assertEquals("SUCCESS", MetadataUtil.generateOverallStatus(Set.of("SUCCESS")));
+        assertEquals("SUCCESS", MetadataUtil.generateOverallStatus(Set.of()));
         final Set<String> successError = Set.of("SUCCESS", "ERROR");
-        CoreCCPostProcessingInternalException exception = assertThrows(CoreCCPostProcessingInternalException.class, () -> RaoMetadata.generateOverallStatus(successError));
+        CoreCCPostProcessingInternalException exception = assertThrows(CoreCCPostProcessingInternalException.class, () -> MetadataUtil.generateOverallStatus(successError));
         assertEquals("Invalid overall status", exception.getMessage());
     }
 }

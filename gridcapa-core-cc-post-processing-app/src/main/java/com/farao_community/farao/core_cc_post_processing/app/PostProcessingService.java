@@ -41,9 +41,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.generateOverallStatus;
-import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.getFirstInstant;
-import static com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata.getLastInstant;
+import static com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil.generateOverallStatus;
+import static com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil.getFirstInstant;
+import static com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil.getLastInstant;
 
 /**
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}

@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil;
 import com.farao_community.farao.core_cc_post_processing.app.util.RaoMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.collections4.map.MultiKeyMap;
@@ -81,7 +82,7 @@ public final class CoreCCMetadataGenerator {
         MultiKeyMap<Object, String> data = new MultiKeyMap<>();
 
         // Compute updated overall status : only timestamps with a RaoRequestInstant defined are considered
-        macroMetada.setStatus(RaoMetadata.generateOverallStatus(metadataList.stream().map(CoreCCMetadata::getStatus).collect(Collectors.toSet())));
+        macroMetada.setStatus(MetadataUtil.generateOverallStatus(metadataList.stream().map(CoreCCMetadata::getStatus).collect(Collectors.toSet())));
         final String timeInterval = macroMetada.getTimeInterval();
         data.put(RAO_REQUESTS_RECEIVED, timeInterval, macroMetada.getRaoRequestFileName());
         data.put(RAO_REQUEST_RECEPTION_TIME, timeInterval, macroMetada.getRequestReceivedInstant());
