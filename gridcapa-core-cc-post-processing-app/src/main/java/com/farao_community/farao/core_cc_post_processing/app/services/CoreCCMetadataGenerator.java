@@ -8,7 +8,7 @@ package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator;
 import com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil;
-import com.farao_community.farao.core_cc_post_processing.app.entities.RaoMetadata;
+import com.farao_community.farao.core_cc_post_processing.app.entities.DailyMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.StringUtils;
@@ -42,30 +42,31 @@ public final class CoreCCMetadataGenerator {
     private CoreCCMetadataGenerator() {
     }
 
-    public static String generateMetadataCsv(List<CoreCCMetadata> metadataList, RaoMetadata macroMetadata) {
-        MultiKeyMap<Object, String> data = structureDataFromTask(metadataList, macroMetadata);
-        return writeCsvFromMap(data, metadataList, macroMetadata.getTimeInterval());
+    public static String generateMetadataCsv(final List<CoreCCMetadata> hourlyMetadataList, final DailyMetadata dailyMetadata) {
+        final MultiKeyMap<Object, String> data = structureDataFromTask(hourlyMetadataList, dailyMetadata);
+        return writeCsvFromMap(data, hourlyMetadataList, dailyMetadata.getTimeInterval());
     }
 
-    private static MultiKeyMap<Object, String> structureDataFromTask(List<CoreCCMetadata> metadataList, RaoMetadata macroMetada) {
+    private static MultiKeyMap<Object, String> structureDataFromTask(final List<CoreCCMetadata> hourlyMetadataList, final DailyMetadata dailyMetadata) {
         // Store data in a MultiKeyMap
         // First key is column (indicator)
         // Second key is timestamp (or whole business day)
         // Value is the value of the indicator for the given timestamp
         MultiKeyMap<Object, String> data = new MultiKeyMap<>();
 
-        // Compute updated overall status : only timestamps with a RaoRequestInstant defined are considered
-        macroMetada.setStatus(MetadataUtil.generateOverallStatus(metadataList.stream().map(CoreCCMetadata::getStatus).collect(Collectors.toSet())));
-        final String timeInterval = macroMetada.getTimeInterval();
-        data.put(RAO_REQUESTS_RECEIVED, timeInterval, macroMetada.getRaoRequestFileName());
-        data.put(RAO_REQUEST_RECEPTION_TIME, timeInterval, macroMetada.getRequestReceivedInstant());
-        data.put(RAO_OUTPUTS_SENT, timeInterval, "SUCCESS".equals(macroMetada.getStatus()) ? "YES" : "NO");
-        data.put(RAO_OUTPUTS_SENDING_TIME, timeInterval, macroMetada.getOutputsSendingInstant());
-        data.put(RAO_COMPUTATION_STATUS, timeInterval, macroMetada.getStatus());
-        data.put(RAO_START_TIME, timeInterval, macroMetada.getComputationStartInstant());
-        data.put(RAO_END_TIME, timeInterval, macroMetada.getComputationEndInstant());
-        data.put(RAO_COMPUTATION_TIME, timeInterval, getComputationTime(macroMetada.getComputationStartInstant(), macroMetada.getComputationEndInstant()));
-        metadataList.forEach(individualMetadata -> {
+        // Recompute the overall status using only the timestamps that have a non-null RaoRequestInstant and update the dailyMetadata object
+        dailyMetadata.setStatus(MetadataUtil.generateOverallStatus(hourlyMetadataList));
+
+        final String timeInterval = dailyMetadata.getTimeInterval();
+        data.put(RAO_REQUESTS_RECEIVED, timeInterval, dailyMetadata.getRaoRequestFileName());
+        data.put(RAO_REQUEST_RECEPTION_TIME, timeInterval, dailyMetadata.getRequestReceivedInstant());
+        data.put(RAO_OUTPUTS_SENT, timeInterval, "SUCCESS".equals(dailyMetadata.getStatus()) ? "YES" : "NO");
+        data.put(RAO_OUTPUTS_SENDING_TIME, timeInterval, dailyMetadata.getOutputsSendingInstant());
+        data.put(RAO_COMPUTATION_STATUS, timeInterval, dailyMetadata.getStatus());
+        data.put(RAO_START_TIME, timeInterval, dailyMetadata.getComputationStartInstant());
+        data.put(RAO_END_TIME, timeInterval, dailyMetadata.getComputationEndInstant());
+        data.put(RAO_COMPUTATION_TIME, timeInterval, getComputationTime(dailyMetadata.getComputationStartInstant(), dailyMetadata.getComputationEndInstant()));
+        hourlyMetadataList.forEach(individualMetadata -> {
             final String raoRequestInstant = individualMetadata.getRaoRequestInstant();
             data.put(RAO_START_TIME, raoRequestInstant, individualMetadata.getComputationStart());
             data.put(RAO_END_TIME, raoRequestInstant, individualMetadata.getComputationEnd());

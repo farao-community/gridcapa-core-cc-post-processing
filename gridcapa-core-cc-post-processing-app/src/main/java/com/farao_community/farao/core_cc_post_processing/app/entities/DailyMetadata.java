@@ -10,7 +10,7 @@ package com.farao_community.farao.core_cc_post_processing.app.entities;
  * @author Philippe Edwards {@literal <philippe.edwards at rte-france.com>}
  * @author Godelaine de Montmorillon {@literal <godelaine.demontmorillon at rte-france.com>}
  */
-public class RaoMetadata {
+public class DailyMetadata {
     private String timeInterval;
     private String raoRequestFileName;
     private String requestReceivedInstant;

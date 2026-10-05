@@ -8,9 +8,12 @@ package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
+import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Vincent Bochet {@literal <vincent.bochet at rte-france.com>}
@@ -21,7 +24,11 @@ public final class MetadataUtil {
     private MetadataUtil() {
     }
 
-    public static String generateOverallStatus(Set<String> statusSet) {
+    public static String generateOverallStatus(Collection<CoreCCMetadata> metadataCollection) {
+        final Set<String> statusSet = metadataCollection.stream()
+            .map(CoreCCMetadata::getStatus)
+            .collect(Collectors.toSet());
+
         if (statusSet.stream().anyMatch(s -> s.equals("FAILURE"))) {
             return "FAILURE";
         } else if (statusSet.stream().anyMatch(s -> s.equals("PENDING"))) {

@@ -7,7 +7,7 @@
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
 import com.farao_community.farao.core_cc_post_processing.app.Utils;
-import com.farao_community.farao.core_cc_post_processing.app.entities.RaoMetadata;
+import com.farao_community.farao.core_cc_post_processing.app.entities.DailyMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CoreCCMetadataGeneratorTest {
 
     private final List<CoreCCMetadata> metadataList = List.of(Utils.CORE_CC_METADATA_SUCCESS);
-    private final RaoMetadata successMacroMetadata = new RaoMetadata();
-    private final RaoMetadata errorMacroMetadata = new RaoMetadata();
+    private final DailyMetadata successMacroMetadata = new DailyMetadata();
+    private final DailyMetadata errorMacroMetadata = new DailyMetadata();
 
     private void setUpSuccessMacroMetadata() {
         successMacroMetadata.setTimeInterval("2023-08-04T11:25:00Z/2023-08-04T12:25:00Z");

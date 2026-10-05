@@ -8,7 +8,9 @@ package com.farao_community.farao.core_cc_post_processing.app.util;
 
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.gridcapa_core_cc.api.exception.CoreCCInternalException;
+import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.Set;
 
@@ -22,13 +24,26 @@ class MetadataUtilTest {
 
     @Test
     void generateOverallStatus() {
-        assertEquals("FAILURE", MetadataUtil.generateOverallStatus(Set.of("PENDING", "RUNNING", "FAILURE", "SUCCESS")));
-        assertEquals("PENDING", MetadataUtil.generateOverallStatus(Set.of("RUNNING", "PENDING", "SUCCESS")));
-        final Set<String> runningSuccess = Set.of("RUNNING", "SUCCESS");
+        final CoreCCMetadata pending = Mockito.mock(CoreCCMetadata.class);
+        Mockito.when(pending.getStatus()).thenReturn("PENDING");
+        final CoreCCMetadata running = Mockito.mock(CoreCCMetadata.class);
+        Mockito.when(running.getStatus()).thenReturn("RUNNING");
+        final CoreCCMetadata failure = Mockito.mock(CoreCCMetadata.class);
+        Mockito.when(failure.getStatus()).thenReturn("FAILURE");
+        final CoreCCMetadata success = Mockito.mock(CoreCCMetadata.class);
+        Mockito.when(success.getStatus()).thenReturn("SUCCESS");
+        final CoreCCMetadata error = Mockito.mock(CoreCCMetadata.class);
+        Mockito.when(error.getStatus()).thenReturn("ERROR");
+
+        assertEquals("FAILURE", MetadataUtil.generateOverallStatus(Set.of(pending, running, failure, success)));
+        assertEquals("PENDING", MetadataUtil.generateOverallStatus(Set.of(running, pending, success)));
+
+        final Set<CoreCCMetadata> runningSuccess = Set.of(running, success);
         assertThrows(CoreCCInternalException.class, () -> MetadataUtil.generateOverallStatus(runningSuccess));
-        assertEquals("SUCCESS", MetadataUtil.generateOverallStatus(Set.of("SUCCESS")));
+        assertEquals("SUCCESS", MetadataUtil.generateOverallStatus(Set.of(success)));
         assertEquals("SUCCESS", MetadataUtil.generateOverallStatus(Set.of()));
-        final Set<String> successError = Set.of("SUCCESS", "ERROR");
+
+        final Set<CoreCCMetadata> successError = Set.of(success, error);
         CoreCCPostProcessingInternalException exception = assertThrows(CoreCCPostProcessingInternalException.class, () -> MetadataUtil.generateOverallStatus(successError));
         assertEquals("Invalid overall status", exception.getMessage());
     }
