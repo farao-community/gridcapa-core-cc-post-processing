@@ -31,7 +31,6 @@ class CoreCCMetadataGeneratorTest {
         successMacroMetadata.setTimeInterval("2023-08-04T11:25:00Z/2023-08-04T12:25:00Z");
         successMacroMetadata.setRequestReceivedInstant("2023-08-04T11:26:00Z");
         successMacroMetadata.setRaoRequestFileName("raoRequest.json");
-        successMacroMetadata.setRaoRequestInstant("2023-08-04T11:26:00Z");
         successMacroMetadata.setStatus("SUCCESS");
         successMacroMetadata.setOutputsSendingInstant("2023-08-04T11:30:00Z");
         successMacroMetadata.setComputationStartInstant("2023-08-04T11:27:00Z");
@@ -42,7 +41,6 @@ class CoreCCMetadataGeneratorTest {
         errorMacroMetadata.setTimeInterval("2023-08-04T11:25:00Z/2023-08-04T12:25:00Z");
         errorMacroMetadata.setRequestReceivedInstant("2023-08-04T11:26:00Z");
         errorMacroMetadata.setRaoRequestFileName("raoRequest.json");
-        errorMacroMetadata.setRaoRequestInstant("2023-08-04T11:26:00Z");
         errorMacroMetadata.setStatus("ERROR");
         errorMacroMetadata.setOutputsSendingInstant("2023-08-04T11:30:00Z");
         errorMacroMetadata.setComputationStartInstant("2023-08-04T11:27:00Z");

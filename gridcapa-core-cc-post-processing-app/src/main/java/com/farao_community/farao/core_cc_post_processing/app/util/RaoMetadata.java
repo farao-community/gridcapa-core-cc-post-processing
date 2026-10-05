@@ -26,7 +26,6 @@ public class RaoMetadata {
     String status;
     String computationStartInstant;
     String computationEndInstant;
-    String raoRequestInstant;
 
     public enum Indicator {
         RAO_REQUESTS_RECEIVED("RAO requests received", 1), // per BD
@@ -141,13 +140,5 @@ public class RaoMetadata {
 
     public void setComputationEndInstant(String computationEndInstant) {
         this.computationEndInstant = computationEndInstant;
-    }
-
-    public String getRaoRequestInstant() {
-        return raoRequestInstant;
-    }
-
-    public void setRaoRequestInstant(String raoRequestInstant) {
-        this.raoRequestInstant = raoRequestInstant;
     }
 }

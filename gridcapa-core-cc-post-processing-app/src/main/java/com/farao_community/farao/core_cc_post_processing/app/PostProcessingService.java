@@ -60,7 +60,8 @@ public class PostProcessingService {
 
     record MetadataExtractedFromMinio(Map<UUID, CoreCCMetadata> metadataMap,
                                       RaoMetadata raoMetadata,
-                                      String correlationId) {
+                                      String correlationId,
+                                      String raoRequestInstant) {
     }
 
     public PostProcessingService(final DailyFbConstraintGenerator dailyFbConstraintGenerator,
@@ -86,6 +87,7 @@ public class PostProcessingService {
 
         final MetadataExtractedFromMinio extractedMetadata = fetchMetadataFromMinio(metadataPerTask);
         final String correlationId = extractedMetadata.correlationId();
+        final String raoRequestInstant = extractedMetadata.raoRequestInstant();
         final Map<UUID, CoreCCMetadata> metadataMap = extractedMetadata.metadataMap();
         final RaoMetadata raoMetadata = extractedMetadata.raoMetadata();
 
@@ -121,7 +123,7 @@ public class PostProcessingService {
                     ),
                     raoMetadata
                 ).getBytes(),
-                raoMetadata.getRaoRequestInstant(),
+                raoRequestInstant,
                 outputFileVersion
             );
         } catch (Exception e) {
@@ -131,7 +133,7 @@ public class PostProcessingService {
         }
 
         // -- F342 : Log files
-        zipAndUploadService.zipAndUploadLogs(outputsTargetMinioFolder, logList, raoMetadata.getRaoRequestInstant(), outputFileVersion);
+        zipAndUploadService.zipAndUploadLogs(outputsTargetMinioFolder, logList, raoRequestInstant, outputFileVersion);
 
         LOGGER.info("All outputs were uploaded");
     }
@@ -215,9 +217,8 @@ public class PostProcessingService {
         raoMetadata.setOutputsSendingInstant(Instant.now().toString());
         raoMetadata.setComputationStartInstant(getFirstInstant(computationStartSet));
         raoMetadata.setComputationEndInstant(getLastInstant(computationEndSet));
-        raoMetadata.setRaoRequestInstant(getLastInstant(raoRequestInstantSet));
 
-        return new MetadataExtractedFromMinio(metadataMap, raoMetadata, correlationIdSet.iterator().next());
+        return new MetadataExtractedFromMinio(metadataMap, raoMetadata, correlationIdSet.iterator().next(), getLastInstant(raoRequestInstantSet));
     }
 
     private void extractTaskMetadataInCollections(final UUID taskId, final ProcessFileDto fileDto, final Map<UUID, CoreCCMetadata> metadataMap, final Set<String> timeIntervalSet, final Set<String> raoRequestFilenameSet, final Set<String> correlationIdSet, final Set<String> statusSet, final Set<String> requestReceivedInstantSet, final Set<String> computationStartSet, final Set<String> computationEndSet, final Set<String> raoRequestInstantSet) {
