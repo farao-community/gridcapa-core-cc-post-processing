@@ -25,7 +25,9 @@ import javax.xml.datatype.DatatypeFactory;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -49,6 +51,8 @@ public final class RaoResponseXmlGenerator {
     private static final String INTERNAL_EXCEPTION = "500-InternalException";
     private static final String NO_OUTPUT_AVAILABLE = "No output available";
     private static final String MISSING_RAO_REQUEST_ERROR_MESSAGE = "Missing raoRequest";
+    private static final String CONTINENTAL_PREFIX = "[CONTINENTAL] %s";
+    private static final String SEM_PREFIX = "[SEM] %s";
 
     private RaoResponseXmlGenerator() {
     }
@@ -125,12 +129,18 @@ public final class RaoResponseXmlGenerator {
                 fillFailedHours(responseItem, "CGM", "", false);
             } else {
                 final CoreCCMetadata metadata = metadataMap.get(taskDto.getId());
-                final String continentalErrorCode = metadata.getContinentalComputationErrorCode();
-                final String semErrorCode = metadata.getSemComputationErrorCode();
-                final String errorCode = String.format("[CONTINENTAL] %s ; [SEM] %s", continentalErrorCode, semErrorCode); // TODO Handle null cases
-                final String continentalErrorMessage = metadata.getContinentalComputationErrorMessage();
-                final String semErrorMessage = metadata.getSemComputationErrorMessage();
-                final String errorMessage = String.format("[CONTINENTAL] %s ; [SEM] %s", continentalErrorMessage, semErrorMessage); // TODO Handle null cases
+                final List<String> errorCodes = new ArrayList<>();
+                final List<String> errorMessages = new ArrayList<>();
+                if (metadata.getContinentalComputationStatus() != null) {
+                    errorCodes.add(String.format(CONTINENTAL_PREFIX, metadata.getContinentalComputationErrorCode()));
+                    errorMessages.add(String.format(CONTINENTAL_PREFIX, metadata.getContinentalComputationErrorMessage()));
+                }
+                if (metadata.getSemComputationStatus() != null) {
+                    errorCodes.add(String.format(SEM_PREFIX, metadata.getSemComputationErrorCode()));
+                    errorMessages.add(String.format(SEM_PREFIX, metadata.getSemComputationErrorMessage()));
+                }
+                final String errorCode = String.join(" ; ", errorCodes);
+                final String errorMessage = String.join(" ; ", errorMessages);
                 fillFailedHours(responseItem, errorCode, errorMessage, true);
             }
         } else {

@@ -44,6 +44,8 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.Metadat
  */
 public final class CoreCCMetadataGenerator {
 
+    private static final char CSV_DELIMITER = ';';
+    private static final char CSV_CR = '\n';
     private static final String UNDEFINED_COMPUTATION_TIME = "UNDEFINED";
 
     private CoreCCMetadataGenerator() {
@@ -59,11 +61,12 @@ public final class CoreCCMetadataGenerator {
         // First key is column (indicator)
         // Second key is timestamp (or whole business day)
         // Value is the value of the indicator for the given timestamp
-        MultiKeyMap<Object, String> data = new MultiKeyMap<>();
+        final MultiKeyMap<Object, String> data = new MultiKeyMap<>();
 
         // Recompute the overall status using only the timestamps that have a non-null RaoRequestInstant and update the dailyMetadata object
         dailyMetadata.setStatus(MetadataUtil.generateOverallStatus(hourlyMetadataList, ComputationArea.ALL));
 
+        // Daily data
         final String timeInterval = dailyMetadata.getTimeInterval();
         data.put(RAO_REQUESTS_RECEIVED, timeInterval, dailyMetadata.getRaoRequestFileName());
         data.put(RAO_REQUEST_RECEPTION_TIME, timeInterval, dailyMetadata.getRequestReceivedInstant());
@@ -75,6 +78,8 @@ public final class CoreCCMetadataGenerator {
             dailyMetadata.getSemComputationStatus(), dailyMetadata.getSemComputationStart(), dailyMetadata.getSemComputationEnd(),
             dailyMetadata.getContinentalComputationStatus(), dailyMetadata.getContinentalComputationStart(), dailyMetadata.getContinentalComputationEnd()
         );
+
+        // Hourly data
         hourlyMetadataList.forEach(individualMetadata -> {
             final String raoRequestInstant = individualMetadata.getRaoRequestInstant();
             data.put(RAO_RESULTS_PROVIDED, raoRequestInstant, getResultsProvidedStatus(individualMetadata.getContinentalComputationStatus(), individualMetadata.getSemComputationStatus()));
@@ -111,29 +116,29 @@ public final class CoreCCMetadataGenerator {
         data.put(CONTINENTAL_RAO_COMPUTATION_TIME, timeInterval, continentalComputationTime);
     }
 
-    private static String writeCsvFromMap(MultiKeyMap<Object, String> data, List<CoreCCMetadata> metadataList, String timeInterval) {
+    private static String writeCsvFromMap(final MultiKeyMap<Object, String> data,
+                                          final List<CoreCCMetadata> metadataList,
+                                          final String timeInterval) {
         // Get headers for columns & lines
-        List<MetadataIndicator> indicators = Arrays.stream(MetadataIndicator.values())
+        final List<MetadataIndicator> indicators = Arrays.stream(MetadataIndicator.values())
             .sorted(Comparator.comparing(MetadataIndicator::getOrder))
             .toList();
-        List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).sorted(String::compareTo).collect(Collectors.toList()); // NOSONAR because the resulting list should be modifiable
+        final List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).sorted(String::compareTo).collect(Collectors.toList()); // NOSONAR because the resulting list should be modifiable
         timestamps.addFirst(timeInterval);
 
         // Generate CSV string
-        char delimiter = ';';
-        char cr = '\n';
-        StringBuilder csvBuilder = new StringBuilder();
-        csvBuilder.append(delimiter);
+        final StringBuilder csvBuilder = new StringBuilder();
+        csvBuilder.append(CSV_DELIMITER);
         csvBuilder.append(indicators.stream().map(MetadataIndicator::getCsvLabel).collect(Collectors.joining(";")));
-        csvBuilder.append(cr);
-        for (String timestamp : timestamps) {
+        csvBuilder.append(CSV_CR);
+        for (final String timestamp : timestamps) {
             csvBuilder.append(timestamp);
-            for (MetadataIndicator indicator : indicators) {
-                String value = data.get(indicator, timestamp) != null ? data.get(indicator, timestamp) : "";
-                csvBuilder.append(delimiter);
+            for (final MetadataIndicator indicator : indicators) {
+                final String value = data.get(indicator, timestamp) != null ? data.get(indicator, timestamp) : "";
+                csvBuilder.append(CSV_DELIMITER);
                 csvBuilder.append(value);
             }
-            csvBuilder.append(cr);
+            csvBuilder.append(CSV_CR);
         }
         return csvBuilder.toString();
     }

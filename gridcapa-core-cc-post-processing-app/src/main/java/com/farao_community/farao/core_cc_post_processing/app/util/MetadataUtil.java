@@ -43,6 +43,10 @@ public final class MetadataUtil {
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
 
+        if (computationArea != ComputationArea.ALL && statusSet.isEmpty()) {
+            return EMPTY_STRING;
+        }
+
         if (statusSet.stream().anyMatch(s -> s.equals(FAILURE))) {
             return FAILURE;
         } else if (statusSet.stream().anyMatch(s -> s.equals(PENDING))) {
