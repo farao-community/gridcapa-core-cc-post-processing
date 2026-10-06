@@ -6,9 +6,10 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app.services;
 
+import com.farao_community.farao.core_cc_post_processing.app.entities.ComputationArea;
+import com.farao_community.farao.core_cc_post_processing.app.entities.DailyMetadata;
 import com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator;
 import com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil;
-import com.farao_community.farao.core_cc_post_processing.app.entities.DailyMetadata;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.collections4.map.MultiKeyMap;
 import org.apache.commons.lang3.StringUtils;
@@ -20,15 +21,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.CONTINENTAL_RAO_COMPUTATION_STATUS;
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.CONTINENTAL_RAO_COMPUTATION_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.CONTINENTAL_RAO_END_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.CONTINENTAL_RAO_START_TIME;
 import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_COMPUTATION_STATUS;
-import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_COMPUTATION_TIME;
-import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_END_TIME;
 import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_OUTPUTS_SENDING_TIME;
 import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_OUTPUTS_SENT;
 import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_REQUESTS_RECEIVED;
 import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_REQUEST_RECEPTION_TIME;
 import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_RESULTS_PROVIDED;
-import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.RAO_START_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.SEM_RAO_COMPUTATION_STATUS;
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.SEM_RAO_COMPUTATION_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.SEM_RAO_END_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIndicator.SEM_RAO_START_TIME;
+import static com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil.getResultsProvidedStatus;
 
 /**
  * @author Peter Mitri {@literal <peter.mitri at rte-france.com>}
@@ -55,33 +62,60 @@ public final class CoreCCMetadataGenerator {
         MultiKeyMap<Object, String> data = new MultiKeyMap<>();
 
         // Recompute the overall status using only the timestamps that have a non-null RaoRequestInstant and update the dailyMetadata object
-        dailyMetadata.setStatus(MetadataUtil.generateOverallStatus(hourlyMetadataList));
+        dailyMetadata.setStatus(MetadataUtil.generateOverallStatus(hourlyMetadataList, ComputationArea.ALL));
 
         final String timeInterval = dailyMetadata.getTimeInterval();
         data.put(RAO_REQUESTS_RECEIVED, timeInterval, dailyMetadata.getRaoRequestFileName());
         data.put(RAO_REQUEST_RECEPTION_TIME, timeInterval, dailyMetadata.getRequestReceivedInstant());
-        data.put(RAO_OUTPUTS_SENT, timeInterval, "SUCCESS".equals(dailyMetadata.getStatus()) ? "YES" : "NO");
+        data.put(RAO_OUTPUTS_SENT, timeInterval, getResultsProvidedStatus(dailyMetadata.getStatus()));
         data.put(RAO_OUTPUTS_SENDING_TIME, timeInterval, dailyMetadata.getOutputsSendingInstant());
         data.put(RAO_COMPUTATION_STATUS, timeInterval, dailyMetadata.getStatus());
-        data.put(RAO_START_TIME, timeInterval, dailyMetadata.getComputationStartInstant());
-        data.put(RAO_END_TIME, timeInterval, dailyMetadata.getComputationEndInstant());
-        data.put(RAO_COMPUTATION_TIME, timeInterval, getComputationTime(dailyMetadata.getComputationStartInstant(), dailyMetadata.getComputationEndInstant()));
+        putAreaRelatedData(
+            data, timeInterval,
+            dailyMetadata.getSemComputationStatus(), dailyMetadata.getSemComputationStart(), dailyMetadata.getSemComputationEnd(),
+            dailyMetadata.getContinentalComputationStatus(), dailyMetadata.getContinentalComputationStart(), dailyMetadata.getContinentalComputationEnd()
+        );
         hourlyMetadataList.forEach(individualMetadata -> {
             final String raoRequestInstant = individualMetadata.getRaoRequestInstant();
-            data.put(RAO_START_TIME, raoRequestInstant, individualMetadata.getComputationStart());
-            data.put(RAO_END_TIME, raoRequestInstant, individualMetadata.getComputationEnd());
-            data.put(RAO_COMPUTATION_TIME, raoRequestInstant, getComputationTime(individualMetadata.getComputationStart(), individualMetadata.getComputationEnd()));
-            data.put(RAO_RESULTS_PROVIDED, raoRequestInstant, individualMetadata.getStatus().equals("SUCCESS") ? "YES" : "NO");
-            data.put(RAO_COMPUTATION_STATUS, raoRequestInstant, individualMetadata.getStatus());
+            data.put(RAO_RESULTS_PROVIDED, raoRequestInstant, getResultsProvidedStatus(individualMetadata.getContinentalComputationStatus(), individualMetadata.getSemComputationStatus()));
+            putAreaRelatedData(
+                data, raoRequestInstant,
+                individualMetadata.getSemComputationStatus(), individualMetadata.getSemComputationStart(), individualMetadata.getSemComputationEnd(),
+                individualMetadata.getContinentalComputationStatus(), individualMetadata.getContinentalComputationStart(), individualMetadata.getContinentalComputationEnd()
+            );
         });
         return data;
+    }
+
+    private static void putAreaRelatedData(final MultiKeyMap<Object, String> data,
+                                           final String timeInterval,
+                                           final String semComputationStatus,
+                                           final String semComputationStart,
+                                           final String semComputationEnd,
+                                           final String continentalComputationStatus,
+                                           final String continentalComputationStart,
+                                           final String continentalComputationEnd) {
+        data.put(SEM_RAO_COMPUTATION_STATUS, timeInterval, semComputationStatus);
+        data.put(SEM_RAO_START_TIME, timeInterval, semComputationStart);
+        data.put(SEM_RAO_END_TIME, timeInterval, semComputationEnd);
+        final String semComputationTime = semComputationStatus == null && semComputationStart == null && semComputationEnd == null
+            ? ""
+            : getComputationTime(semComputationStart, semComputationEnd);
+        data.put(SEM_RAO_COMPUTATION_TIME, timeInterval, semComputationTime);
+        data.put(CONTINENTAL_RAO_COMPUTATION_STATUS, timeInterval, continentalComputationStatus);
+        data.put(CONTINENTAL_RAO_START_TIME, timeInterval, continentalComputationStart);
+        data.put(CONTINENTAL_RAO_END_TIME, timeInterval, continentalComputationEnd);
+        final String continentalComputationTime = continentalComputationStatus == null && continentalComputationStart == null && continentalComputationEnd == null
+            ? ""
+            : getComputationTime(continentalComputationStart, continentalComputationEnd);
+        data.put(CONTINENTAL_RAO_COMPUTATION_TIME, timeInterval, continentalComputationTime);
     }
 
     private static String writeCsvFromMap(MultiKeyMap<Object, String> data, List<CoreCCMetadata> metadataList, String timeInterval) {
         // Get headers for columns & lines
         List<MetadataIndicator> indicators = Arrays.stream(MetadataIndicator.values())
-                .sorted(Comparator.comparing(MetadataIndicator::getOrder))
-                .toList();
+            .sorted(Comparator.comparing(MetadataIndicator::getOrder))
+            .toList();
         List<String> timestamps = metadataList.stream().map(CoreCCMetadata::getRaoRequestInstant).sorted(String::compareTo).collect(Collectors.toList()); // NOSONAR because the resulting list should be modifiable
         timestamps.addFirst(timeInterval);
 

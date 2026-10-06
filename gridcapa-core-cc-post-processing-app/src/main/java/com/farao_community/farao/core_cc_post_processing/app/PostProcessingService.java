@@ -6,6 +6,7 @@
  */
 package com.farao_community.farao.core_cc_post_processing.app;
 
+import com.farao_community.farao.core_cc_post_processing.app.entities.ComputationArea;
 import com.farao_community.farao.core_cc_post_processing.app.entities.DailyMetadata;
 import com.farao_community.farao.core_cc_post_processing.app.exception.CoreCCPostProcessingInternalException;
 import com.farao_community.farao.core_cc_post_processing.app.outputs.rao_response.ResponseMessageType;
@@ -30,6 +31,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -169,8 +171,10 @@ public class PostProcessingService {
         final Set<String> raoRequestFilenameSet = new HashSet<>();
         final Set<String> correlationIdSet = new HashSet<>();
         final Set<String> requestReceivedInstantSet = new HashSet<>();
-        final Set<String> computationStartSet = new HashSet<>();
-        final Set<String> computationEndSet = new HashSet<>();
+        final Set<String> continentalComputationStartSet = new HashSet<>();
+        final Set<String> continentalComputationEndSet = new HashSet<>();
+        final Set<String> semComputationStartSet = new HashSet<>();
+        final Set<String> semComputationEndSet = new HashSet<>();
         final Set<String> raoRequestInstantSet = new HashSet<>();
 
         // Get metadata
@@ -183,8 +187,10 @@ public class PostProcessingService {
                 raoRequestFilenameSet,
                 correlationIdSet,
                 requestReceivedInstantSet,
-                computationStartSet,
-                computationEndSet,
+                continentalComputationStartSet,
+                continentalComputationEndSet,
+                semComputationStartSet,
+                semComputationEndSet,
                 raoRequestInstantSet
             )
         );
@@ -202,18 +208,34 @@ public class PostProcessingService {
 
         // Define raoMetadata attributes
         final DailyMetadata dailyMetadata = new DailyMetadata();
-        dailyMetadata.setStatus(generateOverallStatus(metadataMap.values()));
+        final Collection<CoreCCMetadata> metadataCollection = metadataMap.values();
+        dailyMetadata.setStatus(generateOverallStatus(metadataCollection, ComputationArea.ALL));
         dailyMetadata.setTimeInterval(timeIntervalSet.iterator().next());
         dailyMetadata.setRequestReceivedInstant(getFirstInstant(requestReceivedInstantSet));
         dailyMetadata.setRaoRequestFileName(raoRequestFilenameSet.iterator().next());
         dailyMetadata.setOutputsSendingInstant(Instant.now().toString());
-        dailyMetadata.setComputationStartInstant(getFirstInstant(computationStartSet));
-        dailyMetadata.setComputationEndInstant(getLastInstant(computationEndSet));
+        dailyMetadata.setContinentalComputationStart(getFirstInstant(continentalComputationStartSet));
+        dailyMetadata.setContinentalComputationEnd(getLastInstant(continentalComputationEndSet));
+        dailyMetadata.setContinentalComputationStatus(generateOverallStatus(metadataCollection, ComputationArea.CONTINENTAL));
+        dailyMetadata.setSemComputationStart(getFirstInstant(semComputationStartSet));
+        dailyMetadata.setSemComputationEnd(getLastInstant(semComputationEndSet));
+        dailyMetadata.setSemComputationStatus(generateOverallStatus(metadataCollection, ComputationArea.SEM));
 
         return new MetadataExtractedFromMinio(metadataMap, dailyMetadata, correlationIdSet.iterator().next(), getLastInstant(raoRequestInstantSet));
     }
 
-    private void extractTaskMetadataInCollections(final UUID taskId, final ProcessFileDto fileDto, final Map<UUID, CoreCCMetadata> metadataMap, final Set<String> timeIntervalSet, final Set<String> raoRequestFilenameSet, final Set<String> correlationIdSet, final Set<String> requestReceivedInstantSet, final Set<String> computationStartSet, final Set<String> computationEndSet, final Set<String> raoRequestInstantSet) {
+    private void extractTaskMetadataInCollections(final UUID taskId,
+                                                  final ProcessFileDto fileDto,
+                                                  final Map<UUID, CoreCCMetadata> metadataMap,
+                                                  final Set<String> timeIntervalSet,
+                                                  final Set<String> raoRequestFilenameSet,
+                                                  final Set<String> correlationIdSet,
+                                                  final Set<String> requestReceivedInstantSet,
+                                                  final Set<String> continentalComputationStartSet,
+                                                  final Set<String> continentalComputationEndSet,
+                                                  final Set<String> semComputationStartSet,
+                                                  final Set<String> semComputationEndSet,
+                                                  final Set<String> raoRequestInstantSet) {
         try (final InputStream inputStream = minioAdapter.getFileFromFullPath(fileDto.getFilePath())) {
             final CoreCCMetadata coreCCMetadata = new ObjectMapper().readValue(IOUtils.toString(inputStream, StandardCharsets.UTF_8), CoreCCMetadata.class);
 
@@ -223,10 +245,14 @@ public class PostProcessingService {
             correlationIdSet.add(coreCCMetadata.getCorrelationId());
             requestReceivedInstantSet.add(coreCCMetadata.getRequestReceivedInstant());
             // The following metadata can be null
-            Optional.ofNullable(coreCCMetadata.getComputationStart())
-                .ifPresent(computationStartSet::add);
-            Optional.ofNullable(coreCCMetadata.getComputationEnd())
-                .ifPresent(computationEndSet::add);
+            Optional.ofNullable(coreCCMetadata.getContinentalComputationStart())
+                .ifPresent(continentalComputationStartSet::add);
+            Optional.ofNullable(coreCCMetadata.getContinentalComputationEnd())
+                .ifPresent(continentalComputationEndSet::add);
+            Optional.ofNullable(coreCCMetadata.getSemComputationStart())
+                .ifPresent(semComputationStartSet::add);
+            Optional.ofNullable(coreCCMetadata.getSemComputationEnd())
+                .ifPresent(semComputationEndSet::add);
             Optional.ofNullable(coreCCMetadata.getRaoRequestInstant())
                 .ifPresent(raoRequestInstantSet::add);
         } catch (IOException e) {

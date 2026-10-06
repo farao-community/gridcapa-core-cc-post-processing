@@ -13,9 +13,6 @@ import com.farao_community.farao.gridcapa.task_manager.api.ProcessRunDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskDto;
 import com.farao_community.farao.gridcapa.task_manager.api.TaskStatus;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
-import com.farao_community.farao.minio_adapter.starter.MinioAdapterProperties;
-import io.minio.MinioClient;
-import org.mockito.Mockito;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -58,13 +55,10 @@ public class Utils {
     public static final TaskDto ERROR_TASK_NO_METADATA = new TaskDto(UUID.fromString("6e3e0ef2-96e4-4649-82d4-374f103038d9"), OffsetDateTime.parse("2023-08-21T15:16:48Z"), TaskStatus.ERROR, INPUTS, INPUTS, OUTPUTS, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
     public static final TaskDto ERROR_TASK_NOT_IN_RAO = new TaskDto(UUID.fromString("6e3e0ef2-96e4-4649-82d4-374f103038a1"), OffsetDateTime.parse("2023-08-21T15:16:49Z"), TaskStatus.ERROR, INPUTS, INPUTS, OUTPUTS, PROCESS_EVENTS, PROCESS_RUN_DTOS_ONE, List.of());
     public static final TaskDto RUNNING_TASK = new TaskDto(UUID.fromString("b4efda15-92c5-431b-a17f-9c5f6d8a6437"), OffsetDateTime.parse("2023-08-21T15:16:47Z"), TaskStatus.RUNNING, INPUTS, INPUTS, OUTPUTS, PROCESS_EVENTS, PROCESS_RUN_DTOS_TWO, List.of());
-    public static final CoreCCMetadata CORE_CC_METADATA_SUCCESS = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "SUCCESS", "0", "This is an error.", 1);
-    public static final CoreCCMetadata CORE_CC_METADATA_ERROR = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "ERROR", "1", "This is an error.", 1);
-    public static final CoreCCMetadata CORE_CC_METADATA_ERROR_NOT_IN_RAO = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "ERROR", "1", "Missing raoRequest", 1);
-    public static final CoreCCMetadata CORE_CC_METADATA_RUNNING = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", "RUNNING", "0", "This is an error.", 1);
-    private static final MinioAdapterProperties PROPERTIES = Mockito.mock(MinioAdapterProperties.class);
-    private static final MinioClient MINIO_CLIENT = Mockito.mock(MinioClient.class);
-    public static final MinioFileWriter MINIO_FILE_WRITER = new MinioFileWriter(PROPERTIES, MINIO_CLIENT);
+    public static final CoreCCMetadata CORE_CC_METADATA_SUCCESS = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", 1, "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "SUCCESS", "0", "This is an error.", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "SUCCESS", "0", "This is an error.");
+    public static final CoreCCMetadata CORE_CC_METADATA_ERROR = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", 1, "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "ERROR", "1", "This is an error.", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "ERROR", "1", "This is an error.");
+    public static final CoreCCMetadata CORE_CC_METADATA_ERROR_NOT_IN_RAO = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", 1, "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "ERROR", "1", "Missing raoRequest", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "ERROR", "1", "Missing raoRequest");
+    public static final CoreCCMetadata CORE_CC_METADATA_RUNNING = new CoreCCMetadata("raoRequest.json", "2023-08-04T11:26:00Z", "2023-08-04T11:26:00Z", "2023-08-04T11:25:00Z/2023-08-04T12:25:00Z", "6fe0a389-9315-417e-956d-b3fbaa479caz", 1, "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "RUNNING", "0", "This is an error.", "2023-08-04T11:27:00Z", "2023-08-04T11:29:00Z", "RUNNING", "0", "This is an error.");
     public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
     public static void neutralizeCreationDate(File file, boolean isXml) throws IOException {

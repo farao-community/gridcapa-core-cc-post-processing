@@ -16,8 +16,12 @@ public class DailyMetadata {
     private String requestReceivedInstant;
     private String status;
     private String outputsSendingInstant;
-    private String computationStartInstant;
-    private String computationEndInstant;
+    private String continentalComputationStatus;
+    private String continentalComputationStart;
+    private String continentalComputationEnd;
+    private String semComputationStatus;
+    private String semComputationStart;
+    private String semComputationEnd;
 
     public String getTimeInterval() {
         return timeInterval;
@@ -59,19 +63,51 @@ public class DailyMetadata {
         this.status = status;
     }
 
-    public String getComputationStartInstant() {
-        return computationStartInstant;
+    public String getContinentalComputationStatus() {
+        return continentalComputationStatus;
     }
 
-    public void setComputationStartInstant(String computationStartInstant) {
-        this.computationStartInstant = computationStartInstant;
+    public void setContinentalComputationStatus(final String continentalComputationStatus) {
+        this.continentalComputationStatus = continentalComputationStatus;
     }
 
-    public String getComputationEndInstant() {
-        return computationEndInstant;
+    public String getContinentalComputationStart() {
+        return continentalComputationStart;
     }
 
-    public void setComputationEndInstant(String computationEndInstant) {
-        this.computationEndInstant = computationEndInstant;
+    public void setContinentalComputationStart(final String continentalComputationStart) {
+        this.continentalComputationStart = continentalComputationStart;
+    }
+
+    public String getContinentalComputationEnd() {
+        return continentalComputationEnd;
+    }
+
+    public void setContinentalComputationEnd(final String continentalComputationEnd) {
+        this.continentalComputationEnd = continentalComputationEnd;
+    }
+
+    public String getSemComputationStatus() {
+        return semComputationStatus;
+    }
+
+    public void setSemComputationStatus(final String semComputationStatus) {
+        this.semComputationStatus = semComputationStatus;
+    }
+
+    public String getSemComputationStart() {
+        return semComputationStart;
+    }
+
+    public void setSemComputationStart(final String semComputationStart) {
+        this.semComputationStart = semComputationStart;
+    }
+
+    public String getSemComputationEnd() {
+        return semComputationEnd;
+    }
+
+    public void setSemComputationEnd(final String semComputationEnd) {
+        this.semComputationEnd = semComputationEnd;
     }
 }

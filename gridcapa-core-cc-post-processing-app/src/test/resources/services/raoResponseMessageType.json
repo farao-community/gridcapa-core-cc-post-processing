@@ -43,9 +43,9 @@
         },
         {
           "error": {
-            "code": "1",
+            "code": "[CONTINENTAL] 1 ; [SEM] 1",
             "level": "FATAL",
-            "reason": "This is an error."
+            "reason": "[CONTINENTAL] This is an error. ; [SEM] This is an error."
           },
           "files": null,
           "timeInterval": "2023-08-21T14:46Z/2023-08-21T15:46Z"

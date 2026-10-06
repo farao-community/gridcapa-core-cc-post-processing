@@ -24,40 +24,40 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CoreCCMetadataGeneratorTest {
 
     private final List<CoreCCMetadata> metadataList = List.of(Utils.CORE_CC_METADATA_SUCCESS);
-    private final DailyMetadata successMacroMetadata = new DailyMetadata();
-    private final DailyMetadata errorMacroMetadata = new DailyMetadata();
+    private final DailyMetadata successDailyMetadata = new DailyMetadata();
+    private final DailyMetadata errorDailyMetadata = new DailyMetadata();
 
-    private void setUpSuccessMacroMetadata() {
-        successMacroMetadata.setTimeInterval("2023-08-04T11:25:00Z/2023-08-04T12:25:00Z");
-        successMacroMetadata.setRequestReceivedInstant("2023-08-04T11:26:00Z");
-        successMacroMetadata.setRaoRequestFileName("raoRequest.json");
-        successMacroMetadata.setStatus("SUCCESS");
-        successMacroMetadata.setOutputsSendingInstant("2023-08-04T11:30:00Z");
-        successMacroMetadata.setComputationStartInstant("2023-08-04T11:27:00Z");
-        successMacroMetadata.setComputationEndInstant("2023-08-04T11:29:00Z");
+    private void setUpSuccessDailyMetadata() {
+        successDailyMetadata.setTimeInterval("2023-08-04T11:25:00Z/2023-08-04T12:25:00Z");
+        successDailyMetadata.setRequestReceivedInstant("2023-08-04T11:26:00Z");
+        successDailyMetadata.setRaoRequestFileName("raoRequest.json");
+        successDailyMetadata.setStatus("SUCCESS");
+        successDailyMetadata.setOutputsSendingInstant("2023-08-04T11:30:00Z");
+        successDailyMetadata.setContinentalComputationStart("2023-08-04T11:27:00Z");
+        successDailyMetadata.setContinentalComputationEnd("2023-08-04T11:29:00Z");
     }
 
-    private void setUpErrorMacroMetadata() {
-        errorMacroMetadata.setTimeInterval("2023-08-04T11:25:00Z/2023-08-04T12:25:00Z");
-        errorMacroMetadata.setRequestReceivedInstant("2023-08-04T11:26:00Z");
-        errorMacroMetadata.setRaoRequestFileName("raoRequest.json");
-        errorMacroMetadata.setStatus("ERROR");
-        errorMacroMetadata.setOutputsSendingInstant("2023-08-04T11:30:00Z");
-        errorMacroMetadata.setComputationStartInstant("2023-08-04T11:27:00Z");
-        errorMacroMetadata.setComputationEndInstant("2023-08-04T11:29:00Z");
+    private void setUpErrorDailyMetadata() {
+        errorDailyMetadata.setTimeInterval("2023-08-04T11:25:00Z/2023-08-04T12:25:00Z");
+        errorDailyMetadata.setRequestReceivedInstant("2023-08-04T11:26:00Z");
+        errorDailyMetadata.setRaoRequestFileName("raoRequest.json");
+        errorDailyMetadata.setStatus("ERROR");
+        errorDailyMetadata.setOutputsSendingInstant("2023-08-04T11:30:00Z");
+        errorDailyMetadata.setContinentalComputationStart("2023-08-04T11:27:00Z");
+        errorDailyMetadata.setContinentalComputationEnd("2023-08-04T11:29:00Z");
     }
 
     @Test
     void successfullyGeneratedMetadataCsv() throws IOException {
-        setUpSuccessMacroMetadata();
-        final String result = CoreCCMetadataGenerator.generateMetadataCsv(metadataList, successMacroMetadata);
+        setUpSuccessDailyMetadata();
+        final String result = CoreCCMetadataGenerator.generateMetadataCsv(metadataList, successDailyMetadata);
         assertTrue(Utils.isFileContentEqualToString(result, "/services/metadataSuccess.csv"));
     }
 
     @Test
     void exportErrorMetadataFile() throws IOException {
-        setUpErrorMacroMetadata();
-        final String result = CoreCCMetadataGenerator.generateMetadataCsv(metadataList, errorMacroMetadata);
+        setUpErrorDailyMetadata();
+        final String result = CoreCCMetadataGenerator.generateMetadataCsv(metadataList, errorDailyMetadata);
         assertTrue(Utils.isFileContentEqualToString(result, "/services/metadataError.csv"));
     }
 }
