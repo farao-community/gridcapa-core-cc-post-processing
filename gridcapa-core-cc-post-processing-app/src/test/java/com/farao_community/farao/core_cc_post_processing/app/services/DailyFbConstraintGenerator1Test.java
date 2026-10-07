@@ -61,6 +61,9 @@ class DailyFbConstraintGenerator1Test {
         InputStream inputCracXmlInputStream = getClass().getResourceAsStream("/services/f303-1/inputs/F301.xml");
         doReturn(inputCracXmlInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputCracXml.xml");
 
+        InputStream virtualHubInputStream = getClass().getResourceAsStream("/services/virtualhubs.xml");
+        doReturn(virtualHubInputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/inputVirtualHub.xml");
+
         InputStream network1InputStream = getClass().getResourceAsStream("/services/f303-1/inputs/networks/20190108_1230.xiidm");
         doReturn(network1InputStream).when(minioAdapter).getFileFromFullPath("/CORE/CC/network1.xiidm");
 
@@ -79,26 +82,27 @@ class DailyFbConstraintGenerator1Test {
         String baseUuid = "5bec38f9-80c6-4441-bbe7-b9dca13ca2";
         OffsetDateTime firstTimestamp = OffsetDateTime.parse(timeStampBegin);
         ProcessFileDto cracProcessFile = new ProcessFileDto("/CORE/CC/inputCracXml.xml", "CBCORA", ProcessFileStatus.VALIDATED, "inputCracXml.xml", "docId", firstTimestamp);
+        ProcessFileDto virtualHubProcessFile = new ProcessFileDto("/CORE/CC/inputVirtualHub.xml", "VIRTUALHUB", ProcessFileStatus.VALIDATED, "inputVirtualHub.xml", "docId", firstTimestamp);
 
         // NOT_CREATED tasks from 2019-01-07 23:00 to 2019-01-08 11:00
         for (int h = 0; h <= 12; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile, virtualHubProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
         }
 
         // SUCCESS task at 12:30
         OffsetDateTime timestamp1230 = OffsetDateTime.parse("2019-01-08T12:30:00Z");
         ProcessFileDto cgm1ProcessFile = new ProcessFileDto("/CORE/CC/network1.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network1.xiidm", "docId", timestamp1230);
         ProcessFileDto raoResult1ProcessFile = new ProcessFileDto("/CORE/CC/raoResult1.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult1.json", "docId", timestamp1230);
-        final TaskDto successTaskOne = new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of(), List.of(), List.of(), List.of());
+        final TaskDto successTaskOne = new TaskDto(UUID.fromString(baseUuid + 13), timestamp1230, TaskStatus.SUCCESS, List.of(cracProcessFile, virtualHubProcessFile), List.of(cgm1ProcessFile, raoResult1ProcessFile), List.of(), List.of(), List.of(), List.of());
         taskDtos.add(successTaskOne);
 
         // SUCCESS task at 13:30
         OffsetDateTime timestamp1330 = OffsetDateTime.parse("2019-01-08T13:30:00Z");
         ProcessFileDto cgm2ProcessFile = new ProcessFileDto("/CORE/CC/network2.xiidm", "CGM_OUT", ProcessFileStatus.VALIDATED, "network2.xiidm", "docId", timestamp1330);
         ProcessFileDto raoResult2ProcessFile = new ProcessFileDto("/CORE/CC/raoResult2.json", "RAO_RESULT", ProcessFileStatus.VALIDATED, "raoResult2.json", "docId", timestamp1330);
-        final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of(), List.of(), List.of(), List.of());
+        final TaskDto successTaskTwo = new TaskDto(UUID.fromString(baseUuid + 14), timestamp1330, TaskStatus.SUCCESS, List.of(cracProcessFile, virtualHubProcessFile), List.of(cgm2ProcessFile, raoResult2ProcessFile), List.of(), List.of(), List.of(), List.of());
         taskDtos.add(successTaskTwo);
 
         raoResult.put(successTaskOne, raoResult1ProcessFile);
@@ -110,7 +114,7 @@ class DailyFbConstraintGenerator1Test {
         for (int h = 15; h <= 23; h++) {
             // Set tasks' status to NOT_CREATED to ignore them
             OffsetDateTime timestamp = firstTimestamp.plusHours(h);
-            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
+            taskDtos.add(new TaskDto(UUID.fromString(baseUuid + h), timestamp, TaskStatus.NOT_CREATED, List.of(cracProcessFile, virtualHubProcessFile), List.of(), List.of(), List.of(), List.of(), List.of()));
         }
     }
 

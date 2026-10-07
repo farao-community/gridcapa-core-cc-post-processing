@@ -14,6 +14,9 @@ import com.farao_community.farao.minio_adapter.starter.MinioAdapter;
 import com.powsybl.openrao.data.crac.api.parameters.CracCreationParameters;
 import com.powsybl.openrao.data.crac.api.parameters.JsonCracCreationParameters;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.FlowBasedConstraintDocument;
+import com.powsybl.openrao.virtualhubs.InternalHvdc;
+import com.powsybl.openrao.virtualhubs.VirtualHubsConfiguration;
+import com.powsybl.openrao.virtualhubs.xml.XmlVirtualHubsConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -49,45 +52,82 @@ public class DailyFbConstraintGenerator {
         this.minioAdapter = minioAdapter;
     }
 
-    public FlowBasedConstraintDocument generate(Map<TaskDto, ProcessFileDto> raoResults, Map<TaskDto, ProcessFileDto> cgms) {
-        String cracFilePath = raoResults.keySet().stream()
+    public FlowBasedConstraintDocument generate(final Map<TaskDto, ProcessFileDto> raoResults,
+                                                final Map<TaskDto, ProcessFileDto> cgms) {
+        final List<ProcessFileDto> inputs = raoResults.keySet().stream()
             .findFirst().orElseThrow()
-            .getInputs()
-            .stream().filter(processFileDto -> processFileDto.getFileType().equals("CBCORA"))
-            .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException("task dto missing cbcora file"))
-            .getFilePath();
-        CracCreationParameters cracCreationParameters = getCimCracCreationParameters();
-        try (final InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFilePath)) {
+            .getInputs();
+        final String virtualHubsFilePath = getFilePath(inputs, "VIRTUALHUB");
+        final String cracFilePath = getFilePath(inputs, "CBCORA");
+
+        final CracCreationParameters cracCreationParameters = getCimCracCreationParameters();
+        try (
+            final InputStream virtualHubsInputStream = minioAdapter.getFileFromFullPath(virtualHubsFilePath);
+            final InputStream cracXmlInputStream = minioAdapter.getFileFromFullPath(cracFilePath)
+        ) {
+            final VirtualHubsConfiguration virtualHubsConfiguration = XmlVirtualHubsConfiguration.importConfiguration(virtualHubsInputStream);
+            final List<InternalHvdc> internalHvdcs = virtualHubsConfiguration.getInternalHvdcs();
+
             final byte[] cracXmlBytes = getBytesFromInputStream(cracXmlInputStream);
             final FlowBasedConstraintDocument flowBasedConstraintDocument;
-            try (final InputStream firstUseStream = new ByteArrayInputStream(cracXmlBytes)) {
-                flowBasedConstraintDocument = importNativeCrac(firstUseStream);
+            try (final InputStream nativeCracInputStream = new ByteArrayInputStream(cracXmlBytes)) {
+                flowBasedConstraintDocument = importNativeCrac(nativeCracInputStream);
             }
+
             // generate FbConstraintInfo for each hour of the initial CRAC
-            Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(flowBasedConstraintDocument.getConstraintTimeInterval().getV());
-            List<HourlyFbConstraintInfo> hourlyFbConstraintInfos = new ArrayList<>();
-            positionMap.values().forEach(interval -> {
-                Optional<TaskDto> taskDtoOptional =  getTaskDtoOfInterval(interval, raoResults.keySet());
-                if (taskDtoOptional.isPresent()) {
-                    TaskDto taskDto = taskDtoOptional.get();
-                    try (final InputStream tempCracXmlInputStream = new ByteArrayInputStream(cracXmlBytes)) {
-                        hourlyFbConstraintInfos.add(new HourlyFbConstraintInfoGenerator(flowBasedConstraintDocument, interval, taskDto, minioAdapter, cracCreationParameters)
-                                .generate(raoResults.get(taskDto), cgms.get(taskDto), tempCracXmlInputStream));
-                    } catch (final IOException e) {
-                        throw new CoreCCPostProcessingInternalException(
-                            String.format("Exception occurred while reading hourly data for timestamp %s", taskDto.getTimestamp()),
-                            e
-                        );
-                    }
-                } else {
-                    LOGGER.warn(String.format("Cannot find taskDto for interval %s", interval));
-                }
-            });
+            final Map<Integer, Interval> positionMap = IntervalUtil.getPositionsMap(flowBasedConstraintDocument.getConstraintTimeInterval().getV());
+            final List<HourlyFbConstraintInfo> hourlyFbConstraintInfos = new ArrayList<>();
+
+            positionMap.values().forEach(interval ->
+                addHourlyFbConstraintInfo(
+                    raoResults,
+                    cgms,
+                    interval,
+                    cracXmlBytes,
+                    flowBasedConstraintDocument,
+                    cracCreationParameters,
+                    internalHvdcs,
+                    hourlyFbConstraintInfos
+                ));
 
             // gather hourly info in one common document, cluster the elements that can be clusterized
             return new DailyFbConstraintClusterizer(hourlyFbConstraintInfos, flowBasedConstraintDocument).generateClusterizedDocument();
         } catch (Exception e) {
             throw new CoreCCPostProcessingInternalException("Exception occurred during CBCORA file creation", e);
+        }
+    }
+
+    private static String getFilePath(final List<ProcessFileDto> inputs, final String filetype) {
+        return inputs.stream()
+            .filter(processFileDto -> processFileDto.getFileType().equals(filetype))
+            .findFirst().orElseThrow(() -> new CoreCCPostProcessingInternalException(String.format("Task dto missing %s file", filetype)))
+            .getFilePath();
+    }
+
+    private void addHourlyFbConstraintInfo(final Map<TaskDto, ProcessFileDto> raoResults,
+                                           final Map<TaskDto, ProcessFileDto> cgms,
+                                           final Interval interval,
+                                           final byte[] cracXmlBytes,
+                                           final FlowBasedConstraintDocument flowBasedConstraintDocument,
+                                           final CracCreationParameters cracCreationParameters,
+                                           final List<InternalHvdc> internalHvdcs,
+                                           final List<HourlyFbConstraintInfo> hourlyFbConstraintInfos) {
+        final Optional<TaskDto> taskDtoOptional = getTaskDtoOfInterval(interval, raoResults.keySet());
+        if (taskDtoOptional.isPresent()) {
+            final TaskDto taskDto = taskDtoOptional.get();
+            try (final InputStream cracXmlInputStream = new ByteArrayInputStream(cracXmlBytes)) {
+                hourlyFbConstraintInfos.add(
+                    new HourlyFbConstraintInfoGenerator(flowBasedConstraintDocument, interval, taskDto, minioAdapter, cracCreationParameters, internalHvdcs)
+                        .generate(raoResults.get(taskDto), cgms.get(taskDto), cracXmlInputStream)
+                );
+            } catch (final IOException e) {
+                throw new CoreCCPostProcessingInternalException(
+                    String.format("Exception occurred while reading hourly data for timestamp %s", taskDto.getTimestamp()),
+                    e
+                );
+            }
+        } else {
+            LOGGER.warn("Cannot find taskDto for interval {}", interval);
         }
     }
 
