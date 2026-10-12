@@ -33,6 +33,7 @@ import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.IndependantComplexVaria
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.ObjectFactory;
 import com.powsybl.openrao.data.crac.io.fbconstraint.xsd.etso.TimeIntervalType;
 import com.powsybl.openrao.data.raoresult.api.RaoResult;
+import com.powsybl.openrao.virtualhubs.InternalHvdc;
 import org.threeten.extra.Interval;
 
 import java.io.IOException;
@@ -65,13 +66,15 @@ class HourlyFbConstraintInfoGenerator {
     private final TaskDto taskDto;
     private final MinioAdapter minioAdapter;
     private final CracCreationParameters cracCreationParameters;
+    private final List<InternalHvdc> internalHvdcs;
 
-    HourlyFbConstraintInfoGenerator(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter, CracCreationParameters cracCreationParameters) {
+    HourlyFbConstraintInfoGenerator(FlowBasedConstraintDocument flowBasedConstraintDocument, Interval interval, TaskDto taskDto, MinioAdapter minioAdapter, CracCreationParameters cracCreationParameters, final List<InternalHvdc> internalHvdcs) {
         this.flowBasedConstraintDocument = flowBasedConstraintDocument;
         this.interval = interval;
         this.taskDto = taskDto;
         this.minioAdapter = minioAdapter;
         this.cracCreationParameters = cracCreationParameters;
+        this.internalHvdcs = internalHvdcs;
     }
 
     HourlyFbConstraintInfo generate(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
@@ -102,17 +105,22 @@ class HourlyFbConstraintInfoGenerator {
         return new HourlyFbConstraintInfo(criticalBranches);
     }
 
-    private HourlyFbConstraintInfo getInfoForSuccessfulInterval(ProcessFileDto raoResultProcessFile, ProcessFileDto cgmProcessFile, InputStream cracInputStream) {
-        Network network = getNetworkOfTaskDto(cgmProcessFile);
-        cracCreationParameters.addExtension(FbConstraintCracCreationParameters.class, new FbConstraintCracCreationParameters());
-        cracCreationParameters.getExtension(FbConstraintCracCreationParameters.class).setTimestamp(taskDto.getTimestamp());
-        FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) new FbConstraintImporter().importData(cracInputStream, cracCreationParameters, network);
-        RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac(), raoResultProcessFile);
+    private HourlyFbConstraintInfo getInfoForSuccessfulInterval(final ProcessFileDto raoResultProcessFile,
+                                                                final ProcessFileDto cgmProcessFile,
+                                                                final InputStream cracInputStream) {
+        final FbConstraintCracCreationParameters fbConstraintCracCreationParameters = new FbConstraintCracCreationParameters();
+        fbConstraintCracCreationParameters.setTimestamp(taskDto.getTimestamp());
+        fbConstraintCracCreationParameters.setInternalHvdcs(internalHvdcs);
+        cracCreationParameters.addExtension(FbConstraintCracCreationParameters.class, fbConstraintCracCreationParameters);
+        final Network network = getNetworkOfTaskDto(cgmProcessFile);
 
-        Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());
+        final FbConstraintCreationContext cracCreationContext = (FbConstraintCreationContext) new FbConstraintImporter().importData(cracInputStream, cracCreationParameters, network);
+        final RaoResult raoResult = getRaoResultOfTaskDto(cracCreationContext.getCrac(), raoResultProcessFile);
 
-        List<CriticalBranchType> criticalBranches = getCriticalBranchesOfSuccessfulInterval(cracCreationContext, statesWithCra);
-        List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval(cracCreationContext, raoResult, statesWithCra);
+        final Map<State, String> statesWithCra = getUIDOfStatesWithCra(cracCreationContext, raoResult, taskDto.getTimestamp().toString());
+
+        final List<CriticalBranchType> criticalBranches = getCriticalBranchesOfSuccessfulInterval(cracCreationContext, statesWithCra);
+        final List<IndependantComplexVariant> complexVariants = getComplexVariantsOfSuccesfulInterval(cracCreationContext, raoResult, statesWithCra);
 
         return new HourlyFbConstraintInfo(criticalBranches, complexVariants);
     }

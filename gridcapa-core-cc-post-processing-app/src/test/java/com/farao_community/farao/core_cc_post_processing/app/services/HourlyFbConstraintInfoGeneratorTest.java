@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import static com.farao_community.farao.core_cc_post_processing.app.util.CracUtil.importNativeCrac;
@@ -82,7 +83,7 @@ class HourlyFbConstraintInfoGeneratorTest {
         doReturn(raoResultIS).when(minioAdapter).getFileFromFullPath("raoResult.json");
         //crac creation parameters
         final CracCreationParameters cracCreationParameters = JsonCracCreationParameters.read(getClass().getResourceAsStream("/services/crac/cracCreationParameters.json"));
-        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters);
+        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, cracCreationParameters, List.of());
         final ProcessFileDto processFileDto = new ProcessFileDto("raoResult.json", "", ProcessFileStatus.VALIDATED, "raoResult.json", "docId", OffsetDateTime.now());
         final ProcessFileDto cgmProcessFile = new ProcessFileDto("network.uct", "", ProcessFileStatus.VALIDATED, "network.uct", "docId", OffsetDateTime.now());
         //
@@ -116,7 +117,7 @@ class HourlyFbConstraintInfoGeneratorTest {
 
     @Test
     void generateForNullTask() {
-        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, null, minioAdapter, new CracCreationParameters());
+        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, null, minioAdapter, new CracCreationParameters(), List.of());
         HourlyFbConstraintInfo hourlyFbConstraintInfo = hourlyFbConstraintInfoGenerator.generate(null, null, null);
         checkCriticalBranches(hourlyFbConstraintInfo);
     }
@@ -124,7 +125,7 @@ class HourlyFbConstraintInfoGeneratorTest {
     @Test
     void generateForNotSuccessfulTask() {
         taskDto = Utils.ERROR_TASK;
-        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, new CracCreationParameters());
+        HourlyFbConstraintInfoGenerator hourlyFbConstraintInfoGenerator = new HourlyFbConstraintInfoGenerator(nativeCrac, interval, taskDto, minioAdapter, new CracCreationParameters(), List.of());
         HourlyFbConstraintInfo hourlyFbConstraintInfo = hourlyFbConstraintInfoGenerator.generate(null, null, cracInputStream);
         checkCriticalBranches(hourlyFbConstraintInfo);
     }
