@@ -12,6 +12,7 @@ import com.farao_community.farao.core_cc_post_processing.app.entities.MetadataIn
 import com.farao_community.farao.core_cc_post_processing.app.util.MetadataUtil;
 import com.farao_community.farao.gridcapa_core_cc.api.resource.CoreCCMetadata;
 import org.apache.commons.collections4.map.MultiKeyMap;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
@@ -104,14 +105,14 @@ public final class CoreCCMetadataGenerator {
         data.put(SEM_RAO_COMPUTATION_STATUS, timeInterval, semComputationStatus);
         data.put(SEM_RAO_START_TIME, timeInterval, semComputationStart);
         data.put(SEM_RAO_END_TIME, timeInterval, semComputationEnd);
-        final String semComputationTime = semComputationStatus == null && semComputationStart == null && semComputationEnd == null
+        final String semComputationTime = ObjectUtils.allNull(semComputationStatus, semComputationStart, semComputationEnd)
             ? ""
             : getComputationTime(semComputationStart, semComputationEnd);
         data.put(SEM_RAO_COMPUTATION_TIME, timeInterval, semComputationTime);
         data.put(CONTINENTAL_RAO_COMPUTATION_STATUS, timeInterval, continentalComputationStatus);
         data.put(CONTINENTAL_RAO_START_TIME, timeInterval, continentalComputationStart);
         data.put(CONTINENTAL_RAO_END_TIME, timeInterval, continentalComputationEnd);
-        final String continentalComputationTime = continentalComputationStatus == null && continentalComputationStart == null && continentalComputationEnd == null
+        final String continentalComputationTime = ObjectUtils.allNull(continentalComputationStatus, continentalComputationStart, continentalComputationEnd)
             ? ""
             : getComputationTime(continentalComputationStart, continentalComputationEnd);
         data.put(CONTINENTAL_RAO_COMPUTATION_TIME, timeInterval, continentalComputationTime);
