@@ -100,6 +100,7 @@ public final class CoreCCMetadataGenerator {
                                            final String continentalComputationStatus,
                                            final String continentalComputationStart,
                                            final String continentalComputationEnd) {
+        // TODO If the area has not been computed, should we add null values, add empty strings, or add no data?
         data.put(SEM_RAO_COMPUTATION_STATUS, timeInterval, semComputationStatus);
         data.put(SEM_RAO_START_TIME, timeInterval, semComputationStart);
         data.put(SEM_RAO_END_TIME, timeInterval, semComputationEnd);
