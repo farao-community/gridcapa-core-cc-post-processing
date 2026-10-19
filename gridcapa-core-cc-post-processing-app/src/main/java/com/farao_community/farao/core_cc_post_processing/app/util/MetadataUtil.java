@@ -67,13 +67,13 @@ public final class MetadataUtil {
             return EMPTY_STRING;
         }
 
-        if (statusSet.stream().anyMatch(s -> s.equals(FAILURE))) {
+        if (statusSet.stream().anyMatch(FAILURE::equals)) {
             return FAILURE;
-        } else if (statusSet.stream().anyMatch(s -> s.equals(PENDING))) {
+        } else if (statusSet.stream().anyMatch(PENDING::equals)) {
             return PENDING;
-        } else if (statusSet.stream().anyMatch(s -> s.equals(PARTIAL_SUCCESS))) {
+        } else if (statusSet.stream().anyMatch(PARTIAL_SUCCESS::equals)) {
             return PARTIAL_SUCCESS;
-        } else if (statusSet.stream().allMatch(s -> s.equals(SUCCESS))) {
+        } else if (statusSet.stream().allMatch(SUCCESS::equals)) {
             return SUCCESS;
         } else {
             throw new CoreCCPostProcessingInternalException("Invalid overall status");

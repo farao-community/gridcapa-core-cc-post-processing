@@ -44,8 +44,8 @@ import static com.farao_community.farao.core_cc_post_processing.app.util.Metadat
  */
 public final class CoreCCMetadataGenerator {
 
-    private static final char CSV_DELIMITER = ';';
-    private static final char CSV_CR = '\n';
+    private static final String CSV_COL_DELIMITER = ";";
+    private static final String CSV_ROW_DELIMITER = "\n";
     private static final String UNDEFINED_COMPUTATION_TIME = "UNDEFINED";
 
     private CoreCCMetadataGenerator() {
@@ -129,17 +129,17 @@ public final class CoreCCMetadataGenerator {
 
         // Generate CSV string
         final StringBuilder csvBuilder = new StringBuilder();
-        csvBuilder.append(CSV_DELIMITER);
-        csvBuilder.append(indicators.stream().map(MetadataIndicator::getCsvLabel).collect(Collectors.joining(";")));
-        csvBuilder.append(CSV_CR);
+        csvBuilder.append(CSV_COL_DELIMITER);
+        csvBuilder.append(indicators.stream().map(MetadataIndicator::getCsvLabel).collect(Collectors.joining(CSV_COL_DELIMITER)));
+        csvBuilder.append(CSV_ROW_DELIMITER);
         for (final String timestamp : timestamps) {
             csvBuilder.append(timestamp);
             for (final MetadataIndicator indicator : indicators) {
                 final String value = data.get(indicator, timestamp) != null ? data.get(indicator, timestamp) : "";
-                csvBuilder.append(CSV_DELIMITER);
+                csvBuilder.append(CSV_COL_DELIMITER);
                 csvBuilder.append(value);
             }
-            csvBuilder.append(CSV_CR);
+            csvBuilder.append(CSV_ROW_DELIMITER);
         }
         return csvBuilder.toString();
     }

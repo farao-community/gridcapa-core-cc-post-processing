@@ -119,7 +119,7 @@ public final class RaoResponseXmlGenerator {
         responseItem.setTimeInterval(IntervalUtil.formatIntervalInUtc(interval));
         boolean includeResponseItem = true;
 
-        if (taskDto.getStatus().equals(TaskStatus.ERROR)) {
+        if (taskDto.getStatus() == TaskStatus.ERROR) {
             if (!metadataMap.containsKey(taskDto.getId())) {
                 fillFailedHours(responseItem, INTERNAL_EXCEPTION, NO_OUTPUT_AVAILABLE, true);
             } else if (isRaoRequestMissing(taskDto, metadataMap)) {
