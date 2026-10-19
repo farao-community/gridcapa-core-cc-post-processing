@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Created="2025-11-30T20:16:27Z" xsi:noNamespaceSchemaLocation="configuration-25.xsd">
+    <DocumentIdentification v="17XTSO-CS------W-20251202F327v5"/>
+    <Sender Code="CORE" Eic="17XTSO-CS------W" Type="CCO"/>
+    <Receiver Code="CORESO" Eic="22XCORESO------S" Type="RSC"/>
+</Configuration>
