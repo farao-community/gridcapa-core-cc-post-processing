@@ -1,3 +1,3 @@
-;RAO requests received;RAO request reception time;RAO outputs sent;RAO outputs sending time;RAO results provided;RAO computation status;RAO computation start;RAO computation end;RAO computation time (minutes)
-2023-08-04T11:25:00Z/2023-08-04T12:25:00Z;raoRequest.json;2023-08-04T11:26:00Z;YES;2023-08-04T11:30:00Z;;SUCCESS;2023-08-04T11:27:00Z;2023-08-04T11:29:00Z;2
-2023-08-04T11:26:00Z;;;;;YES;SUCCESS;2023-08-04T11:27:00Z;2023-08-04T11:29:00Z;2
+;RAO requests received;RAO request reception time;RAO outputs sent;RAO outputs sending time;RAO results provided;RAO computation status;SEM RAO computation status;SEM RAO computation start;SEM RAO computation end;SEM RAO computation time (minutes);Continental RAO computation status;Continental RAO computation start;Continental RAO computation end;Continental RAO computation time (minutes)
+2023-08-04T11:25:00Z/2023-08-04T12:25:00Z;raoRequest.json;2023-08-04T11:26:00Z;YES;2023-08-04T11:30:00Z;;SUCCESS;;;;;;2023-08-04T11:27:00Z;2023-08-04T11:29:00Z;2
+2023-08-04T11:26:00Z;;;;;YES;;SUCCESS;2023-08-04T11:27:00Z;2023-08-04T11:29:00Z;2;SUCCESS;2023-08-04T11:27:00Z;2023-08-04T11:29:00Z;2
