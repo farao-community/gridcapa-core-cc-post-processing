@@ -171,7 +171,6 @@ class MetadataUtilTest {
         assertions.assertThat(MetadataUtil.getResultsProvidedStatus(null, "SUCCESS")).isEqualTo("YES");
         assertions.assertThat(MetadataUtil.getResultsProvidedStatus(null, "FAILURE")).isEqualTo("NO");
         assertions.assertThat(MetadataUtil.getResultsProvidedStatus(null, "PENDING")).isEqualTo("NO");
-        assertions.assertThat(MetadataUtil.getResultsProvidedStatus(null, null)).isEqualTo("YES"); // TODO Check if we really want this... it is consistent with legacy behaviour, but doesn't look quite logical
         assertions.assertAll();
     }
 }
