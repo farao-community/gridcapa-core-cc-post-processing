@@ -36,7 +36,7 @@ public final class NamingRules {
     private static final DateTimeFormatter CGM_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'_'HH'30_2D0_UXV.uct'").withZone(IntervalUtil.ZONE_ID);
     private static final DateTimeFormatter METADATA_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-341_'yyyyMMdd'-F341-<version>.csv'").withZone(IntervalUtil.ZONE_ID); // NOSONAR
     private static final DateTimeFormatter RAO_RESPONSE_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-305_'yyyyMMdd'-F305-<version>.xml'").withZone(IntervalUtil.ZONE_ID); // NOSONAR
-    private static final DateTimeFormatter REFPROG_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-305_'yyyyMMdd'-Fxxx-<version>.xml'").withZone(IntervalUtil.ZONE_ID); // NOSONAR
+    private static final DateTimeFormatter REFPROG_FILENAME_FORMATTER = DateTimeFormatter.ofPattern("'22XCORESO------S_10V1001C--00236Y_CORE-FB-201_'yyyyMMdd'-F201-<version>.xml'").withZone(IntervalUtil.ZONE_ID); // NOSONAR
 
     public static String generateOutputsDestinationPath(String destinationPrefix, String fileName) {
         return String.format(OUTPUTS, destinationPrefix, fileName);
