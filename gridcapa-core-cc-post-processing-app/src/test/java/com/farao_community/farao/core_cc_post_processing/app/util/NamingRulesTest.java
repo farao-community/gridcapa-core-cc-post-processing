@@ -88,8 +88,8 @@ class NamingRulesTest {
 
     @Test
     void generateRefProgFileNameTest() {
-        assertEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-305_20230731-Fxxx-01.xml", NamingRules.generateRefProgFileName(testDate, 1));
-        assertEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-305_20230731-Fxxx-99.xml", NamingRules.generateRefProgFileName(testDate, 99));
-        assertNotEquals("22XCORESO------S_1011001C--00236Y_CORE-FB-305_20230731-Fxxx-01.xml", NamingRules.generateRefProgFileName(testDate, 1));
+        assertEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-201_20230731-F201-01.xml", NamingRules.generateRefProgFileName(testDate, 1));
+        assertEquals("22XCORESO------S_10V1001C--00236Y_CORE-FB-201_20230731-F201-99.xml", NamingRules.generateRefProgFileName(testDate, 99));
+        assertNotEquals("22XCORESO------S_1011001C--00236Y_CORE-FB-201_20230731-F201-01.xml", NamingRules.generateRefProgFileName(testDate, 1));
     }
 }

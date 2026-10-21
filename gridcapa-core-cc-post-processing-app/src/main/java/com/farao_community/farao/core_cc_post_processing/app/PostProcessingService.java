@@ -135,7 +135,7 @@ public class PostProcessingService {
         // -- F342 : Log files
         zipAndUploadService.zipAndUploadLogs(outputsTargetMinioFolder, logList, raoRequestInstant, outputFileVersion);
 
-        // -- Fxxx : RefProg
+        // -- F201 : RefProg
         final byte[] refProgBytes = refProgGenerator.generate(tasksToPostProcess, cgmPerTask, raoResultPerTask).toByteArray();
         zipAndUploadService.uploadRefProgToMinio(outputsTargetMinioFolder, refProgBytes, localDate, outputFileVersion);
 
