@@ -62,6 +62,18 @@
                 <version>${maven.jaxb.version}</version>
                 <executions>
                     <execution>
+                        <id>reference-program-xsd</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <forceRegenerate>true</forceRegenerate>
+                            <schemaDirectory>src/main/resources/xsd/F120-F201-ReferenceProgram</schemaDirectory>
+                            <bindingDirectory>src/main/resources/xjb/F120-F201-ReferenceProgram</bindingDirectory>
+                            <strict>false</strict>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>rao-request-xsd</id>
                         <goals>
                             <goal>generate</goal>
@@ -148,10 +160,6 @@
         <dependency>
             <groupId>com.powsybl</groupId>
             <artifactId>open-rao-rao-result-json</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.powsybl</groupId>
-            <artifactId>open-rao-reference-program</artifactId>
         </dependency>
         <dependency>
             <groupId>com.powsybl</groupId>

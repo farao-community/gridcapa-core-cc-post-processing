@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jxb:bindings version="3.0"
+              xmlns:jxb="https://jakarta.ee/xml/ns/jaxb"
+              xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+              xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <jxb:bindings schemaLocation="../../xsd/F120-F201-ReferenceProgram/publication-document-v2r0_FlowBased_v03.xsd">
+        <jxb:schemaBindings>
+            <jxb:package name="com.farao_community.farao.core_cc_post_processing.app.referenceprogram" />
+        </jxb:schemaBindings>
+    </jxb:bindings>
+</jxb:bindings>
