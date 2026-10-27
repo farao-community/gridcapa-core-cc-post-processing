@@ -68,8 +68,8 @@
                         </goals>
                         <configuration>
                             <forceRegenerate>true</forceRegenerate>
-                            <schemaDirectory>src/main/xsd/F302-RaoRequest</schemaDirectory>
-                            <bindingDirectory>src/main/xjb/F302-RaoRequest</bindingDirectory>
+                            <schemaDirectory>src/main/resources/xsd/F302-RaoRequest</schemaDirectory>
+                            <bindingDirectory>src/main/resources/xjb/F302-RaoRequest</bindingDirectory>
                             <strict>false</strict>
                         </configuration>
                     </execution>
@@ -80,8 +80,8 @@
                         </goals>
                         <configuration>
                             <forceRegenerate>true</forceRegenerate>
-                            <schemaDirectory>src/main/xsd/CgmHeaderInput</schemaDirectory>
-                            <bindingDirectory>src/main/xjb/CgmHeaderInput</bindingDirectory>
+                            <schemaDirectory>src/main/resources/xsd/CgmHeaderInput</schemaDirectory>
+                            <bindingDirectory>src/main/resources/xjb/CgmHeaderInput</bindingDirectory>
                             <strict>false</strict>
                         </configuration>
                     </execution>
@@ -92,8 +92,8 @@
                         </goals>
                         <configuration>
                             <forceRegenerate>true</forceRegenerate>
-                            <schemaDirectory>src/main/xsd/F305-RaoResponse</schemaDirectory>
-                            <bindingDirectory>src/main/xjb/F305-RaoResponse</bindingDirectory>
+                            <schemaDirectory>src/main/resources/xsd/F305-RaoResponse</schemaDirectory>
+                            <bindingDirectory>src/main/resources/xjb/F305-RaoResponse</bindingDirectory>
                             <strict>false</strict>
                         </configuration>
                     </execution>
