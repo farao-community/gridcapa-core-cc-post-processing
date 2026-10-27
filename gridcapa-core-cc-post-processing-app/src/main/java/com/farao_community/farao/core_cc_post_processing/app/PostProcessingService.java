@@ -100,6 +100,10 @@ public class PostProcessingService {
         // F??? : RaoResult files
         zipAndUploadService.zipRaoResultsAndSendToOutputs(outputsTargetMinioFolder, raoResultPerTask, localDate);
 
+        // F201 : RefProg
+        final byte[] refProgBytes = refProgGenerator.generate(tasksToPostProcess, cgmPerTask, raoResultPerTask).toByteArray();
+        zipAndUploadService.uploadRefProgToMinio(outputsTargetMinioFolder, refProgBytes, localDate, outputFileVersion);
+
         // F299 : CNE files
         zipAndUploadService.zipCnesAndSendToOutputs(outputsTargetMinioFolder, cnePerTask, localDate, outputFileVersion);
 
@@ -114,7 +118,7 @@ public class PostProcessingService {
         final ResponseMessageType responseMessage = RaoResponseXmlGenerator.generateRaoResponse(tasksToPostProcess, cgmPerTask, localDate, correlationId, metadataMap, timeInterval);
         zipAndUploadService.uploadRaoResponseToMinio(outputsTargetMinioFolder, responseMessage, localDate, outputFileVersion);
 
-        // -- F341 : Metadata files
+        // F341 : Metadata files
         try {
             // Only write metadata for timestamps with a RaoRequestInstant defined
             final List<CoreCCMetadata> hourlyMetadataList = metadataMap.values().stream()
@@ -132,12 +136,8 @@ public class PostProcessingService {
             throw new CoreCCPostProcessingInternalException("Could not generate metadata file", e);
         }
 
-        // -- F342 : Log files
+        // F342 : Log files
         zipAndUploadService.zipAndUploadLogs(outputsTargetMinioFolder, logList, raoRequestInstant, outputFileVersion);
-
-        // -- F201 : RefProg
-        final byte[] refProgBytes = refProgGenerator.generate(tasksToPostProcess, cgmPerTask, raoResultPerTask).toByteArray();
-        zipAndUploadService.uploadRefProgToMinio(outputsTargetMinioFolder, refProgBytes, localDate, outputFileVersion);
 
         LOGGER.info("All outputs were uploaded");
     }
