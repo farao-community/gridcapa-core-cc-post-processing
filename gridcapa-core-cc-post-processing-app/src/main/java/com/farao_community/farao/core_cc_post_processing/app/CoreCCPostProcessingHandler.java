@@ -66,7 +66,7 @@ public class CoreCCPostProcessingHandler {
                 LocalDate localDate = taskDtoUpdated.getTimestamp().atZoneSameInstant(ZoneId.of("CET")).toLocalDate();
                 if (checkIfAllHourlyTasksAreFinished(localDate)) {
                     Set<TaskDto> taskDtoForBusinessDate = getAllTaskDtoForBusinessDate(localDate);
-                    // Only perform post processing if a task from local date was updated
+                    // Only perform post-processing if a task from local date was updated
                     if (taskDtoForBusinessDate.stream().map(TaskDto::getId).anyMatch(uuid -> uuid.equals(taskDtoUpdated.getId()))) {
                         postProcessingService.processTasks(localDate, taskDtoForBusinessDate, getLogsForTask(taskDtoForBusinessDate));
                     }
