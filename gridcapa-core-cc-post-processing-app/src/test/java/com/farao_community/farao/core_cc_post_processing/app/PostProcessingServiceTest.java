@@ -143,13 +143,13 @@ class PostProcessingServiceTest {
         assertEquals("raoRequest.json", metadata.getRaoRequestFileName());
         assertEquals("2019-01-08T12:30:00Z", metadata.getRequestReceivedInstant());
         assertEquals("2019-01-08T12:30:00Z", metadata.getRaoRequestInstant());
-        assertEquals("2019-01-08T12:30:00Z", metadata.getComputationStart());
-        assertEquals("2019-01-08T12:31:00Z", metadata.getComputationEnd());
+        assertEquals("2019-01-08T12:30:00Z", metadata.getContinentalComputationStart());
+        assertEquals("2019-01-08T12:31:00Z", metadata.getContinentalComputationEnd());
         assertEquals("2019-01-07T23:00Z/2019-01-08T23:00Z", metadata.getTimeInterval());
         assertEquals("00000000-0000-0000-0000-000000000000", metadata.getCorrelationId());
-        assertEquals("SUCCESS", metadata.getStatus());
-        assertEquals("0", metadata.getErrorCode());
-        assertEquals("This is an error.", metadata.getErrorMessage());
+        assertEquals("SUCCESS", metadata.getContinentalComputationStatus());
+        assertEquals("0", metadata.getContinentalComputationErrorCode());
+        assertEquals("This is an error.", metadata.getContinentalComputationErrorMessage());
         assertEquals(1, metadata.getVersion());
     }
 }
