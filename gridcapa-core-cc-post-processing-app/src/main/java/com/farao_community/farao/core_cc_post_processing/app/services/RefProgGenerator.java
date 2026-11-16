@@ -89,7 +89,7 @@ public class RefProgGenerator {
         //  - Récupérer le RefProg initial
         //  - Pour chaque timestamp :
         //    - Si nécessaire, mettre à jour les valeurs des quatre setpoint PiSA dans le RefProg avec les données obtenues du RaoResult
-        //    - De même, mettre à jour la valeur d'échange FR-IT (FR-INOR depuis le découpage de l'Italie en 5 bidding zones) avec les valeurs du RaoResult et du CGM
+        //    - De même, mettre à jour la valeur d'échange FR-INOR avec les valeurs du RaoResult et du CGM
 
         final CracCreationParameters cracCreationParameters = getCimCracCreationParameters();
         final TaskDto firstTasksToPostProcess = tasksToPostProcess.stream().findFirst().orElseThrow();
@@ -114,6 +114,11 @@ public class RefProgGenerator {
 
             final State preventiveState = crac.getPreventiveState();
 
+            // TODO Maybe too complex way of getting the information:
+            //  do we have to go through CRAC to get initial setpoint?
+            //  Can't we find the information in the network directly?
+            //  Moreover, if PiSA is represented in the same way as German HVDCs, the RA id will result of the concatenation of complex variant's IDs, so we probably won't be able to handle them in the same way as we did in CSE
+            //  Should we use PiSaConfiguration.alignedRaNames and get rid of the remaining data from application.yml?
             final Set<InjectionRangeAction> piSaLink1RangeActions = piSaLink1Processor.getRelatedHvdcRangeActions(crac);
             final Set<InjectionRangeAction> piSaLink2RangeActions = piSaLink2Processor.getRelatedHvdcRangeActions(crac);
 
@@ -140,7 +145,9 @@ public class RefProgGenerator {
             // Load initial RefProg
             final PublicationDocument document = (PublicationDocument) jaxbUnmarshaller.unmarshal(refProgInputStream);
 
-            updateRefProgXmlDocument(document, initialFrPisaSetpoints, postPraPisaSetpoints);
+            // TODO For November 2026 version, we only export a RefProg containing the exact same data as it contains in input
+            //  This line will be uncommented in future versions
+//            updateRefProgXmlDocument(document, initialFrPisaSetpoints, postPraPisaSetpoints);
 
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             jaxbMarshaller.marshal(document, outputStream);
@@ -198,16 +205,15 @@ public class RefProgGenerator {
             final String timeSeriesIdentification = pubTS.getTimeSeriesIdentification().getV();
             // TODO Wait for precise timeSeriesIdentification IDs to use
             // Make it a switch ?
-            if ("FR-INOR".equals(timeSeriesIdentification)) {
-                updateFrItValue(pubTS, initialFrPisaSetpoints, postPraPisaSetpoints);
-            } else if ("FR-INOR_PISA1".equals(timeSeriesIdentification)) {
-                updatePisaValue(pubTS, postPraPisaSetpoints);
-            } else if ("FR-INOR_PISA2".equals(timeSeriesIdentification)) {
-                updatePisaValue(pubTS, postPraPisaSetpoints);
-            } else if ("INOR-FR_PISA1".equals(timeSeriesIdentification)) {
-                updatePisaValue(pubTS, postPraPisaSetpoints);
-            } else if ("INOR-FR_PISA2".equals(timeSeriesIdentification)) {
-                updatePisaValue(pubTS, postPraPisaSetpoints);
+            switch (timeSeriesIdentification) {
+                case "FR-INOR" -> updateFrItValue(pubTS, initialFrPisaSetpoints, postPraPisaSetpoints);
+                case "FR-INOR_PISA1",
+                     "FR-INOR_PISA2",
+                     "INOR-FR_PISA1",
+                     "INOR-FR_PISA2" -> updatePisaValue(pubTS, postPraPisaSetpoints);
+                default -> {
+                    // Nothing to do for non FR-IT exchanges
+                }
             }
         }
     }
@@ -256,7 +262,7 @@ public class RefProgGenerator {
             final double newValue = postPraPisaSetpoints.getData(postPraSetpointsSortedTimestamps.get(i)).get().entrySet().stream()
                 // TODO For now, key is defined in Core CC post-processing's code as "rangeAction.getId()"
                 //  We must check which value should be used here
-                .filter(entry -> entry.getKey().equals("FR-INOR_PISA")) // What about INOR-FR_PISA?
+                .filter(entry -> entry.getKey().equals("FR-INOR_PISA")) // TODO What about INOR-FR_PISA? And what about the second HVDC line?
                 .mapToDouble(Map.Entry::getValue)
                 .findFirst().orElse(initialValue);
 
