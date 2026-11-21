@@ -97,12 +97,12 @@ class RaoResponseXmlGeneratorTest {
     }
 
     @Test
-    void generateRaoResponsePayLoad() {
+    void generateRaoResponsePayload() {
         ResponseMessageType responseMessage = new ResponseMessageType();
         initTasksForRaoResponse();
         initMetadataMap();
         initCgmPerTaskMap();
-        ReflectionTestUtils.invokeMethod(RaoResponseXmlGenerator.class, "generateRaoResponsePayLoad", taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
+        ReflectionTestUtils.invokeMethod(RaoResponseXmlGenerator.class, "generateRaoResponsePayload", taskDtos, cgmPerTask, responseMessage, localDate, metadataMap, "2023-08-04T14:46:00.000Z/2023-08-04T15:46:00.000Z");
         PayloadType payload = responseMessage.getPayload();
 
         assertEquals(4, payload.getResponseItems().getResponseItem().size());
@@ -119,7 +119,7 @@ class RaoResponseXmlGeneratorTest {
 
         ResponseItem errorResponseItem = payload.getResponseItems().getResponseItem().get(1);
         assertEquals("2023-08-21T14:46Z/2023-08-21T15:46Z", errorResponseItem.getTimeInterval());
-        assertEquals("1", errorResponseItem.getError().getCode());
+        assertEquals("[CONTINENTAL] 1 ; [SEM] 1", errorResponseItem.getError().getCode());
         assertEquals("FATAL", errorResponseItem.getError().getLevel());
         assertNull(errorResponseItem.getFiles());
     }

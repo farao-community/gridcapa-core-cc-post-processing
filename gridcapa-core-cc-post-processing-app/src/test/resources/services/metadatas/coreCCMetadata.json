@@ -2,12 +2,17 @@
   "raoRequestFileName": "raoRequest.json",
   "requestReceivedInstant": "2019-01-08T12:30:00Z",
   "raoRequestInstant": "2019-01-08T12:30:00Z",
-  "computationStart": "2019-01-08T12:30:00Z",
-  "computationEnd": "2019-01-08T12:31:00Z",
   "timeInterval": "2019-01-07T23:00Z/2019-01-08T23:00Z",
   "correlationId": "00000000-0000-0000-0000-000000000000",
-  "status": "SUCCESS",
-  "errorCode": "0",
-  "errorMessage": "This is an error.",
-  "version": 1
+  "version": 1,
+  "continentalComputationStatus": "SUCCESS",
+  "continentalComputationStart": "2019-01-08T12:30:00Z",
+  "continentalComputationEnd": "2019-01-08T12:31:00Z",
+  "continentalComputationErrorCode": "0",
+  "continentalComputationErrorMessage": "This is an error.",
+  "semComputationStatus": "SUCCESS",
+  "semComputationStart": "2019-01-08T12:30:00Z",
+  "semComputationEnd": "2019-01-08T12:31:00Z",
+  "semComputationErrorCode": "0",
+  "semComputationErrorMessage": "This is an error."
 }
